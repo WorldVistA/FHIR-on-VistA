@@ -41,11 +41,8 @@ targetCompatibility = 1.8
 // Compile using UTF-8 charset
 compileJava.options.encoding = 'UTF-8'
 
-// Get minor version from environment or default to 1
-def minorVersion = System.getenv("BUILD_NUMBER") as Integer ?: 1
-
 // Current Project's version
-version = "1.2." + minorVersion as String
+version = "1.0.0"
 
 // Project's description
 description = 'FHIR VistA Services' + version
