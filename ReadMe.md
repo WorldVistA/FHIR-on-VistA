@@ -60,4 +60,6 @@ Within the Patient resource the following compartments are available:
 * More FHIR resources
 * More JSON consumption, replacing text-delimited consumption.
 
-
+## Related Projects ##
+The [VistA FHIR Data Loader project](https://github.com/OSEHRA/VistA-FHIR-Data-Loader
+) can be used in conjunction with this project to provide a complete VistA test or development environment. The VistA FHIR Data Loader can generate high quality synthetic patient data in VistA that can be exposed via this project.
