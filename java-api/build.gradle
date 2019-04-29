@@ -1,0 +1,76 @@
+/* Created by Perspecta http://www.perspecta.com */
+/*
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
+*/
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+}
+
+plugins {
+    id "org.springframework.boot" version "2.1.4.RELEASE"
+}
+
+apply plugin: 'java'
+apply plugin: "jacoco"
+apply plugin: 'eclipse'
+
+group 'com.healthconcourse.fhir'
+
+// Use Java 8
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+// Compile using UTF-8 charset
+compileJava.options.encoding = 'UTF-8'
+
+// Get minor version from environment or default to 1
+def minorVersion = System.getenv("BUILD_NUMBER") as Integer ?: 1
+
+// Current Project's version
+version = "1.2." + minorVersion as String
+
+// Project's description
+description = 'FHIR VistA Services' + version
+
+repositories {
+    mavenCentral()
+
+}
+
+def springVersion = '4.3.6.RELEASE'
+def springBootVersion = '2.1.4.RELEASE'
+def hapiVersion = '3.7.0'
+
+dependencies {
+
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
+    implementation group: 'ca.uhn.hapi.fhir', name: 'hapi-fhir-structures-dstu3', version: hapiVersion
+    implementation group: 'ca.uhn.hapi.fhir', name: 'hapi-fhir-jaxrsserver-base', version: hapiVersion
+    implementation group: 'org.springframework', name: 'spring-web', version: springVersion
+    implementation group: 'org.thymeleaf', name: 'thymeleaf', version:'3.0.2.RELEASE'
+    implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version:'2.0.1'
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.8.1'
+    implementation group: 'com.jayway.jsonpath', name: 'json-path', version: '2.4.0'
+
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '3.8.1'
+    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion
+}

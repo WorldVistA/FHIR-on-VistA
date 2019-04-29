@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration PUBLIC "-//log4j/log4j Configuration//EN" "log4j.dtd" >
+<log4j:configuration>
+
+    <appender name="STDOUT" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %-5p (%c.java:%L).%M - %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="file" class="org.apache.log4j.DailyRollingFileAppender">
+        <param name="File" value="/data/dhp/logs/dhp-fhir-api.log" />
+        <param name="threshold" value="info"/>
+        <param name="DatePattern" value=".yyyy-MM-dd" />
+        <param name="maxBackupIndex" value="7" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern"
+                   value="%d{yyyy-MMM-dd HH:mm:ss,SSS} [%t] %c %x%n  %-5p %m%n"/>
+        </layout>
+    </appender>
+
+    <root>
+        <priority value="INFO" />
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="file"/>
+    </root>
+
+</log4j:configuration>
