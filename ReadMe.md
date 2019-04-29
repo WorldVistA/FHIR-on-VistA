@@ -1,4 +1,4 @@
-#FHIR-on-VistA#
+# FHIR-on-VistA #
 
 This repository consists of two main components:
 
