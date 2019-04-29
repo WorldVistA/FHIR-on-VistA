@@ -1,4 +1,5 @@
 #FHIR-on-VistA#
+
 This repository consists of two main components:
 
 1. A VistA application which provides a REST API on top of VistA
@@ -43,7 +44,7 @@ Within the Patient resource the following compartments are available:
 * CarePlan
 * Diagnostic Report
 
-[Java API Implementation](java-api/ReadMe.md)
+[Java API Implementation
 
 ## Long Term Goals
 
