@@ -44,7 +44,7 @@ Within the Patient resource the following compartments are available:
 * CarePlan
 * Diagnostic Report
 
-[Java API Implementation
+[Java API Implementation](java-api/ReadMe.md)
 
 ## Long Term Goals
 
