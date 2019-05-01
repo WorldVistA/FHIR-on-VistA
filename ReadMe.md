@@ -12,7 +12,9 @@ The VistA REST API reads data from a VistA instance and returns data either as d
 ![Data flow through components](images/component-flow.png)
 
 ## VistA REST API
+The REST services use the RGNET web server to return data as either delimited text or JSON.
 
+[VistA REST API Implementation](VistA-REST-services/ReadMe.md)
 
 ## Java Application
 The Java application provids a FHIR API using [Spring Boot](https://spring.io/projects/spring-boot) and the [Hapi FHIR framework](http://hapifhir.io/). 
