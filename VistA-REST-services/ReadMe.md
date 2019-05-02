@@ -28,16 +28,14 @@ Install VistA REST Services patch from file SYN_1_0_2.KID
 ## Test Installation ##
 
 
-
-Test the application by visiting [http://localhost:8080/api/metadata](http://localhost:8080/api/metadata)
-
-To test the services run the following to obtain some ICN's (the example requests 3)
+To test that the installation has completed succesfully run the following to obtain some
+ ICN's (the example requests 3):
 
 curl "http://localhost:8001/DHPPATICNALL?CNT=3"
 
 1001949719V291733;1004751168V745102;1006145121V631417;
 
-Then make a call for a resource e.g. vitals
+Then make a call for a resource (e.g. vitals) using one of the ICN's returned by the above (DHPPATICNALL):
 
 curl "http://localhost:8001/DHPPATVITICN?ICN=1001949719V291733"
 
