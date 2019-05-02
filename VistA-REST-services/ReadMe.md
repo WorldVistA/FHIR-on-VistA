@@ -6,7 +6,23 @@ The REST services use the RGNET web server.
 
 ![VistA REST Service architecture](../images/VistA-architecture.png)
 
+## Installation ##
+
+Install RGNET - the builds should be avaialle from the following links
+	 1.	rgut-3.0.kid – VistA-RG-Utilities:
+	    https://github.com/mdgeek/VistA-RG-Utilities
+
+	 2.	rgne-1.0.kid – VistA Network Services (NETSERV):
+	    https://github.com/mdgeek/VistA-Network-Services/tree/master/kid
+
+	 3.	rgse-1.0.kid – VistA-Serialization-Framework:
+	    https://github.com/mdgeek/VistA-Serialization-Framework/tree/master/kid
+		
+
+    Install 
+
 ## Configuration ##
+
 There are two configuration items in the project, located in `java-api/src/main/resources/application.properties`: 
 
 * vistaUrl - The base URL to the VistA REST API
