@@ -19,28 +19,14 @@ Install RGNET - the builds should be avaialle from the following links
 	    https://github.com/mdgeek/VistA-Serialization-Framework/tree/master/kid
 		
 
-    Install 
+Install VistA REST Services patch from file SYN_1_0_2.KID
 
 ## Configuration ##
 
-There are two configuration items in the project, located in `java-api/src/main/resources/application.properties`: 
 
-* vistaUrl - The base URL to the VistA REST API
-* serverUrl - The URL to this application (required by Hapi FHIR)
 
-Additionally, requests are served out of the `/api` directory in the application URL. This is set in the `HcFhirServlet` class.
+## Test Installation ##
 
-## Build and Run ##
-
-The project uses Gradle for compiling and running tests. There is no need to install Gradle, the Gradle wrapper included in the repository is sufficient to compile and test the code. The first time the wrapper is executed it will download the correct version of Gradle into the project directory. This step varies slightly by platform. Execute the commands below to build, test, and run the code.
-
-MacOS or Linux
-	
-~~~~
-./gradlew clean build
-
-java -jar build/libs/healthconcourse-vista-fhir-api-1.0.0.jar
-~~~~
 
 
 Test the application by visiting [http://localhost:8080/api/metadata](http://localhost:8080/api/metadata)
