@@ -2,7 +2,8 @@
 
 ## Architecture ##
 
-The REST services use the RGNET web server.
+The REST service software resides on the VistA instance to be queried and assumes that the RGNET web
+server is installed on the same VistA instance.
 
 ![VistA REST Service architecture](../images/VistA-architecture.png)
 
