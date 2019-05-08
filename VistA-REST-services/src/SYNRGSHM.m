@@ -9,7 +9,7 @@ SYNRGSHM ;ven/gpl - RGNET SHIM ;2018-08-17  3:28 PM
 DETECT ; _rewrite_dhp exit for DHP RGNET SERVICES
  ; called from VPRJRSP or from %webrsp to detect RGNET URLs for DHP
  ; If RGNET is on the system for mapping...
- IF ROUTINE="" IF $D(^RGNET(996.52)) DO MATCHRG(.ROUTINE,.ARGS,.AUTHNODE)
+ IF ROUTINE="" IF $D(^RGNET(996.52)) DO MATCHR5BG(.ROUTINE,.ARGS,.AUTHNODE)
  ;
  Q
  ;
@@ -19,9 +19,10 @@ MATCHRG(ROUTINE,ARGS,AUTHNODE) ; match agains RGNET
  S PATH=$E(PATH,2,$L(PATH))
  Q:PATH=""
  N SYNENTRY
- S SYNENTRY=$O(^RGNET(996.52,"B",PATH))
+ S SYNENTRY=$O(^RGNET(996.52,"B",PATH,""))
+ ;D ^ZTER
  Q:SYNENTRY=""
- Q:$E(SYNENTRY,1,3)'="DHP"
+ Q:$E(PATH,1,3)'="DHP"
  ; D ^ZTER
  S ARGS("command")=PATH
  S ROUTINE="WSRGNET^SYNRGSHM"
@@ -50,6 +51,7 @@ WSRGNET(RTN,FILTER) ; web service shim for RGNET web services
  . X ^%ZOSF("UPPERCASE")
  . Q:Y=""
  . S @Y=$G(FILTER(ZI))
+ ;D ^ZTER
  ;
  ; run the processor
  ;
@@ -99,8 +101,16 @@ DHPR(HAND) ; extrinsic returns
  N ZE1,ZE2
  S ZE1=$P(DHPRTN,"(",1)
  S ZE2=$P(DHPRTN,"(",2)
- S ZE2=$TR(ZE2,"DHP","")
- S DHPRTN=ZE1_"("_ZE2
+ N ZP,ZE3
+ S ZE3=".RETSTA"
+ F ZP=2:1:$L(ZE2,",") D  ;
+ . N ZP1
+ . S ZP1=$P(ZE2,",",ZP)
+ . S ZP1=$TR(ZP1,")")
+ . I $E(ZP1,1,3)="DHP" S ZP1=$E(ZP1,4,$L(ZP1))
+ . S ZE3=ZE3_","_ZP1
+ ;S ZE2=$TR(ZE2,"DHP","")
+ S DHPRTN=ZE1_"("_ZE3_")"
  S DHPRTN=$E(DHPRTN,2,$L(DHPRTN))
  ;
  Q DHPRTN
@@ -111,6 +121,7 @@ DHPPARMS(ARY,CMD) ; pulls the DHP and other parameters out of the line
  . N ZP1
  . S ZP1=$P(CMD,",",ZP)
  . S ZP1=$TR(ZP1,")")
+ . I $E(ZP1,1,3)="DHP" S ZP1=$E(ZP1,4,$L(ZP1))
  . S @ARY@(ZP1)=""
  Q
  ;
