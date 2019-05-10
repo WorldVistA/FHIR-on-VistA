@@ -1,5 +1,5 @@
-SYNDHP09 ; HC/fjf/art - HealthConcourse - get patient health factors ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP09 ; HC/fjf/art - HealthConcourse - get patient health factors ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -25,7 +25,7 @@ PATHLF(RETSTA,NAME,SSN,DOB,GENDER,FRDAT,TODAT,RETJSON) ; get health factors for 
  ;             0 or null = Return health factors string (default)
  ; Output:
  ;   RETSTA  - a delimited string that lists SNOMED CDT codes for the patient health factors
- ;           - ICN^SCT code|HF Name|Resource ID|HF Severity|Encounter Provider|Visit Date^SCT code...   
+ ;           - ICN^SCT code|HF Name|Resource ID|HF Severity|Encounter Provider|Visit Date^SCT code...
  ;          or patient health factors in JSON format
  ;
  S FRDAT=$S($G(FRDAT):$$HL7TFM^XLFDT(FRDAT),1:1000101)
@@ -68,13 +68,13 @@ PATHLFI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient health factors for ICN
  ;          or patient health factors in JSON format
  ;
  ; bypass for CQM
- ; 
+ ;
  ; ***********
  ; *********** Important Note for open source community
  ; ***********
  ; *********** Perspecta - who developed this source code and have released it to the open source
  ; *********** need the following six lines to remain intact
- ; 
+ ;
  I DHPICN="2495309561V670720" D  QUIT
  . S RETSTA="2495309561V670720^75624-7|5 or more drinks|442_130_1014|9|9990000033|20170101^24165007|Alcohol Counseling and Treatment|442_130_101||9990000033|20170101"
  I DHPICN="1686299845V246594" D  QUIT
@@ -82,7 +82,7 @@ PATHLFI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient health factors for ICN
  ;I DHPICN="2495309561V670720" D  QUIT
  ;. S RETSTA="2495309561V670720^24165007|Alcohol Counseling and Treatment|442_130_101||9990000033|20170101"
  ;
- ; *********** the above lines will be redacted by Perspecta at some suitable juncture to 
+ ; *********** the above lines will be redacted by Perspecta at some suitable juncture to
  ; *********** be determined by Perspecta
  ; ***********
  ; *********** End of Important Note for open source community
@@ -93,7 +93,7 @@ PATHLFI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient health factors for ICN
  ; validate ICN
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" QUIT
- ; 
+ ;
  S FRDAT=$S($G(FRDAT):$$HL7TFM^XLFDT(FRDAT),1:1000101)
  S TODAT=$S($G(TODAT):$$HL7TFM^XLFDT(TODAT),1:9991231)
  I $G(DEBUG) W !,"FRDAT: ",FRDAT,"   TODAT: ",TODAT,!
@@ -174,6 +174,27 @@ HLFS(HFARRAY,PATIEN,DHPICN,FRDAT,TODAT) ; get health factors for a patient
  . S HLFCTS=HLFCTS_U_ZARR(HIEN)
  ;
  QUIT HLFCTS
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="5000001536V889384"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D PATHLFI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="5000001536V889384"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATHLFI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;
 HLFTEST0 ; all pass ICN
  N ICN S ICN=""

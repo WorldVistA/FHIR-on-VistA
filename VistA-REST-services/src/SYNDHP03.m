@@ -1,17 +1,17 @@
-SYNDHP03 ; HC/rbd/art - HealthConcourse - get patient condition/problem data ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP03 ; HC/rbd/art - HealthConcourse - get patient condition/problem data ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
  QUIT
  ;
- ;----------------  Get Patient Conditions  ---------------------- 
+ ;----------------  Get Patient Conditions  ----------------------
  ;
 PATCONDS(RETSTA,NAME,SSN,DOB,GENDER) ; get condition SCT codes for a patient by traits
  S RETSTA="-1^This service has been retired"
  QUIT
  ; Return list of active conditions (problems) for name, SSN, DOB, and gender
- ;   conditions without a SNOMED code are not be reported
+ ;   conditions without a SNOMED CT code are not be reported
  ;
  ; Input:
  ;   NAME    - patient name
@@ -53,7 +53,7 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT) ; Patient conditions for ICN
  ;   TODATE  - to date (inclusive), optional, compared to .13 DATE OF ONSET
  ; Output:
  ;   RETSTA  - a delimited string that lists the following information
- ;      PatientICN ^ resourceId ^ DiagnosisCode ; DiagnosisName ^ DateOfOnset ^ SnomedCode ; SnomedName |
+ ;      PatientICN ^ resourceId ^ DiagnosisCode ; DiagnosisName ^ DateOfOnset ^ SNOMED CT Code ; SNOMED CT Name |
  ;      and continue this for every diagnosis for a particular patient ICN
  ;
  ;  Identifier will be "V_"_SITE ID_"_"_FILE #_"_"_FILE IEN   i.e. V_500_9000011_930
@@ -105,7 +105,7 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT) ; Patient conditions for ICN
  ;
  QUIT
  ;
- ;  ----------------  Patients for a given active condition  -------------- 
+ ;  ----------------  Patients for a given active condition  --------------
  ;
 PATCONAL(RETSTA,DHPSCT) ; Patients for a given active condition
  ;
@@ -115,9 +115,9 @@ PATCONAL(RETSTA,DHPSCT) ; Patients for a given active condition
  ;   DHPSCT - SNOMED CT code  (mandatory)
  ; Output:
  ;   RETSTA  - a delimited string that lists SNOMED CDT codes for active  patient conditions
- ;           - SCT^ICN 1|patient name 1^ICN 2|patient name 2^...^ICN n|patient name n 
+ ;           - SCT^ICN 1|patient name 1^ICN 2|patient name 2^...^ICN n|patient name n
  ;           - -1 - error
- ; 
+ ;
  ; validate SNOMED CT code
  I $G(DHPSCT)="" S RETSTA="-1^What code?" QUIT
  I +$$CODE^LEXTRAN(DHPSCT,"SCT")'=1 S RETSTA="-1^SNOMED CT code not recognised" Q
@@ -132,4 +132,28 @@ PATCONAL(RETSTA,DHPSCT) ; Patients for a given active condition
  S PAT=""
  F  S PAT=$O(PATA(PAT)) Q:PAT=""  S RETSTA=RETSTA_U_PAT_P_PATA(PAT)
  Q
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="10111V183702"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N RETSTA
+ D PATCONI(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N SNOMED S SNOMED=47505003
+ N RETSTA
+ D PATCONAL(.RETSTA,SNOMED)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T3 ;
+ N SNOMED S SNOMED=10509002
+ N RETSTA
+ D PATCONAL(.RETSTA,SNOMED)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;

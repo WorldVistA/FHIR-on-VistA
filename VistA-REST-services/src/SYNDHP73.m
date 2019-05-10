@@ -1,27 +1,27 @@
 SYNDHP73 ;AFHIL DHP/fjf/art - HealthConcourse - DHP REST handlers ;03/27/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;  -------------------------------
  ;  Patient validate bridge routine
  ;  -------------------------------
  ;
-PATVAL ; Verify patient on basis of name, SSN, DoB, Gender and Mother's Maiden name 
+PATVAL ; Verify patient on basis of name, SSN, DoB, Gender and Mother's Maiden name
  ;parse out RPC call parameters from REST request
- ;  
+ ;
  ;   DHPPATVAL
  ;
  ;S $ZT="^ZTER"
  D PARSEVAL
  ;
  D PATVAL^SYNDHP43(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER,DHPMMDNM)
- ; RETSTA is string returned by 
+ ; RETSTA is string returned by
  ;S RETSTA="NOTHING SUCCEEDS LIKE A BUDGIE"
  D ADD^RGNETWWW(RETSTA_$C(13,10))
  ;
  Q
  ;
-PARSEVAL ; 
+PARSEVAL ;
  ;
  F I="SSN","DOB","GENDER","MMDNM" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  S DHPNAME=$$GETPARAM^RGNETWWW("NAME",1,1)
@@ -116,7 +116,7 @@ PATCON ; get patient condition SCT codes for one patient by traits
  Q
  ;
 PARSECON ;
- ; 
+ ;
  F I="SSN","DOB","GENDER" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  S DHPNAME=$$GETPARAM^RGNETWWW("NAME",1,1)
  S DHPNAME=DHPNAME_","_$$GETPARAM^RGNETWWW("NAME",1,2)_" "
@@ -149,7 +149,7 @@ PATENCI ; get patient encounters for one patient by ICN
  D PATENCI^SYNDHP40(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT)
  D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
- ;  
+ ;
  ;  ---------------------------------------
  ;  Patients for a condition bridge routine
  ;  ---------------------------------------
@@ -164,7 +164,7 @@ PATCONAL ; get patients for a condition
  Q
  ;
 PARSECONAL ; generalise
- ; 
+ ;
  F I="SCT" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  Q
  ;
@@ -538,7 +538,7 @@ PATCPI ; get one care plan for a patient
  ;  ----------------------------------------------
  ;  Institution Information by HLOC bridge routine
  ;  ----------------------------------------------
- ; 
+ ;
 HLOCINST ; get institution information for hospital location name
  ;
  ;    DHPHLOCINSTHLOCNAM
@@ -604,7 +604,7 @@ SYSFAC ; get system facility  suffix parameter
  S DHPFAC="DHP"_$$GETPARAM^RGNETWWW(1)
  D GETFACID^SYNDHP69(.RETSTA,DHPFAC)
  D ADD^RGNETWWW(RETSTA_$C(13,10))
- Q 
+ Q
  ;
 LOGRST ; expunge VPRHTTP("log"
  ;
@@ -612,12 +612,12 @@ LOGRST ; expunge VPRHTTP("log"
  ;
  D LOGRST^SYNDHP69(.RETSTA)
  D ADD^RGNETWWW(RETSTA_$C(13,10))
- Q 
+ Q
  ;
  ;  -------------------------------------
  ;
 PARSEICN ; ICN PARSER
- ; 
+ ;
  F I="ICN" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  Q
  ;

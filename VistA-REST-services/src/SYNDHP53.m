@@ -1,5 +1,5 @@
-SYNDHP53 ; HC/fjf/art - HealthConcourse - get patient labs ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP53 ; HC/fjf/art - HealthConcourse - get patient labs ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -125,12 +125,24 @@ LABS(LLIST,PATIEN,FRDAT,TODAT,DHPICN,LABARRAY) ; return chem labs for patient
  ;
  ; --------------------------------------------------------------------
  ;
-TESTS ;
-DEMTEST0 ; pass
- ;D PATDEM(.RETSTA,"HYPERTENSION,PATIENT FEMALE",666111938,19280913,"F")
- ;ZWRITE RETSTA
- Q
-CONTEST0 ; pass
- ;D PATCONDS(.RETSTA,"HYPERTENSION,PATIENT FEMALE",666111938,19280913,"F")
- ;ZWRITE RETSTA
- Q
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="1034989029V875306"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D PATLABI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="1034989029V875306"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATLABI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;

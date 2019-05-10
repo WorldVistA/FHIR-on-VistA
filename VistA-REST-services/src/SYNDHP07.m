@@ -1,5 +1,5 @@
-SYNDHP07 ; HC/rbd/art - HealthConcourse - get patient's nursing care plan data ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP07 ; HC/rbd/art - HealthConcourse - get patient's nursing care plan data ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -32,7 +32,7 @@ PATGOLI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient goals for ICN
  ; validate ICN
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" Q
- ; 
+ ;
  ; get patient IEN from ICN
  N NCPARR
  N PATIEN S PATIEN=$O(^DPT("AFICN",DHPICN,""))
@@ -84,4 +84,25 @@ GOALS(NCPARR,PATIEN,DHPICN,FRDAT,TODAT) ; get goals for a patient
  . . S GOALS=GOALS_U_GOALREC
  ;
  QUIT GOALS
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="1967316818V742124"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D PATGOLI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="1967316818V742124"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATGOLI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;

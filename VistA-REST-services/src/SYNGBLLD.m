@@ -1,5 +1,5 @@
 SYNGBLLD ; HC/ART - HealthConcourse - DHP load data in ^SYN("2002.030" global ;02/04/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -326,7 +326,7 @@ PRCSCT ; CPT to SNOMED CT map for procedures
  S SCTX("11000")="19780006^Debridement of Infection of Skin"
  S SCTX("47562")="45595009^Laparoscopic cholecystectomy"
  Q
- ; 
+ ;
 HLFSCT ; SNOMED CT MAP for health factors
  K SCTA,SCTX
  S SCTA(266919005)="5^Never smoked tobacco"
@@ -342,5 +342,5 @@ HLFSCT ; SNOMED CT MAP for health factors
  S SCTX("15")="266890009^Family History of Alcoholism"
  S SCTX("13")="371434005^History of Alcoholism"
  S SCTX("12")="219009^Current drinker of alcohol"
- Q 
+ Q
  ;

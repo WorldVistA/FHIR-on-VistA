@@ -1,5 +1,5 @@
 SYNRGSHM ;ven/gpl - RGNET SHIM ;2018-08-17  3:28 PM
- ;;0.1;VISTA FHIR SERVER;;Aug 17, 2018;Build 47
+ ;;0.1;VISTA FHIR SERVER;;Aug 17, 2018
  ;
  ; Authored by George P. Lilly 2019
  ;
@@ -9,7 +9,7 @@ SYNRGSHM ;ven/gpl - RGNET SHIM ;2018-08-17  3:28 PM
 DETECT ; _rewrite_dhp exit for DHP RGNET SERVICES
  ; called from VPRJRSP or from %webrsp to detect RGNET URLs for DHP
  ; If RGNET is on the system for mapping...
- IF ROUTINE="" IF $D(^RGNET(996.52)) DO MATCHR5BG(.ROUTINE,.ARGS,.AUTHNODE)
+ IF ROUTINE="" IF $D(^RGNET(996.52)) DO MATCHRG(.ROUTINE,.ARGS,.AUTHNODE)
  ;
  Q
  ;
@@ -65,7 +65,7 @@ WSRGNET(RTN,FILTER) ; web service shim for RGNET web services
  ;
  Q
  ;
-GETRGR(SVC) ; extrinsic returns the routine associated with the 
+GETRGR(SVC) ; extrinsic returns the routine associated with the
  ; the RGNET web service SVC
  ; returns -1 if not found
  N SYNRTN S SYNRTN=-1
@@ -86,7 +86,7 @@ GETRGR(SVC) ; extrinsic returns the routine associated with the
  ;
  Q SYNRTN
  ;
-DHPR(HAND) ; extrinsic returns 
+DHPR(HAND) ; extrinsic returns
  ;the DHP processing routine for the handler HAND
  N ZI,DHPRTN
  S DHPRTN=""
@@ -125,4 +125,4 @@ DHPPARMS(ARY,CMD) ; pulls the DHP and other parameters out of the line
  . S @ARY@(ZP1)=""
  Q
  ;
- 
+

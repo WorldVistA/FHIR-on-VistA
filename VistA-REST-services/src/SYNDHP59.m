@@ -1,5 +1,5 @@
-SYNDHP59 ; HC/art - HealthConcourse - get care plan data for a patient ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP59 ; HC/art - HealthConcourse - get care plan data for a patient ;05/07/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -72,7 +72,7 @@ PATCPALLI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Get Patient Care Plans for ICN
  ; validate ICN
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" QUIT
- ; 
+ ;
  ; get patient IEN from ICN
  N PATIEN S PATIEN=$O(^DPT("AFICN",DHPICN,""))
  I PATIEN="" S RETSTA="-1^Internal data structure error" QUIT
@@ -158,7 +158,7 @@ PATCPI(RETSTA,DHPICN,VRESID,RETJSON) ; Patient Care Plan(s) for ICN and Visit ID
  ;
  ; Input:
  ;   DHPICN  - patient ICN (unique patient identifier across all VistA systems)
- ;   VRESID  - Visit resource ID, "_" piece 4 is the visit ien 
+ ;   VRESID  - Visit resource ID, "_" piece 4 is the visit ien
  ;   RETJSON - J = Return JSON
  ;             F = Return FHIR
  ;             0 = Return Care Plan string (default)
@@ -172,7 +172,7 @@ PATCPI(RETSTA,DHPICN,VRESID,RETJSON) ; Patient Care Plan(s) for ICN and Visit ID
  ;
  ; validate ICN
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" Q
- ; 
+ ;
  ; get patient IEN from ICN
  N PATIEN S PATIEN=$O(^DPT("AFICN",DHPICN,""))
  ;
@@ -214,5 +214,44 @@ GETONE(RETSTA,PATIEN,VRESID) ;get care plan(s) for a visit
  ;
  ;I $G(DEBUG) W ! ZWRITE RETSTA
  ;
+ QUIT
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="2434609669V691690"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D PATCPALLI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="2434609669V691690"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATCPALLI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T3 ;
+ N ICN S ICN="2434609669V691690"
+ N VRESID S VRESID="V_500_1000010_34494"
+ N JSON S JSON=""
+ N RETSTA
+ D PATCPI(.RETSTA,ICN,VRESID,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T4 ;
+ N ICN S ICN="2434609669V691690"
+ N VRESID S VRESID="V_500_1000010_34494"
+ N JSON S JSON="J"
+ N RETSTA
+ D PATCPI(.RETSTA,ICN,VRESID,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
  QUIT
  ;

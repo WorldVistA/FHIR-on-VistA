@@ -1,5 +1,5 @@
-SYNDHP48 ; HC/PWC/art - HealthConcourse - retrieve patient medication data ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP48 ; HC/PWC/art - HealthConcourse - retrieve patient medication data ;05/07/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -261,21 +261,24 @@ PATMEDD(RETSTA,DHPICN,FRDAT,TODAT) ; Patient medication dispense for ICN
  ;
 TESTS ;
  Q
+ ;
 T1 ;
  N ICN S ICN=""
  F  S ICN=$O(^DPT("AFICN",ICN)) Q:ICN=""  D
  .W !!!,ICN,!!!
  .D PATMEDS(.RETSTA,ICN)
- .ZWRITE RETSTA
+ .W $$ZW^SYNDHPUTL("RETSTA")
  .W !!!
  Q
+ ;
 T2 ;
  N ICN S ICN=""
  F  S ICN=$O(^DPT("AFICN",ICN)) Q:ICN=""  D
  .W !,ICN,!
  .D PATMEDD(.RETSTA,ICN)
- .ZWRITE RETSTA
+ .W $$ZW^SYNDHPUTL("RETSTA"),!!
  Q
+ ;
 T3 ;
  N ICN,XPIEN
  S ICN=""
@@ -283,8 +286,36 @@ T3 ;
  .S XPIEN=$O(^DPT("AFICN",ICN,""))
  .W !,ICN,!,XPIEN,!,^DPT(XPIEN,0),!
  .D PATMEDD(.RETSTA,ICN)
- .ZWRITE RETSTA
+ .W $$ZW^SYNDHPUTL("RETSTA"),!!
  Q
+ ;
+T4 ;
+ N ICN S ICN="10111V183702"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N RETSTA
+ D PATMEDA(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T5 ;
+ N ICN S ICN="10111V183702"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N RETSTA
+ D PATMEDD(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T6 ;
+ N ICN S ICN="10111V183702"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N RETSTA
+ D PATMEDS(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
  ;Statement
  ;IP S RETDESC=RETDESC_$G(IDENT)_U_$G(STATUS)_U_$G(DRUG)_U_$G(STDT)_U_"REASON"_U_$G(SITEA)_S_$G(ROUTE)_S_$G(DOSORD)_U_QTY_U_DAYS_U_RXN_P
  ;OP S RETDESC=RETDESC_$G(IDENT)_U_$G(STATUS)_U_$G(DRUG)_U_$G(IDATE)_U_"REASON"_U_$G(SITEA)_S_$G(ROUTE)_S_$G(DOSORD)_U_QTY_U_DAYS_U_RXN_P

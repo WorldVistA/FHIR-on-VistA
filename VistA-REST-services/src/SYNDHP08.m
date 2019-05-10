@@ -1,5 +1,5 @@
-SYNDHP08 ; HC/rbd/art - HealthConcourse - get patient flag data ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP08 ; HC/rbd/art - HealthConcourse - get patient flag data ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -20,7 +20,7 @@ PATFLGI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient flags for ICN
  ;             0 or null = Return patient flags string (default)
  ; Output:
  ;   RETSTA  - a delimited string that lists patient flag information
- ;             ICN^flag name|SNOMED code|flag record IEN|national or local|status|owner site|originating site|review date|resource id^...
+ ;             ICN^flag name|SNOMED CT code|flag record IEN|national or local|status|owner site|originating site|review date|resource id^...
  ;          or patient flags in JSON format
  ;
  S FRDAT=$S($G(FRDAT):$$HL7TFM^XLFDT(FRDAT),1:1000101)
@@ -32,7 +32,7 @@ PATFLGI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient flags for ICN
  ; validate ICN
  I $G(DHPICN)="" S RETSTA="-1^What Patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" QUIT
- ; 
+ ;
  N PATIEN S PATIEN=$O(^DPT("AFICN",DHPICN,""))
  I PATIEN="" S RETSTA="-1^Internal data structure error" QUIT
  ;
@@ -83,4 +83,25 @@ FLAGS(FLAGARR,PATIEN,DHPICN,FRDAT,TODAT) ; get flags for a patient
  . S FLAGS=FLAGS_U_FLAGDESC_P_FLAGREC
  ;
  QUIT FLAGS
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="10189V514254"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D PATFLGI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="10189V514254"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATFLGI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;

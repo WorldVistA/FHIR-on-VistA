@@ -1,5 +1,5 @@
-SYNDHP41 ; HC/rdb/art - HealthConcourse - retrieve patient appointments ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP41 ; HC/rdb/art - HealthConcourse - retrieve patient appointments ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -21,17 +21,17 @@ PATAPTI(RETSTA,DHPICN,FRDAT,TODAT) ; Patient appointments for ICN
  ;          ICN ^ Patient IEN _ Appt Date (HL7) | Clinic | Appt Status | purpose of visit | Appt Type | Resource ID ^...
  ;
  ; bypass for CQM
- ; 
+ ;
  ; ***********
  ; *********** Important Note for open source community
  ; ***********
  ; *********** Perspecta - who developed this source code and have released it to the open source
  ; *********** need the following six lines to remain intact
- ; 
+ ;
  ;I DHPICN="1686299845V246594" D  Q
  ;.S RETSTA="1686299845V246594^101916_201704281200-0500|GENERAL MEDICINE||UNSCHED. VISIT|REGULAR"
  ;
- ; *********** the above lines will be redacted by Perspecta at some suitable juncture to 
+ ; *********** the above lines will be redacted by Perspecta at some suitable juncture to
  ; *********** be determined by Perspecta
  ; ***********
  ; *********** End of Important Note for open source community
@@ -44,7 +44,7 @@ PATAPTI(RETSTA,DHPICN,FRDAT,TODAT) ; Patient appointments for ICN
  ; validate ICN
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" Q
- ; 
+ ;
  ; get patient IEN from ICN
  S PATIEN=$O(^DPT("AFICN",DHPICN,""))
  I PATIEN="" S RETSTA="-1^Internal data structure error" QUIT
@@ -78,4 +78,14 @@ APPTS(PATIEN,DHPICN,FRDAT,TODAT) ; get appointments for a patient
  .S APPTREC=ZARR(DHPICN,APPTDTTM)
  .S HLFCTS=HLFCTS_U_APPTREC
  Q HLFCTS
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="1198013374V588739"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N RETSTA
+ D PATAPTI(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;

@@ -1,5 +1,5 @@
 SYNDHPTS1 ;AFHIL DHP/fjf/art - HealthConcourse - DHP REST handlers ;12/04/2018
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+ ;;1.0;DHP;;Jan 17, 2017
  ;
  ;
 CTRL ;
@@ -43,7 +43,7 @@ PATENCI ; get patient encounters for one patient by ICN
  ;
  D PATENCI^SYNDHP40(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT)
  Q
- ;  
+ ;
  ; --------------------------------------------------
  ;
 PATMEDS ; get patient medication statement for one patient by ICN

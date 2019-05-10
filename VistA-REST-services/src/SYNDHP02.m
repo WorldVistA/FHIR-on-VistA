@@ -1,5 +1,5 @@
-SYNDHP02 ; HC/rbd/art - HealthConcourse - get patient immunization data ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP02 ; HC/rbd/art - HealthConcourse - get patient immunization data ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -32,7 +32,7 @@ PATIMMI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient immunizations for ICN
  ; validate ICN
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" Q
- ; 
+ ;
  ; get patient IEN from ICN
  N PATIEN S PATIEN=$O(^DPT("AFICN",DHPICN,""))
  I PATIEN="" S RETSTA="-1^Internal data structure error" QUIT
@@ -94,29 +94,50 @@ IMMS(IMMARR,PATIEN,DHPICN,FRDAT,TODAT) ; get immunizations for a patient
  Q HLFCTS
  ; for a given pt, returns Unique ID |Imm. Enc. Visit Dt | Imm. CVX Code | Imm. Description | Series Indicator ; Description |
  ;                            Imm. Given Date  | Loc. of Enc. | Reaction Indicator ; Description | Imm. Provider
- ; 
- ;  Series can be:   'P' FOR PARTIALLY COMPLETE 
- ;                   'C' FOR COMPLETE 
- ;                   'B' FOR BOOSTER 
- ;                   '1' FOR SERIES 1 
- ;                   '2' FOR SERIES 2 
- ;                   '3' FOR SERIES 3 
- ;                   '4' FOR SERIES 4 
- ;                   '5' FOR SERIES 5 
- ;                   '6' FOR SERIES 6 
- ;                   '7' FOR SERIES 7 
+ ;
+ ;  Series can be:   'P' FOR PARTIALLY COMPLETE
+ ;                   'C' FOR COMPLETE
+ ;                   'B' FOR BOOSTER
+ ;                   '1' FOR SERIES 1
+ ;                   '2' FOR SERIES 2
+ ;                   '3' FOR SERIES 3
+ ;                   '4' FOR SERIES 4
+ ;                   '5' FOR SERIES 5
+ ;                   '6' FOR SERIES 6
+ ;                   '7' FOR SERIES 7
  ;                   '8' FOR SERIES 8
  ;
  ;  Reactions can be:  '1' FOR FEVER
- ;                     '2' FOR IRRITABILITY; 
- ;                     '3' FOR LOCAL REACTION OR SWELLING; 
- ;                     '4' FOR VOMITING; 
- ;                     '5' FOR RASH OR ITCHING; 
- ;                     '6' FOR LETHARGY; 
- ;                     '7' FOR CONVULSIONS; 
- ;                     '8' FOR ARTHRITIS OR ARTHRALGIAS; 
- ;                     '9' FOR ANAPHYLAXIS OR COLLAPSE; 
- ;                     '10' FOR RESPIRATORY DISTRESS; 
- ;                     '11' FOR OTHER; 
+ ;                     '2' FOR IRRITABILITY;
+ ;                     '3' FOR LOCAL REACTION OR SWELLING;
+ ;                     '4' FOR VOMITING;
+ ;                     '5' FOR RASH OR ITCHING;
+ ;                     '6' FOR LETHARGY;
+ ;                     '7' FOR CONVULSIONS;
+ ;                     '8' FOR ARTHRITIS OR ARTHRALGIAS;
+ ;                     '9' FOR ANAPHYLAXIS OR COLLAPSE;
+ ;                     '10' FOR RESPIRATORY DISTRESS;
+ ;                     '11' FOR OTHER;
  ;                     '0' FOR NONE;
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="10110V004877"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D PATIMMI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="10110V004877"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATIMMI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;

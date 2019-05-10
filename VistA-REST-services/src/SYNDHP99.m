@@ -1,5 +1,5 @@
-SYNDHP99 ; HC/art - HealthConcourse - retrieve VistA data for a resource id ;04/04/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP99 ; HC/art - HealthConcourse - retrieve VistA data for a resource id ;05/08/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -9,8 +9,9 @@ GETREC(RETSTR,RESID) ; Get VistA record for Resource ID
  ;Inputs: RETSTR - return string, by reference
  ;        RESID  - resource id - V_site_file#_record#
  ;Output: RETSTR - VistA record as a JSON string
- ;              or error message   
+ ;              or error message
  ;
+ S ^TMP("ZZZ")=RESID_"^333"
  new UL set UL="_"
  new P set P="|"
  set DUZ=$$DUZ^SYNDHP69
@@ -36,7 +37,9 @@ GETREC(RETSTR,RESID) ; Get VistA record for Resource ID
  set FILE=$p(RESID,UL,3)
  set RECORD=$p(RESID,UL,4)
  if '$d(VFILES(FILE)) set RETSTR="{""error:"":""this file is currently not supported""}" QUIT
+ set:FILE=2.98 RECORD=+$O(^DPT(RECORD,"S",0))_","_RECORD_","
  if $$GET1^DIQ(FILE,RECORD_",",.01)="" set RETSTR="{""error:"":""the record was not found""}" QUIT
+ set RECORD=$p(RESID,UL,4)
  ;
  new GETTER
  set GETTER=$p($g(VFILES(FILE)),P,1)
@@ -49,6 +52,7 @@ GETREC(RETSTR,RESID) ; Get VistA record for Resource ID
  ;
 FILELIST ;file#|GETer routine|file name
  ;;2|GETPATIENT^SYNDHP20|Patient
+ ;;2.98|GETPATAPPT^SYNDHP25|Patient Appointments
  ;;4|GET1SITE^SYNDHP10|Institution
  ;;26.13|GET1FLAG^SYNDHP17|PRF Assignment (flags)
  ;;44|GETHLOC^SYNDHP22|Hospital location
@@ -63,13 +67,29 @@ FILELIST ;file#|GETer routine|file name
  ;;404.57|TEAMPOS^SYNDHP18|Team Position
  ;;404.58|GET1TEAM^SYNDHP18|Team History
  ;;404.59|TEAMPOS^SYNDHP18|Team Position History
- ;;627.8|GET1DXMH^SYNDHP17|Diagnostic Report-Mental Health
+ ;;627.8|GET1MHDX^SYNDHP17|Diagnostic Report-Mental Health
+ ;;8925|GET1TIU^SYNDHP24|TIU Document
  ;;9000010|GET1VISIT^SYNDHP13|Visit
  ;;9000010.06|GET1VPROV^SYNDHP23|V Provider
  ;;9000010.07|GET1VPOV^SYNDHP13|V POV
  ;;9000010.11|GET1IMMUN^SYNDHP12|V Immunization
- ;;90000100.18|GET1VCPT^SYNDHP14|V CPT
+ ;;9000010.18|GET1VCPT^SYNDHP14|V CPT
  ;;9000010.23|GET1HLF^SYNDHP15|V Health Factors
  ;;9000010.71|GET1VSCODE^SYNDHP14|V Standard Codes
  ;;9000011|GET1PROB^SYNDHP11|Problem
  ;;zzzzz
+ ;
+T1 ;
+ N RESID S RESID="V_500_9000010_34494"
+ N RETSTA
+ D GETREC(.RETSTA,RESID)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T2 ;
+ N RESID S RESID="V_500_2.98_33"
+ N RETSTA
+ D GETREC(.RETSTA,RESID)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;

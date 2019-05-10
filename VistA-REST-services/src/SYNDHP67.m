@@ -1,5 +1,5 @@
-SYNDHP67 ; AFHIL/fjf/art - HealthConcourse - retrieve patient data ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP67 ; AFHIL/fjf/art - HealthConcourse - retrieve patient TIU notes ;05/07/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -117,15 +117,26 @@ NOTSTAT(X) ; Note status mapping
  S XNS("unsigned")="preliminary"
  S XNS("untranscribed")="preliminary"
  S XNS("unverified")="preliminary"
- ; 
+ ;
  Q:$D(XNS(X)) $P(XNS(X),U)
  Q "error - composition status not recognised"
  ;
- ;
+ ; ----------- Unit Test -----------
 T1 ;
+ N ZXC
  D PATTIUI(.ZXC,"5000000001V324625")
  Q
 T2 ;
- K ZXS
+ N ZXS
  D PATTIUI(.ZXS,"11004V412157")
  Q
+ ;
+T3 ;
+ N ICN S ICN="9009373208V847154"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N RETSTA
+ D PATTIUI(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;

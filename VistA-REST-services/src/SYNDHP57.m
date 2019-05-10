@@ -1,5 +1,5 @@
-SYNDHP57 ; HC/fjf/art - HealthConcourse - get patient allergies ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP57 ; HC/fjf/art - HealthConcourse - get patient allergies ;05/07/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -99,7 +99,7 @@ ALLERGIES(ALLARRAY,PATIEN,DHPICN,FRDAT,TODAT) ; get allergies for a patient
  . . S ALLERGIES(x,y)=AID_U_REACTION_U_ENTBY_U_ENTDATE_U_RSEV_U_ATYPET
  . M ALLARRAY("Allergies",ALLIEN)=ALLERGY ;
  . ;
- . I $G(DEBUG) D 
+ . I $G(DEBUG) D
  . . W "ADATE:",ADATE,!
  . . W "REACTANT:",REACTANT,!
  . . W "ALGE:",ALGE,!
@@ -266,20 +266,31 @@ KILL ;
  ;K ALLERGY,AVERT,ATYPE,S,ALGN,PSDRUG
  Q
  ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="10111V183702"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D PATALLI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
  ;
- Q  ; disembodied quit
+T2 ;
+ N ICN S ICN="10111V183702"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATALLI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
 TESTS ;
-DEMTEST0 ; pass
- D PATDEM^SYNDHP47(.RETSTA,"HYPERTENSION,PATIENT FEMALE",666111938,19280913,"F")
- ZWRITE RETSTA
- Q
 ALLTEST0 ; pass
  D PATALLI(.RETSTA,"10111V183702")
- ZWRITE RETSTA
- Q
-CONTEST0 ; pass
- D PATCONDS^SYNDHP03(.RETSTA,"HYPERTENSION,PATIENT FEMALE",666111938,19280913,"F")
- ZWRITE RETSTA
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
  Q
 PROTEST ; in keeping with the spirit of the times
  n icn,pien
@@ -290,9 +301,9 @@ PROTEST ; in keeping with the spirit of the times
  ..q:'$d(^GMR(120.8,"B",pien))
  ..k output
  ..k (icn,pien)
- ..d PATALLI^SYNDHP57(.output,icn)
+ ..d PATALLI(.output,icn)
  ..;i output["RXNORM" q
  ..;i output["NDFRT" q
  ..;i output'["VANDF" q
- ..W !!!!!!!! zwrite output
+ ..W !!!!!!!! W $$ZW^SYNDHPUTL("output")
  q

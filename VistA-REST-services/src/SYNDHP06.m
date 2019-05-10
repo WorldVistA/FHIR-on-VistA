@@ -1,5 +1,5 @@
-SYNDHP06 ; HC/rbd/art - HealthConcourse - get hospital location and institution data ;04/03/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP06 ; HC/rbd/art - HealthConcourse - get hospital location and institution data ;05/07/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -81,4 +81,21 @@ INSTS(HLOCNAME,HLOCARR) ; get locations for encounters for a patient
  .S HLOC=HLOC_U_HLIEN_P_HLREC
  ;
  Q HLOC
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N LOCNAME S LOCNAME="GENERAL MEDICINE"
+ N JSON S JSON=""
+ N RETSTA
+ D HOSINSTI(.RETSTA,LOCNAME,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N LOCNAME S LOCNAME="GENERAL MEDICINE"
+ N JSON S JSON="J"
+ N RETSTA
+ D HOSINSTI(.RETSTA,LOCNAME,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;

@@ -1,5 +1,5 @@
-SYNDHP56 ; HC/ART - HealthConcourse - retrieve patient mental health observations ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP56 ; HC/ART - HealthConcourse - retrieve patient mental health observations ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -22,7 +22,7 @@ PATOBS(RETSTA,NAME,SSN,DOB,GENDER,FRDAT,TODAT) ; get Observations for a patient 
  ;   FRDAT   - from date (inclusive), optional, compared to date given (MH) date/time of diagnosis (GAF)
  ;   TODAT   - to date (inclusive), optional, compared to date given (MH) date/time of diagnosis (GAF)
  ; Output:
- ;   RETSTA  - a delimited string that lists LOINC and SNOMED CDT codes for the patient Observations
+ ;   RETSTA  - a delimited string that lists LOINC and SNOMED CT codes for the patient Observations
  ;           - ICN^SCT code|descrption|LOINC code|description|instrument name|date given|clinic name|ordered by|scale:score|identifier
  ;
  S FRDAT=$S($G(FRDAT):$$HL7TFM^XLFDT(FRDAT),1:1000101)
@@ -53,13 +53,13 @@ PATOBSI(RETSTA,DHPICN,FRDAT,TODAT) ; Patient Observations for ICN
  ;   FRDAT   - from date (inclusive), optional, compared to date given (MH) date/time of diagnosis (GAF)
  ;   TODAT   - to date (inclusive), optional, compared to date given (MH) date/time of diagnosis (GAF)
  ; Output:
- ;   RETSTA  - a delimited string that lists LOINC and SNOMED CDT codes for the patient Observations
- ;           - ICN^LOINC code|description|SCT code|descrption|Instrument Name|date given|clinic name|ordered by|scale:score|resource ID^...
+ ;   RETSTA  - a delimited string that lists LOINC and SNOMED CT codes for the patient Observations
+ ;           - ICN^LOINC code|description|SCT code|description|Instrument Name|date given|clinic name|ordered by|scale:score|resource ID^...
  ;
  ; validate ICN
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" Q
- ; 
+ ;
  S FRDAT=$S($G(FRDAT):$$HL7TFM^XLFDT(FRDAT),1:1000101)
  S TODAT=$S($G(TODAT):$$HL7TFM^XLFDT(TODAT),1:9991231)
  I $G(DEBUG) W !,"FRDAT: ",FRDAT,"   TODAT: ",TODAT,!
@@ -139,7 +139,7 @@ MHOBS(PATIEN,FRDAT,TODAT) ;Mental Health Observations
  . . S RESULT=SCALE_":"_SCORE
  . . S PID=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_ADMINNBR_S_FNBR2_S_RESIEN
  . . ;
- . . ;Look-up LOINC CODE & SNOMED code
+ . . ;Look-up LOINC CODE & SNOMED CT code
  . . S LDESC=INSTNAME_" Result"
  . . S SDESC=INSTNAME_" Result"
  . . S LOINC=""
@@ -246,4 +246,14 @@ GAFOBS(PATIEN,FRDAT,TODAT) ;get GAF score
  ;I $G(DEBUG) W ! ZWRITE SERPROCS
  ;
  QUIT SERPROCS
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="5000000352V586511"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N RETSTA
+ D PATOBSI(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;

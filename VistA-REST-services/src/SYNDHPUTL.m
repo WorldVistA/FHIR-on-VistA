@@ -1,5 +1,5 @@
 SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;04/08/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -136,7 +136,7 @@ GETIEN(ZZFILE,ZZNAME) ;Get IEN for name
  QUIT ZZIEN
  ;
 UICN(PATIEN) ; ICN for IEN
- ; 
+ ;
  Q $$GET1^DIQ(2,PATIEN_",",991.1)
  ;
 ICN(IEN) ; obtain ICN
@@ -204,7 +204,7 @@ CTRLS(X) ; strip control characters
  ;
 ZW(VAR) ; simulate Caché or GT.M ZW or ZWRITE fuction
  ; VAR - variable to be ZWritten
- ; 
+ ;
  N TSUB,I
  W $G(@VAR)
  S TSUB=VAR F I=1:1 S TSUB=$Q(@TSUB) Q:TSUB'[VAR  W !,TSUB,"=",@TSUB

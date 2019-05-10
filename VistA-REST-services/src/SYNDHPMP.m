@@ -1,10 +1,10 @@
 SYNDHPMP ; AFHIL/FJF - HealthConcourse - terminology mapping ;03/26/2019
- ;;0.1;VISTA SYNTHETIC DATA LOADER;;Aug 17, 2018;Build 47
+ ;;0.1;VISTA SYNTHETIC DATA LOADER;;Aug 17, 2018
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
 MAP(MAP,CODE,DIR,IOE) ; Return a mapped code for a given code
- ; 
+ ;
  ;--------------------------------------------------------------------
  ;
  ; Input:
@@ -28,13 +28,13 @@ MAP(MAP,CODE,DIR,IOE) ; Return a mapped code for a given code
  ;   IOE  - use internal or exernal mappings
  ;       I for internal SYN VistA(default)
  ;       H for external Health Concourse
- ; 
+ ;
  ; Output:
  ;   1^map target code
  ;   or -1^exception
  ;
  ; -------------------------------------------------------------------
- ; 
+ ;
 MSTART ;
  ;
  N MAPA,MAPJ,MAPJ8,NODE,STA,RET,DOI,TAR,URL,C,P,SUB
@@ -50,7 +50,7 @@ MSTART ;
  .; check for result returned from exernal server
  .; change numbers in valueString attribute to string
  .D NTS("MAPJ")
- .; decode the JSON into M array 
+ .; decode the JSON into M array
  .D DECODE^XLFJSON("MAPJ","MAPA")
  .I '$D(MAPA) S STA=-1,TAR="code not mapped" Q
  .; convert the number_" " back to a number
@@ -82,7 +82,7 @@ TRMURL(EXSRV) ; create url of mapping service
  ; once we have url - infuse it with mapping identifier and source code
  ; currently Health Concourse is only supported external server
  ; for additional servers add appropriate url builder below
- ; 
+ ;
  ; Health Concourse
  I EXSRV="H" D
  .S URL="https://terminology-service.dev.openplatform.healthcare/vista2/"_MAP_"?searchString="_CODE
@@ -145,7 +145,7 @@ T3V ;
  D DECODE^XLFJSON("MAPSV","MAPSVO")
  ; mh2sct vista
  S URLMV="https://terminology-service.dev.openplatform.healthcare/vista/mh2sct?searchString=PHQ-2"
- S RET=$$GETURL^XTHC10(URLMV,,"MAPMV") 
+ S RET=$$GETURL^XTHC10(URLMV,,"MAPMV")
  D DECODE^XLFJSON("MAPMV","MAPMVO")
  ;
  W !,URLSV,!!
@@ -163,7 +163,7 @@ T4V ;
  ; now scan json in MPASV to find string that look like numbers
  ; and convert them to strings by concateneating space
  D NTS("MAPSV")
- ; 
+ ;
  D DECODE^XLFJSON("MAPSV","MAPSVO")
  ; now that json decodon complete remove space
  ;D RMS("MAPSVO")
@@ -204,4 +204,4 @@ RMS(JSONA) ; convert numeric string to a number
  .S VALUE=+VALUE
  .S @N=VALUE
  Q
- 
+

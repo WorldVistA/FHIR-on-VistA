@@ -1,5 +1,5 @@
 SYNPRE1 ; HC/art - HealthConcourse - Pre Install for SYN*1.0*2 ;04/10/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;

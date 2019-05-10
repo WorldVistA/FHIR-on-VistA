@@ -1,5 +1,5 @@
-SYNTSTRS ; HC/art - HealthConcourse - test rest services ;04/19/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNTSTRS ; HC/art - HealthConcourse - test rest services ;05/09/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -10,7 +10,7 @@ EN ;Run service tests
  W #,!,?10,"HealthConcourse Get VistA Data REST Services Unit Tests",!
  ;
  N X,Y,DIR,DTOUT,DUOUT,DIRUT,DIROUT
- S DIR(0)="SO^G:General Service Tests;I:ICN Batch Tests;U:Unit Tests"
+ S DIR(0)="SO^G:General Service Testing;I:ICN Batch Tests;U:Unit Tests"
  S DIR("A")="Type"
  ;S DIR("B")=""
  D ^DIR
@@ -66,9 +66,9 @@ UT ;unit test for get VistA data REST services
  N TOTFAIL S TOTFAIL=0
  N STARTTM S STARTTM=$$NOW^XLFDT()
  ;
- N RET,RETDATA,RETHDR,STR,URL,URLNAME,URLIEN,URLDESC,URLSTR,URLSRVC,PF,IENS,IDX,TIMEOUT,POS
+ N RET,RETDATA,RETHDR,STR,URL,URLNAME,URLIEN,URLDESC,URLSTR,URLSRVC,PF,IENS,IDX,TIMEOUT,POS,ANOMALY
  N IEN S IEN=0
- ;F  S IEN=$O(^SYN(2002.1,IEN)) QUIT:IEN>26  D
+ ;F  S IEN=$O(^SYN(2002.1,IEN)) QUIT:IEN>274  D
  F  S IEN=$O(^SYN(2002.1,IEN)) QUIT:'+IEN  D
  . S URL=$$GET1^DIQ(2002.1,IEN,.01)
  . S URLNAME=$P($P(URL,"/",4),"?",1)
@@ -86,7 +86,7 @@ UT ;unit test for get VistA data REST services
  . . S URLDESC=$$GET1^DIQ(996.52099,IENS,.01)
  . W:URLNAME'=LASTRS !,"-------------------------------------------------------------------",!
  . S LASTRS=URLNAME
- . W !,"***** ",URLNAME," * ",URLDESC,$S(URL["JSON=J":" (JSON)",1:""),"  ",$S(PF="F":"(Fail)",1:"(Pass)"),!!
+ . W !,"***** ",IEN," * ",URLNAME," * ",URLDESC,$S(URL["JSON=J":" (JSON)",1:""),$S(PF="F":" * (Fail)",1:" * (Pass)"),!!
  . W "URL: ",URLSTR,!
  . ; call the service
  . S TIMEOUT=30
@@ -97,10 +97,17 @@ UT ;unit test for get VistA data REST services
  . I +RET'=200 D  QUIT
  . . W ">>Error from Kernel call: ",+RET_":"_$P(RET,U,2),!!
  . . S CNTKER=CNTKER+1
+ . . S:PF="P" ANOMALY(IEN)="Test should pass"
  . S POS=$O(RETDATA(""))
- . I (+RETDATA(POS)=-1)!(RETDATA(POS)["{""error:""") D  QUIT
+ . I POS="" D  QUIT
+ . . W ">>Error: no data returned: ",RET,!!
+ . . S CNTERR=CNTERR+1
+ . . S:PF="P" ANOMALY(IEN)="Test should pass"
+ . I ($P(RETDATA(POS),U,1)=-1)!(RETDATA(POS)["error")!(RETDATA(POS)["ERROR") D  QUIT
  . . W ">>Error from service: ",RETDATA(POS),!!
  . . S CNTERR=CNTERR+1
+ . . S:PF="P" ANOMALY(IEN)="Test should pass"
+ . S:PF="F" ANOMALY(IEN)="Test should fail"
  . I MODE="O" D
  . . W "Returned data:",!
  . . N x S x=""
@@ -122,9 +129,17 @@ UT ;unit test for get VistA data REST services
  W "Total to fail: ",$J(TOTFAIL,6),?33,"Failed: ",$J(CNTKER+CNTERR,6),!
  W ?35,"Kernel call:  ",$J(CNTKER,6),!
  W ?35,"Service call: ",$J(CNTERR,6),!
+ ;
  W !,"Start time:   ",$$FMTE^XLFDT(STARTTM,7),!
  W "End time:     ",$$FMTE^XLFDT(ENDTM,7),!
  W "Elapsed time: ",ELAPSED,!
+ ;
+ I $D(ANOMALY) D
+ . W !,"Anomalies:",!
+ . W "Test",?9,"Comment",!
+ . S x=""
+ . F  S x=$O(ANOMALY(x)) QUIT:x=""  D
+ . . W "  ",x,?9,ANOMALY(x),!
  ;
  QUIT
  ;
@@ -133,11 +148,11 @@ UT ;unit test for get VistA data REST services
 UI ;User Interface to run service tests
  ;
  N X,Y,DIR,DTOUT,DUOUT,DIRUT,DIROUT
- S DIR(0)="SB^P:Pick from lists;E:Enter URL"
- S DIR("A")="Mode: (P)ick from lists (E)nter URL"
+ S DIR(0)="SB^P:Pick from lists;U:Enter URL"
+ S DIR("A")="Mode: (P)ick from lists, or enter (U)RL"
  ;S DIR("B")=""
- S DIR("?")="Enter P or E"
- S DIR("??")="Enter P or E"
+ S DIR("?")="Enter P or U"
+ S DIR("??")="Enter P or U"
  D ^DIR
  I $D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT) QUIT
  N MODE S MODE=Y
@@ -165,7 +180,9 @@ UI ;User Interface to run service tests
  I +RET'=200 D  QUIT
  . W ">>Error from Kernel call: ",+RET_":"_$P(RET,U,2),!!
  N POS S POS=$O(RETDATA(""))
- I (+RETDATA(POS)=-1)!(RETDATA(POS)["{""error:""") D  QUIT
+ I POS="" D  QUIT
+ . W ">>Error: no data returned: ",RET,!!
+ I ($P(RETDATA(POS),U,1)=-1)!(RETDATA(POS)["error")!(RETDATA(POS)["ERROR") D  QUIT
  . W ">>Error from service: ",RETDATA(POS),!!
  W "Returned data:",!
  N x S x=""
@@ -178,6 +195,21 @@ UI ;User Interface to run service tests
  ;
  QUIT
  ;
+ ; check status of web call
+ I +RET'=200 D  QUIT
+ . W ">>Error from Kernel call: ",+RET_":"_$P(RET,U,2),!!
+ . S CNTKER=CNTKER+1
+ . S:PF="P" ANOMALY(IEN)="Test should pass"
+ S POS=$O(RETDATA(""))
+ I POS="" D  QUIT
+ . W ">>Error: no data returned: ",RET,!!
+ . S CNTERR=CNTERR+1
+ . S:PF="P" ANOMALY(IEN)="Test should pass"
+ I ($P(RETDATA(POS),U,1)=-1)!(RETDATA(POS)["error")!(RETDATA(POS)["ERROR") D  QUIT
+ . W ">>Error from service: ",RETDATA(POS),!!
+ . S CNTERR=CNTERR+1
+ . S:PF="P" ANOMALY(IEN)="Test should pass"
+ S:PF="F" ANOMALY(IEN)="Test should fail"
  ;----------------- functions -----------------
  ;
 GETSERVER() ;Choose a server name
@@ -187,8 +219,8 @@ GETSERVER() ;Choose a server name
  S SERVERS(1)="http://localhost:8001/"_U_"localhost"
  W !,"Servers:",!
  W 1,?3,$P(SERVERS(1),"/",3),!
- ;F n=1:1 S STR=$P($T(urlli+n^SYNDTS89),";;",2) QUIT:STR["urlend"  D
- F n=1:1 S STR=$P($T(urlli+n),";;",2) QUIT:STR["urlend"  D
+ ;F n=1:1 S STR=$P($T(urlli+n),";;",2) QUIT:STR["urlend"  D
+ F n=1:1 S STR=$P($T(urlli+n^SYNDTS89),";;",2) QUIT:STR["urlend"  D
  . S SERVER=$$TRIM^XLFSTR($P(STR,";",1))
  . S DESC=$$TRIM^XLFSTR($P(STR,";",2))
  . S SERVERS(n+1)=SERVER_U_DESC
@@ -252,7 +284,7 @@ GETPARAMS() ;Define the Parameter(s)
  N PARAMS S PARAMS=""
  N X,Y,DIR,DTOUT,DUOUT,DIRUT,DIROUT
  N PNBR
- F PNBR=1:1 D  QUIT:Y="" 
+ F PNBR=1:1 D  QUIT:Y=""
  . S DIR(0)="FAO^3:50"
  . S DIR("A")="P"_PNBR_": "
  . ;S DIR("B")=""
@@ -285,15 +317,23 @@ GETURL() ;Enter a URL
  ;------------------- data -------------------
  ;
 urlli ; list of url roots
- ;;http://ec2-18-208-29-125.compute-1.amazonaws.com:8003/;              AWS dev
- ;;https://vista.dev.openplatform.healthcare/rgnet-web/;                k8 dev
- ;;urlend
- ;;http://syn.vistaplex.org/;                                           GT.M server
- ;;https://vista.demo-staging.openplatform.healthcare/rgnet-web/;       k8 demo-staging
- ;;https://vista.demo.openplatform.healthcare/rgnet-web/;               k8 demo 
- ;;https://vista-general.dev.openplatform.healthcare/rgnet-web/;        tardis general
- ;;https://vista-emergency.dev.openplatform.healthcare/rgnet-web/;      tardis emergency
- ;;https://vista-specialization.dev.openplatform.healthcare/rgnet-web/; tardis specialization
+ ;;http://localhost:9080/;   AWS dev %webreq
+ ;;http://ec2-18-208-29-125.compute-1.amazonaws.com:8001/;awsdev;                AWS dev
+ ;;http://ec2-18-208-29-125.compute-1.amazonaws.com:9080/;awsdevshm;             AWS dev shim
+ ;;https://vista.dev.openplatform.healthcare/rgnet-web/;k8dev;                   k8 dev
+ ;;https://vista.dev.openplatform.healthcare/vpr-web/;k8devshm;                  k8 dev shim
+ ;;https://vista.demo-staging.openplatform.healthcare/rgnet-web/;k8demstag;      k8 demo-staging
+ ;;https://vista.demo-staging.openplatform.healthcare/rgnet-web/;k8demstagshm;   k8 demo-staging shim
+ ;;https://vista.demo.openplatform.healthcare/rgnet-web/;k8demo;                 k8 demo
+ ;;https://vista.demo.openplatform.healthcare/vpr-web/;k8demoshm;                k8 demo shim
+ ;;https://vista-general.dev.openplatform.healthcare/rgnet-web/;targen;          tardis general
+ ;;https://vista-general.dev.openplatform.healthcare/vpr-web/;targenshm;         tardis general shim
+ ;;https://vista-emergency.dev.openplatform.healthcare/rgnet-web/;taremer;       tardis emergency
+ ;;https://vista-emergency.dev.openplatform.healthcare/vpr-web/;taremershm;      tardis emergency shim
+ ;;https://vista-specialization.dev.openplatform.healthcare/rgnet-web/;tarspec;  tardis specialization
+ ;;https://vista-specialization.dev.openplatform.healthcare/vpr-web/;tarspecshm; tardis specialization shim
+ ;;http://shadow.vistaplex.org/;shadvplex;                                       GT.M server
+ ;;http://syn.vistaplex.org/;synvplex;                                           GT.M server
  ;;urlend
  Q
  ;

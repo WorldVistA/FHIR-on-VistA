@@ -1,5 +1,5 @@
 SYNDHP54 ; HC/rbd/art - HealthConcourse - retrieve patient provider data ;04/12/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -31,7 +31,7 @@ PATPRVI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient encounter providers for ICN
  ; validate ICN
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" Q
- ; 
+ ;
  ; get patient IEN from ICN
  S PATIEN=$O(^DPT("AFICN",DHPICN,""))
  I PATIEN="" S RETSTA="-1^Internal data structure error" QUIT
@@ -105,4 +105,25 @@ PRVS(ENCPROV,PATIEN,DHPICN,FRDAT,TODAT) ; get providers for encounters for a pat
  ..; visit date|visit ien|provider name|role|prim/sec|address1|address2|city|state|zip|off. phone|specialization|resourceId
  ;
  QUIT ENCPROVS
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="1095759922V858498"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D PATPRVI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="1095759922V858498"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATPRVI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;

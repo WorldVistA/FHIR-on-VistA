@@ -1,17 +1,17 @@
-SYNDHP43 ; HC/fjf/art - HealthConcourse - validate a patient's traits ;04/03/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP43 ; HC/fjf/art - HealthConcourse - validate a patient's traits ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
  QUIT
  ;
 PATVAL(RETSTA,NAME,SSN,DOB,GENDER,MMDNM) ; validate patient for DHP
- ; 
+ ;
  ; this API validates a patient
  ; all the input criteria must be satisfied for the patient to be identified as a valid patient
  ;
  ; Input:
- ; NAME is the patient Name                   - REQUIRED 
+ ; NAME is the patient Name                   - REQUIRED
  ; SSN is the patient Social Security Number  - REQUIRED
  ; DOB is the patient Date of Birth           - REQUIRED
  ; GENDER is the patient gender               - REQUIRED
@@ -32,7 +32,7 @@ PATVAL(RETSTA,NAME,SSN,DOB,GENDER,MMDNM) ; validate patient for DHP
  S MMDNM=$G(MMDNM)
  ;
  ; do some validation for above traits and determine if patient is valid
- ; 
+ ;
  ; check to see if SSN is recognised by VistA system
  I '+$$SSNCHK(SSN) S RETSTA="-1^Patient SSN not recognised" Q
  ;
@@ -104,4 +104,14 @@ TESTF4 ; gender fail
 TESTF5 ; mother's maiden name fail
  D PATVAL(.RETSTA,"ZERO,PATIENT",666000000,19350505,"M","SCHROEDINGER")
  Q
+ ;
+T3 ;
+ S NAME="COPD,PATIENT MALE"
+ S SSN=666111957
+ S DOB=19800530
+ S GENDER="M"
+ N RETSTA
+ D PATVAL(.RETSTA,NAME,SSN,DOB,GENDER)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;

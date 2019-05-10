@@ -1,5 +1,5 @@
 SYNDHP64 ;DHP/AFHIL -fjf/art - HealthConcourse - Write Health Factors to VistA ; 31st July 2018
- ;;0.1;VISTA SYNTHETIC DATA LOADER;;Aug 17, 2018;Build 47
+ ;;0.1;VISTA SYNTHETIC DATA LOADER;;Aug 17, 2018
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -9,7 +9,7 @@ SYNDHP64 ;DHP/AFHIL -fjf/art - HealthConcourse - Write Health Factors to VistA ;
  ;
 HLFADD(RETSTA,DHPPAT,DHPLOC,DHPHLF,DHPCAT,DHPCODE,DHPCOD,DHPSYS,DHPDAT,DHPPRV,DHPVST,DHPCOM,DHPUCUM,DHPMAG) ;
  ; Create health factor
- ; 
+ ;
  ;
  ; Input:
  ;   DHPPAT  - Patient ICN (required)

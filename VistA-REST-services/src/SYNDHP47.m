@@ -1,11 +1,11 @@
-SYNDHP47 ; HC/fjf/art - HealthConcourse - retrieve patient demographics ;04/04/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP47 ; HC/fjf/art - HealthConcourse - retrieve patient demographics ;05/07/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
  QUIT
  ;
- ; ----------------  Get Patient Demographics  ----------------------  
+ ; ----------------  Get Patient Demographics  ----------------------
  ;
 PATDEM(RETSTA,NAME,SSN,DOB,GENDER,RETJSON) ; get demographics for a patient by traits
  S RETSTA="-1^This service has been retired"
@@ -45,12 +45,12 @@ PATDEM(RETSTA,NAME,SSN,DOB,GENDER,RETJSON) ; get demographics for a patient by t
  ;
  QUIT
  ;
- ; ----------------  Get Patient Demographics  ----------------------  
+ ; ----------------  Get Patient Demographics  ----------------------
  ;
 PATDEMI(RETSTA,DHPICN,RETJSON) ; get demographics for patient by ICN
- ; 
+ ;
  ; Return patient demographics for given patient ICN
- ; 
+ ;
  ; Input:
  ;   ICN     - unique patient identifier across all VistA systems
  ;   RETJSON - J = Return JSON
@@ -79,9 +79,9 @@ PATDEMI(RETSTA,DHPICN,RETJSON) ; get demographics for patient by ICN
  . D TOJASON^SYNDHPUTL(.PATARRAY,.RETSTA)
  ;
  QUIT
- ; 
+ ;
 GETPATS(PATARRAY,PATIEN) ; get demographics for patient
- ; 
+ ;
  N C,S,RESID,NAME,PHONE,SEX,DOB,ADRS1,ADRS2,ADRS3,CITY,STATE,ZIP,ICN
  S C=","
  S S="_"
@@ -105,11 +105,11 @@ GETPATS(PATARRAY,PATIEN) ; get demographics for patient
  M PATARRAY("Patients",PATIEN)=PATIENT
  ;
  QUIT PATSTR
- ; 
+ ;
 PATDEMAL(RETSTA,DHPICN,RETJSON) ; get demographics for all patients
- ; 
+ ;
  ; Return patient demographics for all patients
- ; 
+ ;
  ; Input:
  ;   DHPICN - "ALL"
  ;   RETJSON - J = Return JSON (JSON is not currently supported for this call)
@@ -150,9 +150,9 @@ PATDEMAL(RETSTA,DHPICN,RETJSON) ; get demographics for all patients
  Q
  ;
 PATDEMRNG(RETSTA,DHPPATS,RETJSON) ; get demographics for range of patients
- ; 
+ ;
  ; Return patient demographics for a range of patients
- ; 
+ ;
  ; Input:
  ;   DHPPATS - mmmmRnnnn where nnnn and mmmm are patient DFNs, mmmm<nnnn (limited 1000 patients for JSON)
  ;   RETJSON - J = Return JSON
@@ -198,31 +198,49 @@ PATDEMRNG(RETSTA,DHPPATS,RETJSON) ; get demographics for range of patients
  ;
  Q
  ;
- ;  -------------- Utility functions
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="1034989029V875306"
+ N JSON S JSON=""
+ N RETSTA
+ D PATDEMI(.RETSTA,ICN,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
  ;
-UICN(PATIEN) ; ICN for IEN
- ; 
- Q $$GET1^DIQ(2,PATIEN_",",991.1)
+T2 ;
+ N ICN S ICN="1034989029V875306"
+ N JSON S JSON="J"
+ N RETSTA
+ D PATDEMI(.RETSTA,ICN,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
  ;
-USCTPT(SCT) ; SNOMED CT preferred term
+T3 ;
+ N RANGE S RANGE="10R15"
+ N JSON S JSON=""
+ N RETSTA
+ D PATDEMRNG(.RETSTA,RANGE,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
  ;
- N LEX,XXX
- S LEX=$$CODE^LEXTRAN(SCT,"SCT")
- S XXX=""
- I $D(LEX("P")) S XXX=LEX("P")
- Q XXX
+T4 ;
+ N RANGE S RANGE="10R15"
+ N JSON S JSON="J"
+ N RETSTA
+ D PATDEMRNG(.RETSTA,RANGE,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
  ;
-UICNVAL(ICN) ; validate ICN
- ; Input: ICN
- ; Returns: 0 - invalid
- ;          1 - valid
- ;
- I $G(ICN)="" Q 0
- I '$D(^DPT("AFICN",ICN)) Q 0
- QUIT 1
+T5 ;
+ N ICN S ICN="ALL"
+ N JSON S JSON=""
+ N RETSTA
+ D PATDEMAL(.RETSTA,ICN,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
  ;
 TESTS ;
 DEMTEST0 ; pass
  D PATDEM(.RETSTA,"HYPERTENSION,PATIENT FEMALE",666111938,19280913,"F")
- ZWRITE RETSTA
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
  Q

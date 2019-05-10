@@ -1,5 +1,5 @@
-SYNDHP40 ; HC/fjf/art - HealthConcourse - retrieve patient encounters ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP40 ; HC/fjf/art - HealthConcourse - retrieve patient encounters ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -17,8 +17,8 @@ PATENCI(RETSTA,DHPICN,FRDAT,TODAT) ; Patient primary encounters for ICN
  ;   TODAT   - to date (inclusive), optional, compared to .01 VISIT/ADMIT DATE&TIME
  ; Output:
  ;   RETSTA  - a delimited string that lists the following information
- ;      PatientICN ^ RESOURSE ID ^ TYPE ^ ENCOUNTER DATE ^ REASON ^ ICD DIAGNOSIS CODE ; ICD DIAGNOSIS NAME 
- ;      ^ SERVICE CATEGORY ^ SOURCE ^  
+ ;      PatientICN ^ RESOURSE ID ^ TYPE ^ ENCOUNTER DATE ^ REASON ^ ICD DIAGNOSIS CODE ; ICD DIAGNOSIS NAME
+ ;      ^ SERVICE CATEGORY ^ SOURCE ^
  ;      ^ LOCATION OF ENCOUNTER , LOCATION ADDRESS SEPARATED BY SEMICOLONS ^ HOSPITAL LOCATION
  ;      ^ PROVIDER(S) SEPARATED BY SEMICOLONS
  ;
@@ -80,5 +80,15 @@ PATENCI(RETSTA,DHPICN,FRDAT,TODAT) ; Patient primary encounters for ICN
  . S RETDESC=RETDESC_$G(IDENT)_U_$G(TYPE)_U_$G(PERIOD)_U_$G(REASON)_U_$G(DIAGC)_S_$G(DIAGN)_U_$G(SERV)_U_$G(SOURCE)_U_$G(LOC)_C_$G(LOCA)_U_$G(HLOC)_U_PROV_P
  S RETSTA=DHPICN_U_RETDESC
  ;
+ QUIT
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="2676604935V204585"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N RETSTA
+ D PATENCI(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA")
  QUIT
  ;

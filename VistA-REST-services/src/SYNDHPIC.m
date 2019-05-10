@@ -1,10 +1,10 @@
 SYNDHPIC ;AFHIL DHP/fjf - HealthConcourse - get ICNs list ;03/28/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+ ;;1.0;DHP;;Jan 17, 2017
  Q
  ;
 ICNS(RETSTA,DHPCNT,DHPJSON) ; list all ICNs in a namespace
  ;
- ; Input: 
+ ; Input:
  ;   DHPCNT  - Number of ICN's to return
  ;               nn - Integer
  ;               A  - all (default)
@@ -14,7 +14,7 @@ ICNS(RETSTA,DHPCNT,DHPJSON) ; list all ICNs in a namespace
  ; Output:
  ;   ICN's in JSON format, or
  ;   ICN's in semicolon delimited text string
- ; 
+ ;
  N ICNAR,JSICNS,ICN,N,I
  S DHPCNT=$G(DHPCNT)
  S DHPCNT=$S(+DHPCNT>0:DHPCNT,1:"A")

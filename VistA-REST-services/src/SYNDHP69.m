@@ -1,5 +1,5 @@
 SYNDHP69 ;AFHIL-DHP/fjf - HealthConcourse - Common Utility Functions
- ;;0.1;VISTA SYNTHETIC DATA LOADER;;Aug 17, 2018;Build 47
+ ;;0.1;VISTA SYNTHETIC DATA LOADER;;Aug 17, 2018
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  Q
@@ -41,7 +41,7 @@ FACPAR(RETSTA,DHPFAC) ; Setup/delete faciltity identification parameter
  ;     SCLIN  - Specialist Clinic
  ;     HS     - HealthShare
  ;     @      - delete
- ;   
+ ;
  S RETSTA=0
  I "^ER^SCLIN^HOSP^HS^@"'[DHPFAC S RETSTA=0_"^error" Q
  I $$CKPRDF=0 S RETSTA=0_"^parameter definition error" Q

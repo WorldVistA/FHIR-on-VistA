@@ -1,5 +1,5 @@
 SYNDHP55 ; HC/art - HealthConcourse - retrieve patient procedures ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;

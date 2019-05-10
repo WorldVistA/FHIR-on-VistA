@@ -1,5 +1,5 @@
 SYNDTS89 ;AFHIL/HC/fjf - HealthConcourse - REST service tester ;03/28/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ; This routine tests the Health Concourse GETter REST services
  ;
@@ -9,14 +9,20 @@ SYNDTS89 ;AFHIL/HC/fjf - HealthConcourse - REST service tester ;03/28/2019
  ; that don't conveniently fit the above pattern
  ;
  ; the routine currently returns the REST call url for json and non-json
- ; plus the relevant data in the appropriate format for the resource 
+ ; plus the relevant data in the appropriate format for the resource
  ;
-ctrl(nopats) ;
+ctrl(nopats,server) ;
  ; Input:
  ;   nopats - number of patiens per system
- ;     if nopats is not passed or evaluates to 0 then all patiens will be tested
+ ;     if nopats is not passed or evaluates to 0 then all patiens
+ ;     will be tested
+ ;   server -
+ ;     if server is not defined in url roots then then all servers
+ ;     will be tested
+ ;
  ;
  ; create array of urls of systems to be tested
+ s server=$g(server,"none")
  d urlrts
  ;
  ; create array of patient data endpoints to be tested
@@ -26,8 +32,9 @@ ctrl(nopats) ;
  s (icn,url,endpoint)=""
  s nopats=$g(nopats)
  s s=";"
- s url=""
- f  s url=$o(urlrt(url)) q:url=""  d
+ s urlab=""
+ f  s urlab=$o(urlrt(urlab)) q:urlab=""  d
+ .s url=urlrt(urlab)
  .; find ICN's in namespace denoted by url+port
  .s icns=$$icnstr(url)
  .i +nopats=0 s nopats=$l(icns,s)
@@ -61,6 +68,7 @@ icnstr(url) ; create icn string for system at url
  s s=";"
  s icnurl=url_"DHPPATICNALL?JSON=T"
  s RET=$$GETURL^XTHC10(icnurl,,"icnar")
+ i +RET=-1 q RET
  s icnar=""
  s icns=$$xthc2st(.icnar)
  q icns
@@ -90,23 +98,34 @@ RESTurl(url,endpoint,icn,fromdt,todt,format) ; create REST service URL
  q url
  ;
 urlrts ; set up roots urls for healthConcourse dev
+ k urlrt
+ n s,t
  s s=";"
  f i=1:1 s t=$t(urlli+i) q:t["urlend"  d
- .s urlrt($p(t,s,3))=""
+ .s urlrt($p(t,s,4))=$p(t,s,3)
+ i $d(urlrt(server)) d
+ .s t=urlrt(server)
+ .k urlrt
+ .s urlrt(server)=t
  q
  ;
 urlli ; list of url roots
- ;;https://vista.dev.openplatform.healthcare/rgnet-web/;
- ;;urlend
- ;;http://syn.vistaplex.org/;                                           GT.M server
- ;;http://ec2-18-208-29-125.compute-1.amazonaws.com:8001/;              AWS dev
- ;;https://vista.dev.openplatform.healthcare/rgnet-web/;                k8 dev
- ;;http://syn.vistaplex.org/;                                           GT.M server
- ;;https://vista.demo-staging.openplatform.healthcare/rgnet-web/;       k8 demo-staging
- ;;https://vista.demo.openplatform.healthcare/rgnet-web/;               k8 demo 
- ;;https://vista-general.dev.openplatform.healthcare/rgnet-web/;        tardis general
- ;;https://vista-emergency.dev.openplatform.healthcare/rgnet-web/;      tardis emergency
- ;;https://vista-specialization.dev.openplatform.healthcare/rgnet-web/; tardis specialization
+ ;;http://ec2-18-208-29-125.compute-1.amazonaws.com:8001/;awsdev;                AWS dev
+ ;;http://ec2-18-208-29-125.compute-1.amazonaws.com:9080/;awsdevshm;             AWS dev shim
+ ;;https://vista.dev.openplatform.healthcare/rgnet-web/;k8dev;                   k8 dev
+ ;;https://vista.dev.openplatform.healthcare/vpr-web/;k8devshm;                  k8 dev shim
+ ;;https://vista.demo-staging.openplatform.healthcare/rgnet-web/;k8demstag;      k8 demo-staging
+ ;;https://vista.demo-staging.openplatform.healthcare/rgnet-web/;k8demstagshm;   k8 demo-staging shim
+ ;;https://vista.demo.openplatform.healthcare/rgnet-web/;k8demo;                 k8 demo
+ ;;https://vista.demo.openplatform.healthcare/vpr-web/;k8demoshm;                k8 demo shim
+ ;;https://vista-general.dev.openplatform.healthcare/rgnet-web/;targen;          tardis general
+ ;;https://vista-general.dev.openplatform.healthcare/vpr-web/;targenshm;         tardis general shim
+ ;;https://vista-emergency.dev.openplatform.healthcare/rgnet-web/;taremer;       tardis emergency
+ ;;https://vista-emergency.dev.openplatform.healthcare/vpr-web/;taremershm;      tardis emergency shim
+ ;;https://vista-specialization.dev.openplatform.healthcare/rgnet-web/;tarspec;  tardis specialization
+ ;;https://vista-specialization.dev.openplatform.healthcare/vpr-web/;tarspecshm; tardis specialization shim
+ ;;http://shadow.vistaplex.org/;shadvplex;                                       GT.M server
+ ;;http://syn.vistaplex.org/;synvplex;                                           GT.M server
  ;;urlend
  q
  ;

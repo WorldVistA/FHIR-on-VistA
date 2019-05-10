@@ -1,5 +1,5 @@
-SYNDHP58 ; HC/art - HealthConcourse - get care team data ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP58 ; HC/art - HealthConcourse - get care team data ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -96,5 +96,40 @@ GETTEAM(RETSTA,TEAMID,RETJSON) ;get one care team
  ;
  ;I $G(DEBUG) W ! ZWRITE RETSTA W !
  ;
+ QUIT
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N TEAMID S TEAMID="BLUE"
+ N JSON S JSON=""
+ N RETSTA
+ D GETTEAM(.RETSTA,TEAMID,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N TEAMID S TEAMID=5
+ N JSON S JSON="J"
+ N RETSTA
+ D GETTEAM(.RETSTA,TEAMID,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T3 ;
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D GETTEAMS(.RETSTA,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T4 ;
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D GETTEAMS(.RETSTA,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
  QUIT
  ;

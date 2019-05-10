@@ -1,5 +1,5 @@
-SYNDHP17 ; HC/art - HealthConcourse - get MH Diagnosis, Flags data ;03/01/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP17 ; HC/art - HealthConcourse - get MH Diagnosis, Flags data ;05/08/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -7,86 +7,89 @@ SYNDHP17 ; HC/art - HealthConcourse - get MH Diagnosis, Flags data ;03/01/2019
  ;
  ;-------------------------------------------------------------
  ;
-GET1DXMH(DXMH,DXMHIEN,RETJSON,DXMHJ) ;get one MH Diagnosis record
- ;inputs: DXMHIEN - MH Diagnosis IEN
+GET1MHDX(MHDX,MHDXIEN,RETJSON,MHDXJ) ;get one Mental Health Diagnosis record
+ ;inputs: MHDXIEN - Mental Health Diagnosis IEN
  ;        RETJSON - J = Return JSON
- ;output: DXMH  - array of MH Diagnosis data, by reference
- ;        DXMHJ - JSON structure of MH Diagnosis data, by reference
+ ;output: MHDX  - array of Mental Health Diagnosis data, by reference
+ ;        MHDXJ - JSON structure of Mental Health Diagnosis data, by reference
  ;
- I $G(DEBUG) W !,"--------------------------- MH Diagnosis -----------------------------",!
+ I $G(DEBUG) W !,"--------------------------- Mental Health Diagnosis ----------------------------",!
  N S S S="_"
  N SITE S SITE=$P($$SITE^VASITE,"^",3)
  N FNBR1 S FNBR1=627.8 ;DIAGNOSTIC RESULTS - MENTAL HEALTH
  N FNBR2 S FNBR2=627.82 ;MODIFIERS
- N IENS1 S IENS1=DXMHIEN_","
+ N FNBR3 S FNBR3=627.81 ;COMMENT
+ N IENS1 S IENS1=MHDXIEN_","
  ;
- N DXMHARR,DXMHERR
- D GETS^DIQ(FNBR1,IENS1,"**","EI","DXMHARR","DXMHERR")
- ;I $G(DEBUG) W ! ZWRITE DXMHARR
- ;I $G(DEBUG),$D(DXMHERR) W ">>ERROR<<" ZWRITE DXMHERR
- I $D(DXMHERR) D  QUIT
- . S DXMH("Dxmh","ERROR")=DXMHIEN
- . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.DXMH,.DXMHJ)
- S DXMH("Dxmh","dxmhIen")=DXMHIEN
- S DXMH("Dxmh","resourceType")="DiagnosticReport"
- S DXMH("Dxmh","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_DXMHIEN
- S DXMH("Dxmh","fileEntryDate")=$G(DXMHARR(FNBR1,IENS1,.01,"E"))
- S DXMH("Dxmh","fileEntryDateFM")=$G(DXMHARR(FNBR1,IENS1,.01,"I"))
- S DXMH("Dxmh","fileEntryDateHL7")=$$FMTHL7^XLFDT($G(DXMHARR(FNBR1,IENS1,.01,"I")))
- S DXMH("Dxmh","fileEntryDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(DXMHARR(FNBR1,IENS1,.01,"I")))
- S DXMH("Dxmh","patientName")=$G(DXMHARR(FNBR1,IENS1,.02,"E"))
- S DXMH("Dxmh","patientNameId")=$G(DXMHARR(FNBR1,IENS1,.02,"I"))
- S DXMH("Dxmh","patientICN")=$$GET1^DIQ(2,DXMH("Dxmh","patientNameId")_",",991.1)
- S DXMH("Dxmh","dateTimeOfDiagnosis")=$G(DXMHARR(FNBR1,IENS1,.03,"E"))
- S DXMH("Dxmh","dateTimeOfDiagnosisFM")=$G(DXMHARR(FNBR1,IENS1,.03,"I"))
- S DXMH("Dxmh","dateTimeOfDiagnosisHL7")=$$FMTHL7^XLFDT($G(DXMHARR(FNBR1,IENS1,.03,"I")))
- S DXMH("Dxmh","dateTimeOfDiagnosisFHIR")=$$FMTFHIR^SYNDHPUTL($G(DXMHARR(FNBR1,IENS1,.03,"I")))
- S DXMH("Dxmh","diagnosisBy")=$G(DXMHARR(FNBR1,IENS1,.04,"E"))
- S DXMH("Dxmh","diagnosisById")=$G(DXMHARR(FNBR1,IENS1,.04,"I"))
- S DXMH("Dxmh","transcriber")=$G(DXMHARR(FNBR1,IENS1,.05,"E"))
- S DXMH("Dxmh","transcriberId")=$G(DXMHARR(FNBR1,IENS1,.05,"I"))
- S DXMH("Dxmh","diagnosis")=$G(DXMHARR(FNBR1,IENS1,1,"E"))
- S DXMH("Dxmh","diagnosisId")=$G(DXMHARR(FNBR1,IENS1,1,"I"))
- S DXMH("Dxmh","diagnosisDesc")=$P($$ICDDX^ICDEX(DXMH("Dxmh","diagnosis")),U,4)
- S DXMH("Dxmh","statusVPRINRu")=$G(DXMHARR(FNBR1,IENS1,5,"E"))
- S DXMH("Dxmh","statusVPRINRuCd")=$G(DXMHARR(FNBR1,IENS1,5,"I"))
- S DXMH("Dxmh","condition")=$G(DXMHARR(FNBR1,IENS1,7,"E"))
- S DXMH("Dxmh","conditionCd")=$G(DXMHARR(FNBR1,IENS1,7,"I"))
- S DXMH("Dxmh","inactivatedDate")=$G(DXMHARR(FNBR1,IENS1,8,"E"))
- S DXMH("Dxmh","inactivatedDateFM")=$G(DXMHARR(FNBR1,IENS1,8,"I"))
- S DXMH("Dxmh","inactivatedDateHL7")=$$FMTHL7^XLFDT($G(DXMHARR(FNBR1,IENS1,8,"I")))
- S DXMH("Dxmh","inactivatedDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(DXMHARR(FNBR1,IENS1,8,"I")))
- S DXMH("Dxmh","statusChanged")=$G(DXMHARR(FNBR1,IENS1,9,"E"))
- S DXMH("Dxmh","statusChangedCd")=$G(DXMHARR(FNBR1,IENS1,9,"I"))
- S DXMH("Dxmh","dxls")=$G(DXMHARR(FNBR1,IENS1,10,"E"))
- S DXMH("Dxmh","dxlsCd")=$G(DXMHARR(FNBR1,IENS1,10,"I"))
- S DXMH("Dxmh","psychosocialStressor")=$G(DXMHARR(FNBR1,IENS1,60,"E"))
- S DXMH("Dxmh","severityCode")=$G(DXMHARR(FNBR1,IENS1,61,"E"))
- S DXMH("Dxmh","severityCodeCd")=$G(DXMHARR(FNBR1,IENS1,61,"I"))
- S DXMH("Dxmh","axis5")=$G(DXMHARR(FNBR1,IENS1,65,"E"))
- S DXMH("Dxmh","patientType")=$G(DXMHARR(FNBR1,IENS1,66,"E"))
- S DXMH("Dxmh","patientTypeCd")=$G(DXMHARR(FNBR1,IENS1,66,"I"))
- N MODIFIER
+ N MHDXARR,MHDXERR
+ D GETS^DIQ(FNBR1,IENS1,"**","EI","MHDXARR","MHDXERR")
+ I $G(DEBUG) W ! ZWRITE MHDXARR
+ I $G(DEBUG),$D(MHDXERR) W !,">>ERROR<<" W ! ZWRITE MHDXERR
+ I $D(MHDXERR) D  QUIT
+ . S MHDX("Mhdiag","ERROR")=MHDXIEN
+ . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.MHDX,.MHDXJ)
+ S MHDX("Mhdiag","mhdiagIen")=MHDXIEN
+ S MHDX("Mhdiag","resourceType")="Observation"
+ S MHDX("Mhdiag","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_MHDXIEN
+ S MHDX("Mhdiag","fileEntryDate")=$G(MHDXARR(FNBR1,IENS1,.01,"E"))
+ S MHDX("Mhdiag","fileEntryDateFM")=$G(MHDXARR(FNBR1,IENS1,.01,"I"))
+ S MHDX("Mhdiag","fileEntryDateHL7")=$$FMTHL7^XLFDT($G(MHDXARR(FNBR1,IENS1,.01,"I")))
+ S MHDX("Mhdiag","fileEntryDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(MHDXARR(FNBR1,IENS1,.01,"I")))
+ S MHDX("Mhdiag","patientName")=$G(MHDXARR(FNBR1,IENS1,.02,"E"))
+ S MHDX("Mhdiag","patientNameId")=$G(MHDXARR(FNBR1,IENS1,.02,"I"))
+ S MHDX("Mhdiag","dateTimeOfDiagnosis")=$G(MHDXARR(FNBR1,IENS1,.03,"E"))
+ S MHDX("Mhdiag","dateTimeOfDiagnosisFM")=$G(MHDXARR(FNBR1,IENS1,.03,"I"))
+ S MHDX("Mhdiag","dateTimeOfDiagnosisHL7")=$$FMTHL7^XLFDT($G(MHDXARR(FNBR1,IENS1,.03,"I")))
+ S MHDX("Mhdiag","dateTimeOfDiagnosisFHIR")=$$FMTFHIR^SYNDHPUTL($G(MHDXARR(FNBR1,IENS1,.03,"I")))
+ S MHDX("Mhdiag","diagnosisBy")=$G(MHDXARR(FNBR1,IENS1,.04,"E"))
+ S MHDX("Mhdiag","diagnosisById")=$G(MHDXARR(FNBR1,IENS1,.04,"I"))
+ S MHDX("Mhdiag","transcriber")=$G(MHDXARR(FNBR1,IENS1,.05,"E"))
+ S MHDX("Mhdiag","transcriberId")=$G(MHDXARR(FNBR1,IENS1,.05,"I"))
+ S MHDX("Mhdiag","diagnosis")=$G(MHDXARR(FNBR1,IENS1,1,"E"))
+ S MHDX("Mhdiag","diagnosisId")=$G(MHDXARR(FNBR1,IENS1,1,"I"))
+ S MHDX("Mhdiag","statusVPRINRu")=$G(MHDXARR(FNBR1,IENS1,5,"E"))
+ S MHDX("Mhdiag","statusVPRINRuCd")=$G(MHDXARR(FNBR1,IENS1,5,"I"))
+ S MHDX("Mhdiag","condition")=$G(MHDXARR(FNBR1,IENS1,7,"E"))
+ S MHDX("Mhdiag","conditionCd")=$G(MHDXARR(FNBR1,IENS1,7,"I"))
+ S MHDX("Mhdiag","inactivatedDate")=$G(MHDXARR(FNBR1,IENS1,8,"E"))
+ S MHDX("Mhdiag","inactivatedDateFM")=$G(MHDXARR(FNBR1,IENS1,8,"I"))
+ S MHDX("Mhdiag","inactivatedDateHL7")=$$FMTHL7^XLFDT($G(MHDXARR(FNBR1,IENS1,8,"I")))
+ S MHDX("Mhdiag","inactivatedDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(MHDXARR(FNBR1,IENS1,8,"I")))
+ S MHDX("Mhdiag","statusChanged")=$G(MHDXARR(FNBR1,IENS1,9,"E"))
+ S MHDX("Mhdiag","statusChangedCd")=$G(MHDXARR(FNBR1,IENS1,9,"I"))
+ S MHDX("Mhdiag","dxls")=$G(MHDXARR(FNBR1,IENS1,10,"E"))
+ S MHDX("Mhdiag","dxlsCd")=$G(MHDXARR(FNBR1,IENS1,10,"I"))
+ S MHDX("Mhdiag","psychosocialStressor")=$G(MHDXARR(FNBR1,IENS1,60,"E"))
+ S MHDX("Mhdiag","severityCode")=$G(MHDXARR(FNBR1,IENS1,61,"E"))
+ S MHDX("Mhdiag","severityCodeCd")=$G(MHDXARR(FNBR1,IENS1,61,"I"))
+ S MHDX("Mhdiag","axis5")=$G(MHDXARR(FNBR1,IENS1,65,"E"))
+ S MHDX("Mhdiag","patientType")=$G(MHDXARR(FNBR1,IENS1,66,"E"))
+ S MHDX("Mhdiag","patientTypeCd")=$G(MHDXARR(FNBR1,IENS1,66,"I"))
  N IENS2 S IENS2=""
- F  S IENS2=$O(DXMHARR(FNBR2,IENS2)) QUIT:IENS2=""  D
- . S MODIFIER=$NA(DXMH("Dxmh","modifierss","modifiers",+IENS2))
- . S @MODIFIER@("modifier")=$G(DXMHARR(FNBR2,IENS2,.01,"E"))
- . S @MODIFIER@("modifierId")=$G(DXMHARR(FNBR2,IENS2,.01,"I"))
- . S @MODIFIER@("numberOfAnswer")=$G(DXMHARR(FNBR2,IENS2,1,"E"))
- . S @MODIFIER@("standsFor")=$G(DXMHARR(FNBR2,IENS2,2,"E"))
- . S @MODIFIER@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_DXMHIEN_S_FNBR2_S_+IENS2
+ F  S IENS2=$O(MHDXARR(FNBR2,IENS2)) QUIT:IENS2=""  D
+ . N MOD S MOD=$NA(MHDX("Mhdiag","modifierss","modifiers",+IENS2))
+ . S @MOD@("modifier")=$G(MHDXARR(FNBR2,IENS2,.01,"E"))
+ . S @MOD@("modifierId")=$G(MHDXARR(FNBR2,IENS2,.01,"I"))
+ . S @MOD@("numberOfAnswer")=$G(MHDXARR(FNBR2,IENS2,1,"E"))
+ . S @MOD@("standsFor")=$G(MHDXARR(FNBR2,IENS2,2,"E"))
+ . S @MOD@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_MHDXIEN_S_FNBR2_S_+IENS2
+ N IENS3 S IENS3=""
+ F  S IENS3=$O(MHDXARR(FNBR3,IENS3)) QUIT:IENS3=""  D
+ . N COMMENT S COMMENT=$NA(MHDX("Mhdiag","comments","comment",+IENS3))
+ . S @COMMENT@("comment")=$G(MHDXARR(FNBR3,IENS3,.01,"E"))
+ . S @COMMENT@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_MHDXIEN_S_FNBR3_S_+IENS3
  ;
  ;get SCT code
- S DXMH("Dxmh","diagnosisSCT")=""
- I DXMH("Dxmh","diagnosis")'="" D
- . N DATE S DATE=$S(DXMH("Dxmh","dateTimeOfDiagnosisFM")'="":DXMH("Dxmh","dateTimeOfDiagnosisFM"),1:DXMH("Dxmh","fileEntryDateFM"))
+ S MHDX("Mhdiag","diagnosisSCT")=""
+ I MHDX("Mhdiag","diagnosis")'="" D
+ . N DATE S DATE=$S(MHDX("Mhdiag","dateTimeOfDiagnosisFM")'="":MHDX("Mhdiag","dateTimeOfDiagnosisFM"),1:MHDX("Mhdiag","fileEntryDateFM"))
  . N MAPPING S MAPPING=$S(DATE>3150930:"sct2icd",1:"sct2icdnine")
- . N SNOMED S SNOMED=$$MAP^SYNDHPMP(MAPPING,DXMH("Dxmh","diagnosis"),"I")
- . S DXMH("Dxmh","diagnosisSCT")=$S(+SNOMED=-1:"",1:$P(SNOMED,U,2))
+ . N SNOMED S SNOMED=$$MAP^SYNDHPMP(MAPPING,MHDX("Mhdiag","diagnosis"),"I")
+ . S MHDX("Mhdiag","diagnosisSCT")=$S(+SNOMED=-1:"",1:$P(SNOMED,U,2))
  ;
  ;I $G(DEBUG) W ! ZWRITE DXMH
  ;
- D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.DXMH,.DXMHJ)
+ D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.MHDX,.MHDXJ)
  ;
  QUIT
  ;

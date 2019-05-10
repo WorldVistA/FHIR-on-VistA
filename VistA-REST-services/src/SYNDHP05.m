@@ -1,5 +1,5 @@
-SYNDHP05 ; HC/fjf/art - HealthConcourse - retrieve patient diagnostic reports ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP05 ; HC/fjf/art - HealthConcourse - retrieve patient diagnostic reports ;05/08/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -25,13 +25,13 @@ PATDXRI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient diagnostic report for ICN
  ;          or patient diagnostic report data in JSON format
  ;
  ; bypass for CQM
- ; 
+ ;
  ; ***********
  ; *********** Important Note for open source community
  ; ***********
  ; *********** Perspecta - who developed this source code and have released it to the open source
  ; *********** need the following six lines to remain intact
- ; 
+ ;
  I DHPICN="2608649748V030771" D  QUIT
  . S RETSTA="2608649748V030771^IMG|final|20170101|PROVIDER,ONE|V_500_74_608|44388||Colon Endoscopy||| there are no previous colonoscopy."
  . S RETSTA=RETSTA_" Impression: There is no definite colonoscopic evidence of malignancy.2. Comparison to previous colonoscopy would be helpful to assure stability."
@@ -43,7 +43,7 @@ PATDXRI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient diagnostic report for ICN
  I DHPICN="1686299845V246594" D  QUIT
  . S RETSTA="1686299845V246594^MHDX|final|20170101|PROVIDER,ONE|V_500_74_608|F32.0|70747007|Major depressive disorder, single episode, mild"
  ;
- ; *********** the above lines will be redacted by Perspecta at some suitable juncture to 
+ ; *********** the above lines will be redacted by Perspecta at some suitable juncture to
  ; *********** be determined by Perspecta
  ; ***********
  ; *********** End of Important Note for open source community
@@ -51,7 +51,7 @@ PATDXRI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient diagnostic report for ICN
  ; validate ICN
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" QUIT
- ; 
+ ;
  S FRDAT=$S($G(FRDAT):$$HL7TFM^XLFDT(FRDAT),1:1000101)
  S TODAT=$S($G(TODAT):$$HL7TFM^XLFDT(TODAT),1:9991231)
  I $G(DEBUG) W !,"FRDAT: ",FRDAT,"   TODAT: ",TODAT,!
@@ -212,19 +212,19 @@ DXMH(DXRPTMH,PATIEN,FRDAT,TODAT) ;get Mental Health Diagnosis
  . S DXCODE=$$GET1^DIQ(FNBR1,IENS,1) ;diagnosis
  . QUIT:DXCODE=""
  . N DXMH
- . D GET1DXMH^SYNDHP17(.DXMH,MHIEN,0)
- . QUIT:$D(DXMH("Dxmh","ERROR"))
- . I $D(DXMH("Dxmh","ERROR")) M DXRPTMH("DxReportMH",MHIEN)=DXMH QUIT
+ . D GET1MHDX^SYNDHP17(.DXMH,MHIEN,0)
+ . QUIT:$D(DXMH("Mhdiag","ERROR"))
+ . I $D(DXMH("Mhdiag","ERROR")) M DXRPTMH("DxReportMH",MHIEN)=DXMH QUIT
  . ;I $G(DEBUG) ZWRITE DXMH
- . S DXDTFM=DXMH("Dxmh","dateTimeOfDiagnosisFM") ;date/time of diagnosis fm format
+ . S DXDTFM=DXMH("Mhdiag","dateTimeOfDiagnosisFM") ;date/time of diagnosis fm format
  . QUIT:((DXDTFM\1)<FRDAT)!((DXDTFM\1)>TODAT)  ;quit if outside of requested date range
- . S DXDTHL=DXMH("Dxmh","dateTimeOfDiagnosisHL7") ;hl7 format date/time of diagnosis
- . S DXBY=DXMH("Dxmh","diagnosisBy") ;diagnosed by
- . S DXCODE=DXMH("Dxmh","diagnosis") ;diagnosis
+ . S DXDTHL=DXMH("Mhdiag","dateTimeOfDiagnosisHL7") ;hl7 format date/time of diagnosis
+ . S DXBY=DXMH("Mhdiag","diagnosisBy") ;diagnosed by
+ . S DXCODE=DXMH("Mhdiag","diagnosis") ;diagnosis
  . S SDESC=$P($$ICDDX^ICDEX(DXCODE),U,4)
- . S STATUS=$$LOW^XLFSTR(DXMH("Dxmh","statusVPRINRu")) ;status
- . S PID=DXMH("Dxmh","resourceId")
- . S SNOMED=DXMH("Dxmh","diagnosisSCT")
+ . S STATUS=$$LOW^XLFSTR(DXMH("Mhdiag","statusVPRINRu")) ;status
+ . S PID=DXMH("Mhdiag","resourceId")
+ . S SNOMED=DXMH("Mhdiag","diagnosisSCT")
  . ;
  . ;^category|status|dateTime|provider|identifier|diag code|SCT|diag desc^...
  . S SEQ=SEQ+1
@@ -281,4 +281,25 @@ DXVISIT(DXRPTV,PATIEN,FRDAT,TODAT) ; get visit diagnostic report
  ;I $G(DEBUG) W ! ZWRITE DXRPTV
  ;
  QUIT SERPOV
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="10101V964144"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D PATDXRI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="10101V964144"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATDXRI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;

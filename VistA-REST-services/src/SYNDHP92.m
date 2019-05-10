@@ -1,5 +1,5 @@
-SYNDHP92 ; DHP/ART - DHP Save TIU Note ;01/26/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP92 ; HC/ART - HealthConcourse - DHP Save TIU Note ;01/26/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -24,7 +24,7 @@ CREATETIU(RETSTAT,DHPICN,TITLE,VISIT,TEXT,ESIG) ;save a TIU note for a patient
  ; get patient IEN from ICN
  N PATIEN S PATIEN=$O(^DPT("AFICN",DHPICN,""))
  I PATIEN="" S RETSTAT="-1^AFICN x-ref issue" QUIT
- ; 
+ ;
  ; validate TITLE
  I '$G(TITLE) S RETSTAT="-1^No title identifier" QUIT
  I '$D(^TIU(8925.1,TITLE,0)) S RETSTAT="-1^Title not found" QUIT

@@ -1,5 +1,5 @@
-SYNDHP01 ; HC/fjf/art - HealthConcourse - get patient vitals ;04/15/2019
- ;;1.0;DHP;;Jan 17, 2017;Build 47
+SYNDHP01 ; HC/fjf/art - HealthConcourse - get patient vitals ;05/04/2019
+ ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -26,7 +26,7 @@ PATVIT(RETSTA,NAME,SSN,DOB,GENDER,FRDAT,TODAT,RETJSON) ; get vitals for a patien
  ;   RETSTA  - a delimited string that lists the vitals for a patient
  ;           - ICN^SCT code for vital|SCT description of vital|value of vital|date|resource id^...
  ;          or patient vitals in JSON format
- ;              
+ ;
  ;     note:resource identifier will be:
  ;             "V"_SITE ID_FILE #_FILE IEN   e.g. V_500_120.5_930
  ;
@@ -68,7 +68,7 @@ PATVITI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient vitals for ICN
  ;   RETSTA  - a delimited string that lists the vitals for a patient
  ;           - ICN^SCT code for vital|SCT description of vital|value of vital|date|resource id^...
  ;          or patient vitals in JSON format
- ;              
+ ;
  ;     note:resource identifier will be:
  ;             "V"_SITE ID_FILE #_FILE IEN   e.g. V_500_120.5_930
  ;
@@ -131,4 +131,25 @@ VITS(PATVIT,PATIEN,DHPICN,FRDAT,TODAT) ; get vitals for a patient
  . . S VITALRTN=VITALRTN_U_SCT_P_VIT
  ;
  Q VITALRTN
+ ;
+ ; ----------- Unit Test -----------
+T1 ;
+ N ICN S ICN="2176287883V515136"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON=""
+ N RETSTA
+ D PATVITI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="2176287883V515136"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATVITI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
  ;
