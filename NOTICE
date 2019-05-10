@@ -1,0 +1,27 @@
+All M code (.m files) authored by Andrew Thompson & Ferdinand Frankson (c) Perspecta 2017-2019.
+All Java code (c) Perspecta 2017-2019.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+The project uses the following external projects as libraries, as presented in the following table:
+
+NAME                    LICENSE                    COPYRIGHT HOLDER/(c) YEARS if noted      CODE LOCATION
+---------               ------------------         -----------------------------------      -------------
+Spring Boot, Web        Apache 2.0                 Various                                  github.com/spring-projects
+HAPI FHIR               Apache 2.0                 University Health Network (c) 2015       github.com/jamesagnew/hapi-fhir
+Thymeleaf               Apache 2.0                 THYMELEAF Team (c) 2011-2016             github.com/thymeleaf
+JAX-RS API              Eclipse 2.0                Various                                  github.com/jax-rs
+okhttp                  Apache 2.0                 Square                                   github.com/square/okhttp
+json-path               Apache 2.0                 Jayway (c) 2017                          github.com/json-path/JsonPath
+junit                   Eclipse 2.0                Various                                  github.com/junit-team/junit5/
+RGNET Server            Apache 2.0                 Douglas Martin (c) 2017                  github.com/mdgeek/VistA-Network-Services
