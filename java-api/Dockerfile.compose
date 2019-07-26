@@ -1,0 +1,9 @@
+FROM openjdk:8-jdk-alpine
+ARG env
+ENV profile=${env}
+WORKDIR /fhir
+COPY java-api /fhir
+RUN sed -i 's/vistaUrl=http\:\/\/localhost\:9086/vistaUrl\=http\:\/\/vista\:9080/' /fhir/src/main/resources/application.properties
+RUN /fhir/gradlew clean build
+EXPOSE 8080
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom", "-Dspring.profiles.active=${profile}","-jar","/fhir/build/libs/healthconcourse-vista-fhir-api-1.0.0.jar"]
