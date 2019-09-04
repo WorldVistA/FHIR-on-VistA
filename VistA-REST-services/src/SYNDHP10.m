@@ -1,4 +1,4 @@
-SYNDHP10 ; HC/art - HealthConcourse - get institution data ;03/26/2019
+SYNDHP10 ; HC/art - HealthConcourse - get institution data ;06/24/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -28,14 +28,14 @@ GET1SITE(SITE,SITEIEN,RETJSON,SITEJ) ;get one Institution record
  ;
  N SITEARR,SITEERR
  D GETS^DIQ(FNBR1,IENS1,"**","EI","SITEARR","SITEERR")
- ;I $G(DEBUG) W ! ZWRITE SITEARR
- ;I $G(DEBUG),$D(SITEERR) W !,">>ERROR<<" ZWRITE SITEERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("SITEARR")
+ I $G(DEBUG),$D(SITEERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("SITEERR")
  I $D(SITEERR) D  QUIT
  . S SITE("Site","ERROR")=SITEIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.SITE,.SITEJ)
  S SITE("Site","siteIen")=SITEIEN
  S SITE("Site","resourceType")="Organization"
- S SITE("Site","resourceId")=$$RESID^SYNDHP69("V",SITEID)_S_FNBR1_S_SITEIEN
+ S SITE("Site","resourceId")=$$RESID^SYNDHP69("V",SITEID,FNBR1,SITEIEN)
  S SITE("Site","siteName")=$G(SITEARR(FNBR1,IENS1,.01,"E"))
  S SITE("Site","state")=$G(SITEARR(FNBR1,IENS1,.02,"E"))
  S SITE("Site","stateId")=$G(SITEARR(FNBR1,IENS1,.02,"I"))
@@ -95,7 +95,7 @@ GET1SITE(SITE,SITEIEN,RETJSON,SITEJ) ;get one Institution record
  . S @CONTACT@("area")=$G(SITEARR(FNBR2,IENS2,.02,"E"))
  . S @CONTACT@("areaId")=$G(SITEARR(FNBR2,IENS2,.02,"I"))
  . S @CONTACT@("phone")=$G(SITEARR(FNBR2,IENS2,.03,"E"))
- . S @CONTACT@("resourceId")=$$RESID^SYNDHP69("V",SITEID)_S_FNBR1_S_SITEIEN_S_FNBR2_S_+IENS2
+ . S @CONTACT@("resourceId")=$$RESID^SYNDHP69("V",SITEID,FNBR1,SITEIEN,FNBR2_U_+IENS2)
  N IENS3 S IENS3=""
  F  S IENS3=$O(SITEARR(FNBR3,IENS3)) QUIT:IENS3=""  D
  . N ASSOC S ASSOC=$NA(SITE("Site","associationss","associations",+IENS3))
@@ -103,7 +103,7 @@ GET1SITE(SITE,SITEIEN,RETJSON,SITEJ) ;get one Institution record
  . S @ASSOC@("associationsId")=$G(SITEARR(FNBR3,IENS3,.01,"I"))
  . S @ASSOC@("parentOfAssociation")=$G(SITEARR(FNBR3,IENS3,1,"E"))
  . S @ASSOC@("parentOfAssociationId")=$G(SITEARR(FNBR3,IENS3,1,"I"))
- . S @ASSOC@("resourceId")=$$RESID^SYNDHP69("V",SITEID)_S_FNBR1_S_SITEIEN_S_FNBR3_S_+IENS3
+ . S @ASSOC@("resourceId")=$$RESID^SYNDHP69("V",SITEID,FNBR1,SITEIEN,FNBR3_U_+IENS3)
  N IENS4 S IENS4=""
  F  S IENS4=$O(SITEARR(FNBR4,IENS4)) QUIT:IENS4=""  D
  . N EFFDATE S EFFDATE=$NA(SITE("Site","effectiveDateTimes","effectiveDateTime",+IENS4))
@@ -114,7 +114,7 @@ GET1SITE(SITE,SITEIEN,RETJSON,SITEJ) ;get one Institution record
  . S @EFFDATE@("status")=$G(SITEARR(FNBR4,IENS4,.02,"E"))
  . S @EFFDATE@("statusCd")=$G(SITEARR(FNBR4,IENS4,.02,"I"))
  . S @EFFDATE@("npi")=$G(SITEARR(FNBR4,IENS4,.03,"E"))
- . S @EFFDATE@("resourceId")=$$RESID^SYNDHP69("V",SITEID)_S_FNBR1_S_SITEIEN_S_FNBR4_S_+IENS4
+ . S @EFFDATE@("resourceId")=$$RESID^SYNDHP69("V",SITEID,FNBR1,SITEIEN,FNBR4_U_+IENS4)
  N IENS5 S IENS5=""
  F  S IENS5=$O(SITEARR(FNBR5,IENS5)) QUIT:IENS5=""  D
  . N TAXON S TAXON=$NA(SITE("Site","taxonomyCodes","taxonomyCode",+IENS5))
@@ -124,7 +124,7 @@ GET1SITE(SITE,SITEIEN,RETJSON,SITEJ) ;get one Institution record
  . S @TAXON@("primaryCodeCd")=$G(SITEARR(FNBR5,IENS5,.02,"I"))
  . S @TAXON@("status")=$G(SITEARR(FNBR5,IENS5,.03,"E"))
  . S @TAXON@("statusCd")=$G(SITEARR(FNBR5,IENS5,.03,"I"))
- . S @TAXON@("resourceId")=$$RESID^SYNDHP69("V",SITEID)_S_FNBR1_S_SITEIEN_S_FNBR5_S_+IENS5
+ . S @TAXON@("resourceId")=$$RESID^SYNDHP69("V",SITEID,FNBR1,SITEIEN,FNBR5_U_+IENS5)
  N IENS6 S IENS6=""
  F  S IENS6=$O(SITEARR(FNBR6,IENS6)) QUIT:IENS6=""  D
  . N HISTORY S HISTORY=$NA(SITE("Site","historys","history",+IENS6))
@@ -142,13 +142,13 @@ GET1SITE(SITE,SITEIEN,RETJSON,SITEJ) ;get one Institution record
  . S @HISTORY@("deactivatedFacilityStaCd")=$G(SITEARR(FNBR6,IENS6,.07,"I"))
  . S @HISTORY@("activatedFacility")=$G(SITEARR(FNBR6,IENS6,.08,"E"))
  . S @HISTORY@("activatedFacilityCd")=$G(SITEARR(FNBR6,IENS6,.08,"I"))
- . S @HISTORY@("resourceId")=$$RESID^SYNDHP69("V",SITEID)_S_FNBR1_S_SITEIEN_S_FNBR6_S_+IENS6
+ . S @HISTORY@("resourceId")=$$RESID^SYNDHP69("V",SITEID,FNBR1,SITEIEN,FNBR6_U_+IENS6)
  N IENS7 S IENS7=""
  F  S IENS7=$O(SITEARR(FNBR7,IENS7)) QUIT:IENS7=""  D
  . N ASSTYPE S ASSTYPE=$NA(SITE("Site","institutionAssociationTypess","institutionAssociationTypes",+IENS7))
  . S @ASSTYPE@("number")=$G(SITEARR(FNBR7,IENS7,.001,"E"))
  . S @ASSTYPE@("name")=$G(SITEARR(FNBR7,IENS7,.01,"E"))
- . S @ASSTYPE@("resourceId")=$$RESID^SYNDHP69("V",SITEID)_S_FNBR1_S_SITEIEN_S_FNBR7_S_+IENS7
+ . S @ASSTYPE@("resourceId")=$$RESID^SYNDHP69("V",SITEID,FNBR1,SITEIEN,FNBR7_U_+IENS7)
  N IENS8 S IENS8=""
  F  S IENS8=$O(SITEARR(FNBR8,IENS8)) QUIT:IENS8=""  D
  . N IDENT S IDENT=$NA(SITE("Site","identifiers","identifier",+IENS8))
@@ -160,9 +160,9 @@ GET1SITE(SITE,SITEIEN,RETJSON,SITEJ) ;get one Institution record
  . S @IDENT@("effectiveDateTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(SITEARR(FNBR8,IENS8,.03,"I")))
  . S @IDENT@("status")=$G(SITEARR(FNBR8,IENS8,.04,"E"))
  . S @IDENT@("statusCd")=$G(SITEARR(FNBR8,IENS8,.04,"I"))
- . S @IDENT@("resourceId")=$$RESID^SYNDHP69("V",SITEID)_S_FNBR1_S_SITEIEN_S_FNBR8_S_+IENS8
+ . S @IDENT@("resourceId")=$$RESID^SYNDHP69("V",SITEID,FNBR1,SITEIEN,FNBR8_U_+IENS8)
  ;
- ;I $G(DEBUG) W ! ZWRITE SITE
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("SITE")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.SITE,.SITEJ)
  ;

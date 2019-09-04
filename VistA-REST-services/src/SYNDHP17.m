@@ -1,4 +1,4 @@
-SYNDHP17 ; HC/art - HealthConcourse - get MH Diagnosis, Flags data ;05/08/2019
+SYNDHP17 ; HC/art - HealthConcourse - get MH Diagnosis, Flags data ;08/27/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -23,26 +23,29 @@ GET1MHDX(MHDX,MHDXIEN,RETJSON,MHDXJ) ;get one Mental Health Diagnosis record
  ;
  N MHDXARR,MHDXERR
  D GETS^DIQ(FNBR1,IENS1,"**","EI","MHDXARR","MHDXERR")
- I $G(DEBUG) W ! ZWRITE MHDXARR
- I $G(DEBUG),$D(MHDXERR) W !,">>ERROR<<" W ! ZWRITE MHDXERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("MHDXARR")
+ I $G(DEBUG),$D(MHDXERR) W !,">>ERROR<<" W ! W $$ZW^SYNDHPUTL("MHDXERR")
  I $D(MHDXERR) D  QUIT
  . S MHDX("Mhdiag","ERROR")=MHDXIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.MHDX,.MHDXJ)
  S MHDX("Mhdiag","mhdiagIen")=MHDXIEN
  S MHDX("Mhdiag","resourceType")="Observation"
- S MHDX("Mhdiag","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_MHDXIEN
+ S MHDX("Mhdiag","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,MHDXIEN)
  S MHDX("Mhdiag","fileEntryDate")=$G(MHDXARR(FNBR1,IENS1,.01,"E"))
  S MHDX("Mhdiag","fileEntryDateFM")=$G(MHDXARR(FNBR1,IENS1,.01,"I"))
  S MHDX("Mhdiag","fileEntryDateHL7")=$$FMTHL7^XLFDT($G(MHDXARR(FNBR1,IENS1,.01,"I")))
  S MHDX("Mhdiag","fileEntryDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(MHDXARR(FNBR1,IENS1,.01,"I")))
  S MHDX("Mhdiag","patientName")=$G(MHDXARR(FNBR1,IENS1,.02,"E"))
  S MHDX("Mhdiag","patientNameId")=$G(MHDXARR(FNBR1,IENS1,.02,"I"))
+ S MHDX("Mhdiag","patientNameICN")=$$GET1^DIQ(2,MHDX("Mhdiag","patientNameId")_",",991.1)
  S MHDX("Mhdiag","dateTimeOfDiagnosis")=$G(MHDXARR(FNBR1,IENS1,.03,"E"))
  S MHDX("Mhdiag","dateTimeOfDiagnosisFM")=$G(MHDXARR(FNBR1,IENS1,.03,"I"))
  S MHDX("Mhdiag","dateTimeOfDiagnosisHL7")=$$FMTHL7^XLFDT($G(MHDXARR(FNBR1,IENS1,.03,"I")))
  S MHDX("Mhdiag","dateTimeOfDiagnosisFHIR")=$$FMTFHIR^SYNDHPUTL($G(MHDXARR(FNBR1,IENS1,.03,"I")))
  S MHDX("Mhdiag","diagnosisBy")=$G(MHDXARR(FNBR1,IENS1,.04,"E"))
  S MHDX("Mhdiag","diagnosisById")=$G(MHDXARR(FNBR1,IENS1,.04,"I"))
+ S MHDX("Mhdiag","diagnosisByNPI")=$$GET1^DIQ(200,MHDX("Mhdiag","diagnosisById")_",",41.99) ;NPI
+ S MHDX("Mhdiag","diagnosisByResId")=$$RESID^SYNDHP69("V",SITE,200,MHDX("Mhdiag","diagnosisById"))
  S MHDX("Mhdiag","transcriber")=$G(MHDXARR(FNBR1,IENS1,.05,"E"))
  S MHDX("Mhdiag","transcriberId")=$G(MHDXARR(FNBR1,IENS1,.05,"I"))
  S MHDX("Mhdiag","diagnosis")=$G(MHDXARR(FNBR1,IENS1,1,"E"))
@@ -62,7 +65,7 @@ GET1MHDX(MHDX,MHDXIEN,RETJSON,MHDXJ) ;get one Mental Health Diagnosis record
  S MHDX("Mhdiag","psychosocialStressor")=$G(MHDXARR(FNBR1,IENS1,60,"E"))
  S MHDX("Mhdiag","severityCode")=$G(MHDXARR(FNBR1,IENS1,61,"E"))
  S MHDX("Mhdiag","severityCodeCd")=$G(MHDXARR(FNBR1,IENS1,61,"I"))
- S MHDX("Mhdiag","axis5")=$G(MHDXARR(FNBR1,IENS1,65,"E"))
+ S MHDX("Mhdiag","axis5-GAF")=$G(MHDXARR(FNBR1,IENS1,65,"E"))
  S MHDX("Mhdiag","patientType")=$G(MHDXARR(FNBR1,IENS1,66,"E"))
  S MHDX("Mhdiag","patientTypeCd")=$G(MHDXARR(FNBR1,IENS1,66,"I"))
  N IENS2 S IENS2=""
@@ -72,12 +75,12 @@ GET1MHDX(MHDX,MHDXIEN,RETJSON,MHDXJ) ;get one Mental Health Diagnosis record
  . S @MOD@("modifierId")=$G(MHDXARR(FNBR2,IENS2,.01,"I"))
  . S @MOD@("numberOfAnswer")=$G(MHDXARR(FNBR2,IENS2,1,"E"))
  . S @MOD@("standsFor")=$G(MHDXARR(FNBR2,IENS2,2,"E"))
- . S @MOD@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_MHDXIEN_S_FNBR2_S_+IENS2
+ . S @MOD@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,MHDXIEN,FNBR2_U_+IENS2)
  N IENS3 S IENS3=""
  F  S IENS3=$O(MHDXARR(FNBR3,IENS3)) QUIT:IENS3=""  D
  . N COMMENT S COMMENT=$NA(MHDX("Mhdiag","comments","comment",+IENS3))
  . S @COMMENT@("comment")=$G(MHDXARR(FNBR3,IENS3,.01,"E"))
- . S @COMMENT@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_MHDXIEN_S_FNBR3_S_+IENS3
+ . S @COMMENT@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,MHDXIEN,FNBR3_U_+IENS3)
  ;
  ;get SCT code
  S MHDX("Mhdiag","diagnosisSCT")=""
@@ -87,7 +90,7 @@ GET1MHDX(MHDX,MHDXIEN,RETJSON,MHDXJ) ;get one Mental Health Diagnosis record
  . N SNOMED S SNOMED=$$MAP^SYNDHPMP(MAPPING,MHDX("Mhdiag","diagnosis"),"I")
  . S MHDX("Mhdiag","diagnosisSCT")=$S(+SNOMED=-1:"",1:$P(SNOMED,U,2))
  ;
- ;I $G(DEBUG) W ! ZWRITE DXMH
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("DXMH")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.MHDX,.MHDXJ)
  ;
@@ -108,18 +111,18 @@ GET1FLAG(FLAG,FLAGIEN,RETJSON,FLAGJ) ;get one Flag record
  ;
  N FLAGARR,FLAGERR
  D GETS^DIQ(FNBR1,IENS1,"**","EI","FLAGARR","FLAGERR")
- ;I $G(DEBUG) W ! ZWRITE FLAGARR
- ;I $G(DEBUG),$D(FLAGERR) W ">>ERROR<<" ZWRITE FLAGERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("FLAGARR")
+ I $G(DEBUG),$D(FLAGERR) W ">>ERROR<<" W $$ZW^SYNDHPUTL("FLAGERR")
  I $D(FLAGERR) D  QUIT
  . S FLAG("Flag","ERROR")=FLAGIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.FLAG,.FLAGJ)
  S FLAG("Flag","flagIen")=FLAGIEN
- S FLAG("Flag","resourceType")="Observation"
- S FLAG("Flag","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_FLAGIEN
+ S FLAG("Flag","resourceType")="Flag"
+ S FLAG("Flag","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,FLAGIEN)
  S FLAG("Flag","number")=$G(FLAGARR(FNBR1,IENS1,.001,"E"))
  S FLAG("Flag","patientName")=$G(FLAGARR(FNBR1,IENS1,.01,"E"))
  S FLAG("Flag","patientNameId")=$G(FLAGARR(FNBR1,IENS1,.01,"I"))
- S FLAG("Flag","patientICN")=$$GET1^DIQ(2,FLAG("Flag","patientNameId")_",",991.1)
+ S FLAG("Flag","patientNameICN")=$$GET1^DIQ(2,FLAG("Flag","patientNameId")_",",991.1)
  S FLAG("Flag","flagName")=$G(FLAGARR(FNBR1,IENS1,.02,"E"))
  S FLAG("Flag","flagNameId")=$G(FLAGARR(FNBR1,IENS1,.02,"I"))
  S FLAG("Flag","status")=$G(FLAGARR(FNBR1,IENS1,.03,"E"))
@@ -133,16 +136,16 @@ GET1FLAG(FLAG,FLAGIEN,RETJSON,FLAGJ) ;get one Flag record
  S FLAG("Flag","reviewDateHL7")=$$FMTHL7^XLFDT($G(FLAGARR(FNBR1,IENS1,.06,"I")))
  S FLAG("Flag","reviewDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(FLAGARR(FNBR1,IENS1,.06,"I")))
  S FLAG("Flag","assignmentNarrative")=""
- N x S x=""
- F  S x=$O(FLAGARR(FNBR1,IENS1,1,x)) QUIT:'+x  D
- . S FLAG("Flag","assignmentNarrative")=FLAG("Flag","assignmentNarrative")_$G(FLAGARR(FNBR1,IENS1,1,x))
+ N Z S Z=""
+ F  S Z=$O(FLAGARR(FNBR1,IENS1,1,Z)) QUIT:'+Z  D
+ . S FLAG("Flag","assignmentNarrative")=FLAG("Flag","assignmentNarrative")_$G(FLAGARR(FNBR1,IENS1,1,Z))_" "
  ;
  ;get snomed
  N SCT
  S SCT=$$MAP^SYNDHPMP("flag2sct",FLAG("Flag","flagName"),"D")
  S FLAG("Flag","flagSCT")=$S(+SCT=-1:"",1:$P(SCT,U,2))
  ;
- ;I $G(DEBUG) W ! ZWRITE FLAG
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("FLAG")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.FLAG,.FLAGJ)
  ;

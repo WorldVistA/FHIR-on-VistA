@@ -1,4 +1,4 @@
-SYNDHP13 ; HC/art - HealthConcourse - get visit and pov data ;03/26/2019
+SYNDHP13 ; HC/art - HealthConcourse - get visit and pov data ;08/27/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -20,14 +20,14 @@ GET1VISIT(VISIT,VISITIEN,RETJSON,VISITJ) ;get one Visit record
  N IENS1 S IENS1=VISITIEN_","
  N VISITARR,VISITERR
  D GETS^DIQ(FNBR1,IENS1,"**","EI","VISITARR","VISITERR")
- ;I $G(DEBUG) W ! ZWRITE VISITARR
- ;I $G(DEBUG),$D(VISITERR) W ">>ERROR<<",! ZWRITE VISITERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VISITARR")
+ I $G(DEBUG),$D(VISITERR) W ">>ERROR<<",! W $$ZW^SYNDHPUTL("VISITERR")
  I $D(VISITERR) D  QUIT
  . S VISIT("Visit","ERROR")=VISITIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.VISIT,.VISITJ)
  S VISIT("Visit","visitIen")=VISITIEN
  S VISIT("Visit","resourceType")="Encounter"
- S VISIT("Visit","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_VISITIEN
+ S VISIT("Visit","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,VISITIEN)
  S VISIT("Visit","visitAdmitDateTime")=$G(VISITARR(FNBR1,IENS1,.01,"E"))
  S VISIT("Visit","visitAdmitDateTimeFM")=$G(VISITARR(FNBR1,IENS1,.01,"I"))
  S VISIT("Visit","visitAdmitDateTimeHL7")=$$FMTHL7^XLFDT($G(VISITARR(FNBR1,IENS1,.01,"I")))
@@ -116,7 +116,7 @@ GET1VISIT(VISIT,VISITIEN,RETJSON,VISITJ) ;get one Visit record
  S VISIT("Visit","dataSource")=$G(VISITARR(FNBR1,IENS1,81203,"E"))
  S VISIT("Visit","dataSourceId")=$G(VISITARR(FNBR1,IENS1,81203,"I"))
  ;
- ;I $G(DEBUG) W ! ZWRITE VISIT
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VISIT")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.VISIT,.VISITJ)
  ;
@@ -137,14 +137,14 @@ GET1VPOV(VPOV,VPOVIEN,RETJSON,VPOVJ) ;get one V POV record
  N IENS1 S IENS1=VPOVIEN_","
  N VPOVARR,VPOVERR
  D GETS^DIQ(FNBR1,IENS1,"**","EI","VPOVARR","VPOVERR")
- ;I $G(DEBUG) W ! ZWRITE VPOVARR
- ;I $G(DEBUG),$D(VPOVERR) W ">>ERROR<<",! ZWRITE VPOVERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VPOVARR")
+ I $G(DEBUG),$D(VPOVERR) W ">>ERROR<<",! W $$ZW^SYNDHPUTL("VPOVERR")
  I $D(VPOVERR) D  QUIT
  . S VPOV("V POV","ERROR")=VPOVIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.VPOV,.VPOVJ)
  S VPOV("V POV","vpovIen")=VPOVIEN
  S VPOV("V POV","resourceType")="Encounter"
- S VPOV("V POV","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_VPOVIEN
+ S VPOV("V POV","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,VPOVIEN)
  S VPOV("V POV","pov")=$G(VPOVARR(FNBR1,IENS1,.01,"E"))
  S VPOV("V POV","povId")=$G(VPOVARR(FNBR1,IENS1,.01,"I"))
  S VPOV("V POV","povDesc")=$P($$ICDDX^ICDEX(VPOV("V POV","pov")),U,4)
@@ -157,6 +157,7 @@ GET1VPOV(VPOV,VPOVIEN,RETJSON,VPOVJ) ;get one V POV record
  S VPOV("V POV","visitFM")=$$GET1^DIQ(9000010,VPOV("V POV","visitId")_",",.01,"I")
  S VPOV("V POV","visitHL7")=$$FMTHL7^XLFDT(VPOV("V POV","visitFM"))
  S VPOV("V POV","visitFHIR")=$$FMTFHIR^SYNDHPUTL(VPOV("V POV","visitFM"))
+ S VPOV("V POV","visitResId")=$$RESID^SYNDHP69("V",SITE,9000010,VPOV("V POV","visitId"))
  S VPOV("V POV","providerNarrative")=$G(VPOVARR(FNBR1,IENS1,.04,"E"))
  S VPOV("V POV","providerNarrativeId")=$G(VPOVARR(FNBR1,IENS1,.04,"I"))
  S VPOV("V POV","modifier")=$G(VPOVARR(FNBR1,IENS1,.06,"E"))
@@ -180,8 +181,12 @@ GET1VPOV(VPOV,VPOVIEN,RETJSON,VPOVJ) ;get one V POV record
  S VPOV("V POV","eventDateAndTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(VPOVARR(FNBR1,IENS1,1201,"I")))
  S VPOV("V POV","orderingProvider")=$G(VPOVARR(FNBR1,IENS1,1202,"E"))
  S VPOV("V POV","orderingProviderId")=$G(VPOVARR(FNBR1,IENS1,1202,"I"))
+ S VPOV("V POV","orderingProviderNPI")=$$GET1^DIQ(200,VPOV("V POV","orderingProviderId")_",",41.99) ;NPI
+ S VPOV("V POV","orderingProviderResId")=$$RESID^SYNDHP69("V",SITE,200,VPOV("V POV","orderingProviderId"))
  S VPOV("V POV","encounterProvider")=$G(VPOVARR(FNBR1,IENS1,1204,"E"))
  S VPOV("V POV","encounterProviderId")=$G(VPOVARR(FNBR1,IENS1,1204,"I"))
+ S VPOV("V POV","encounterProviderNPI")=$$GET1^DIQ(200,VPOV("V POV","encounterProviderId")_",",41.99) ;NPI
+ S VPOV("V POV","encounterProviderResId")=$$RESID^SYNDHP69("V",SITE,200,VPOV("V POV","encounterProviderId"))
  S VPOV("V POV","serviceConnected")=$G(VPOVARR(FNBR1,IENS1,80001,"E"))
  S VPOV("V POV","serviceConnectedCd")=$G(VPOVARR(FNBR1,IENS1,80001,"I"))
  S VPOV("V POV","agentOrangeExposure")=$G(VPOVARR(FNBR1,IENS1,80002,"E"))
@@ -216,7 +221,7 @@ GET1VPOV(VPOV,VPOVIEN,RETJSON,VPOVJ) ;get one V POV record
  N SNOMED S SNOMED=$$MAP^SYNDHPMP(MAPPING,VPOV("V POV","pov"),"I")
  S VPOV("V POV","povSCT")=$S(+SNOMED=-1:"",1:$P(SNOMED,U,2))
  ;
- ;I $G(DEBUG) W ! ZWRITE VPOV
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VPOV")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.VPOV,.VPOVJ)
  ;

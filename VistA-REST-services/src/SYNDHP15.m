@@ -1,4 +1,4 @@
-SYNDHP15 ; HC/art - HealthConcourse - get care plan data ;03/01/2019
+SYNDHP15 ; HC/art - HealthConcourse - get care plan data ;08/28/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -22,20 +22,21 @@ GET1HLF(HLFACT,HLFIEN,CP,RETJSON,HLFACTJ) ;get one Health Factor
  N IENS S IENS=HLFIEN_","
  N HLFARR,HLFERR
  D GETS^DIQ(FNBR1,IENS,"**","EI","HLFARR","HLFERR")
- ;I $G(DEBUG) W ! ZWRITE HLFARR
- ;I $G(DEBUG),$D(HLFERR) W ">>ERROR<<",! ZWRITE HLFERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("HLFARR")
+ I $G(DEBUG),$D(HLFERR) W ">>ERROR<<",! W $$ZW^SYNDHPUTL("HLFERR")
  I $D(HLFERR) D  QUIT
  . S HLFACT("HealthFactor","ERROR")=HLFIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.HLFACT,.HLFACTJ)
  N HLFACTOR S HLFACTOR=$NA(HLFACT("HealthFactor"))
  S @HLFACTOR@("hlfIen")=HLFIEN
  S @HLFACTOR@("resourceType")="HealthFactor"
- S @HLFACTOR@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_HLFIEN
+ S @HLFACTOR@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,HLFIEN)
  S @HLFACTOR@("visitId")=$G(HLFARR(FNBR1,IENS,.03,"I"))
  S @HLFACTOR@("visit")=$G(HLFARR(FNBR1,IENS,.03,"E"))
  S @HLFACTOR@("visitFM")=$$GET1^DIQ(9000010,@HLFACTOR@("visitId")_",",.01,"I")
  S @HLFACTOR@("visitHL7")=$$FMTHL7^XLFDT(@HLFACTOR@("visitFM"))
  S @HLFACTOR@("visitFHIR")=$$FMTFHIR^SYNDHPUTL(@HLFACTOR@("visitFM"))
+ S @HLFACTOR@("visitResId")=$$RESID^SYNDHP69("V",SITE,9000010,@HLFACTOR@("visitId"))
  S @HLFACTOR@("hlfNameId")=$G(HLFARR(FNBR1,IENS,.01,"I"))
  S @HLFACTOR@("hlfName")=$G(HLFARR(FNBR1,IENS,.01,"E"))
  QUIT:$G(CP)&($E(@HLFACTOR@("hlfName"),1,4)'="SYN ")
@@ -43,7 +44,7 @@ GET1HLF(HLFACT,HLFIEN,CP,RETJSON,HLFACTJ) ;get one Health Factor
  S @HLFACTOR@("hlfCategoryId")=$$GET1^DIQ(9999999.64,@HLFACTOR@("hlfNameId")_",",.03,"I")
  S @HLFACTOR@("patientNameId")=$G(HLFARR(FNBR1,IENS,.02,"I"))
  S @HLFACTOR@("patientName")=$G(HLFARR(FNBR1,IENS,.02,"E"))
- S @HLFACTOR@("patientICN")=$$GET1^DIQ(2,@HLFACTOR@("patientNameId")_",",991.1)
+ S @HLFACTOR@("patientNameICN")=$$GET1^DIQ(2,@HLFACTOR@("patientNameId")_",",991.1)
  S @HLFACTOR@("levelSeverityCd")=$G(HLFARR(FNBR1,IENS,.04,"I"))
  S @HLFACTOR@("levelSeverity")=$G(HLFARR(FNBR1,IENS,.04,"E"))
  S @HLFACTOR@("magnitude")=$G(HLFARR(FNBR1,IENS,220,"E"))
@@ -55,8 +56,12 @@ GET1HLF(HLFACT,HLFIEN,CP,RETJSON,HLFACTJ) ;get one Health Factor
  S @HLFACTOR@("eventDateTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(HLFARR(FNBR1,IENS,1201,"I")))
  S @HLFACTOR@("orderingProviderId")=$G(HLFARR(FNBR1,IENS,1202,"I"))
  S @HLFACTOR@("orderingProvider")=$G(HLFARR(FNBR1,IENS,1202,"E"))
+ S @HLFACTOR@("orderingProviderNPI")=$$GET1^DIQ(200,@HLFACTOR@("orderingProviderId")_",",41.99) ;NPI
+ S @HLFACTOR@("orderingProviderResId")=$$RESID^SYNDHP69("V",SITE,200,@HLFACTOR@("orderingProviderId"))
  S @HLFACTOR@("encounterProviderId")=$G(HLFARR(FNBR1,IENS,1204,"I"))
  S @HLFACTOR@("encounterProvider")=$G(HLFARR(FNBR1,IENS,1204,"E"))
+ S @HLFACTOR@("encounterProviderNPI")=$$GET1^DIQ(200,@HLFACTOR@("encounterProviderId")_",",41.99) ;NPI
+ S @HLFACTOR@("encounterProviderResId")=$$RESID^SYNDHP69("V",SITE,200,@HLFACTOR@("encounterProviderId"))
  S @HLFACTOR@("editedCd")=$G(HLFARR(FNBR1,IENS,80101,"I"))
  S @HLFACTOR@("edited")=$G(HLFARR(FNBR1,IENS,80101,"E"))
  S @HLFACTOR@("auditTrail")=$G(HLFARR(FNBR1,IENS,80102,"E"))
@@ -94,7 +99,7 @@ GET1HLF(HLFACT,HLFIEN,CP,RETJSON,HLFACTJ) ;get one Health Factor
  . . S SCT=$$MAP^SYNDHPMP("sct2hf",@HLFACTOR@("hlfNameId"),"I")
  . . S @HLFACTOR@("hlfNameSCT")=$S(+SCT=-1:"",1:$P(SCT,U,2))
  ;
- ;I $G(DEBUG) W ! ZWRITE HLFACT
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("HLFACT")
  ;
  D:$G(RETJSON)="J"!($G(RETJSON)="F") TOJASON^SYNDHPUTL(.HLFACT,.HLFACTJ)
  ;
@@ -127,15 +132,15 @@ GET1NCP(NCP,NCPIEN,RETJSON,NCPJ) ;get one nursing care plan
  N IENS S IENS=NCPIEN_","
  N NCPARR,NCPERR
  D GETS^DIQ(FNBR1,IENS,"**","EI","NCPARR","NCPERR")
- ;I $G(DEBUG) W ! ZWRITE NCPARR
- ;I $G(DEBUG),$D(NCPERR) W ">>ERROR<<",! ZWRITE NCPERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("NCPARR")
+ I $G(DEBUG),$D(NCPERR) W ">>ERROR<<",! W $$ZW^SYNDHPUTL("NCPERR")
  I $D(NCPERR) D  QUIT
  . S NCP("NurseCarePlan","ERROR")=NCPIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.NCP,.NCPJ)
  N CAREPLAN S CAREPLAN=$NA(NCP("NurseCarePlan"))
  S @CAREPLAN@("ncpIen")=NCPIEN
  S @CAREPLAN@("resourceType")="NurseCarePlan"
- S @CAREPLAN@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_NCPIEN
+ S @CAREPLAN@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,NCPIEN)
  S @CAREPLAN@("textFileEntryId")=$G(NCPARR(FNBR1,IENS,.01,"I"))
  S @CAREPLAN@("textFileEntry")=$G(NCPARR(FNBR1,IENS,.01,"E"))
  ;
@@ -145,7 +150,7 @@ GET1NCP(NCP,NCPIEN,RETJSON,NCPJ) ;get one nursing care plan
  . N PROBLIST S PROBLIST=$NA(NCP("NurseCarePlan","problemLists","problemList",FIEN))
  . S @PROBLIST@("problemId")=$G(NCPARR(FNBR2,PROB,.01,"I"))
  . S @PROBLIST@("problem")=$G(NCPARR(FNBR2,PROB,.01,"E"))
- . S @PROBLIST@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_NCPIEN_S_FNBR2_S_FIEN
+ . S @PROBLIST@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,NCPIEN,FNBR2_U_FIEN)
  ;
  N EVAL S EVAL=""
  F  S EVAL=$O(NCPARR(FNBR3,EVAL)) QUIT:EVAL=""  D
@@ -159,13 +164,15 @@ GET1NCP(NCP,NCPIEN,RETJSON,NCPJ) ;get one nursing care plan
  . S @EVALDATE@("problem")=$G(NCPARR(FNBR3,EVAL,.02,"E"))
  . S @EVALDATE@("userWhoEvaluatedId")=$G(NCPARR(FNBR3,EVAL,1,"I"))
  . S @EVALDATE@("userWhoEvaluated")=$G(NCPARR(FNBR3,EVAL,1,"E"))
+ . S @EVALDATE@("userWhoEvaluatedNPI")=$$GET1^DIQ(200,@EVALDATE@("userWhoEvaluatedId")_",",41.99) ;NPI
+ . S @EVALDATE@("userWhoEvaluatedResId")=$$RESID^SYNDHP69("V",SITE,200,@EVALDATE@("userWhoEvaluatedId"))
  . S @EVALDATE@("problemStatusCd")=$G(NCPARR(FNBR3,EVAL,2,"I"))
  . S @EVALDATE@("problemStatus")=$G(NCPARR(FNBR3,EVAL,2,"E"))
  . S @EVALDATE@("evaluationDate")=$G(NCPARR(FNBR3,EVAL,3,"E"))
  . S @EVALDATE@("evaluationDateFM")=$G(NCPARR(FNBR3,EVAL,3,"I"))
  . S @EVALDATE@("evaluationDateHL7")=$$FMTHL7^XLFDT($G(NCPARR(FNBR3,EVAL,3,"I")))
  . S @EVALDATE@("evaluationDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(NCPARR(FNBR3,EVAL,3,"I")))
- . S @EVALDATE@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_NCPIEN_S_FNBR3_S_FIEN
+ . S @EVALDATE@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,NCPIEN,FNBR3_U_FIEN)
  ;
  N TARG S TARG=""
  F  S TARG=$O(NCPARR(FNBR4,TARG)) QUIT:TARG=""  D
@@ -179,13 +186,15 @@ GET1NCP(NCP,NCPIEN,RETJSON,NCPJ) ;get one nursing care plan
  . S @TARGDATE@("goalExpectedOutcome")=$G(NCPARR(FNBR4,TARG,.03,"E"))
  . S @TARGDATE@("userWhoEnteredId")=$G(NCPARR(FNBR4,TARG,1,"I"))
  . S @TARGDATE@("userWhoEntered")=$G(NCPARR(FNBR4,TARG,1,"E"))
+ . S @TARGDATE@("userWhoEnteredNPI")=$$GET1^DIQ(200,@TARGDATE@("userWhoEnteredId")_",",41.99) ;NPI
+ . S @TARGDATE@("userWhoEnteredResId")=$$RESID^SYNDHP69("V",SITE,200,@TARGDATE@("userWhoEnteredId"))
  . S @TARGDATE@("goalMetDcdCd")=$G(NCPARR(FNBR4,TARG,2,"I"))
  . S @TARGDATE@("goalMetDcd")=$G(NCPARR(FNBR4,TARG,2,"E"))
  . S @TARGDATE@("targetDate")=$G(NCPARR(FNBR4,TARG,3,"E"))
  . S @TARGDATE@("targetDateFM")=$G(NCPARR(FNBR4,TARG,3,"I"))
  . S @TARGDATE@("targetDateHL7")=$$FMTHL7^XLFDT($G(NCPARR(FNBR4,TARG,3,"I")))
  . S @TARGDATE@("targetDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(NCPARR(FNBR4,TARG,3,"I")))
- . S @TARGDATE@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_NCPIEN_S_FNBR4_S_FIEN
+ . S @TARGDATE@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,NCPIEN,FNBR4_U_FIEN)
  ;
  N ORD S ORD=""
  F  S ORD=$O(NCPARR(FNBR5,ORD)) QUIT:ORD=""  D
@@ -195,9 +204,11 @@ GET1NCP(NCP,NCPIEN,RETJSON,NCPJ) ;get one nursing care plan
  . S @ORDINFO@("status")=$G(NCPARR(FNBR5,ORD,1,"E"))
  . S @ORDINFO@("userModifyingId")=$G(NCPARR(FNBR5,ORD,2,"I"))
  . S @ORDINFO@("userModifying")=$G(NCPARR(FNBR5,ORD,2,"E"))
- . S @ORDINFO@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_NCPIEN_S_FNBR5_S_FIEN
+ . S @ORDINFO@("userModifyingNPI")=$$GET1^DIQ(200,@ORDINFO@("userModifyingId")_",",41.99) ;NPI
+ . S @ORDINFO@("userModifyingResId")=$$RESID^SYNDHP69("V",SITE,200,@ORDINFO@("userModifyingId"))
+ . S @ORDINFO@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,NCPIEN,FNBR5_U_FIEN)
  ;
- ;I $G(DEBUG) W ! ZWRITE NCP
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("NCP")
  ;
  D:$G(RETJSON)="J"!($G(RETJSON)="F") TOJASON^SYNDHPUTL(.NCP,.NCPJ)
  ;
@@ -216,19 +227,20 @@ GET1GMR(GMRTEXT,GMRIEN,RETJSON,GMRTEXTJ) ;get one GMR Text record
  N FNBR2 S FNBR2=124.31 ;GMR TEXT:SELECTION
  N FNBR3 S FNBR3=124.313 ;GMR TEXT:SELECTION:AUDIT TRAIL
  N S S S="_"
+ N C S C=","
  N SITE S SITE=$P($$SITE^VASITE,"^",3)
  N IENS S IENS=GMRIEN_","
  N GMRARR,GMRERR
  D GETS^DIQ(FNBR1,IENS,"**","EI","GMRARR","GMRERR")
- ;I $G(DEBUG) W ! ZWRITE GMRARR
- ;I $G(DEBUG),$D(GMRERR) W ">>ERROR<<",! ZWRITE GMRERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("GMRARR")
+ I $G(DEBUG),$D(GMRERR) W ">>ERROR<<",! W $$ZW^SYNDHPUTL("GMRERR")
  I $D(GMRERR) D  QUIT
  . S GMRTEXT("GMRtext","ERROR")=GMRIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.GMRTEXT,.GMRTEXTJ)
  N GMRTXT S GMRTXT=$NA(GMRTEXT("GMRtext"))
  S @GMRTXT@("GMRIen")=GMRIEN
  S @GMRTXT@("resourceType")="GMRtext"
- S @GMRTXT@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_GMRIEN
+ S @GMRTXT@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,GMRIEN)
  S @GMRTXT@("textBlockId")=$G(GMRARR(FNBR1,IENS,.01,"I"))
  S @GMRTXT@("textBlock")=$G(GMRARR(FNBR1,IENS,.01,"E"))
  S @GMRTXT@("patientId")=$G(GMRARR(FNBR1,IENS,.02,"I"))
@@ -253,32 +265,33 @@ GET1GMR(GMRTEXT,GMRIEN,RETJSON,GMRTEXTJ) ;get one GMR Text record
  S @GMRTXT@("dateLastUpdatedHL7")=$$FMTHL7^XLFDT($G(GMRARR(FNBR1,IENS,6,"I")))
  S @GMRTXT@("dateLastUpdatedFHIR")=$$FMTFHIR^SYNDHPUTL($G(GMRARR(FNBR1,IENS,6,"I")))
  ;
- N SEL S SEL=""
- F  S SEL=$O(GMRARR(FNBR2,SEL)) QUIT:SEL=""  D
- . N FIEN S FIEN=+SEL
- . N SELECTION S SELECTION=$NA(GMRTEXT("GMRtext","selections","selection",FIEN))
- . S @SELECTION@("selectionId")=$G(GMRARR(FNBR2,SEL,.01,"I"))
- . S @SELECTION@("selection")=$G(GMRARR(FNBR2,SEL,.01,"E"))
- . S @SELECTION@("appendedInternalText")=$G(GMRARR(FNBR2,SEL,1,"E"))
- . S @SELECTION@("additionalText")=$G(GMRARR(FNBR2,SEL,2,"E"))
- . S @SELECTION@("added")=$G(GMRARR(FNBR2,SEL,4,"E"))
- . S @SELECTION@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_GMRIEN_S_FNBR2_S_FIEN
- . N AUDIT S AUDIT=""
- . F  S AUDIT=$O(GMRARR(FNBR3,AUDIT)) QUIT:AUDIT=""  D
- . . N AIEN S AIEN=+AUDIT
- . . N AUDIT S AUDIT=$NA(GMRTEXT("GMRtext","selections","selection",FIEN,"auditTrails","auditTrail",AIEN))
- . . S @AUDIT@("auditTrailDateTime")=$G(GMRARR(FNBR3,AUDIT,.01,"E"))
- . . S @AUDIT@("auditTrailDateTimeFM")=$G(GMRARR(FNBR3,AUDIT,.01,"I"))
- . . S @AUDIT@("auditTrailDateTimeHL7")=$$FMTHL7^XLFDT($G(GMRARR(FNBR3,AUDIT,.01,"I")))
- . . S @AUDIT@("auditTrailDateTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(GMRARR(FNBR3,AUDIT,.01,"I")))
- . . S @AUDIT@("modification")=$G(GMRARR(FNBR3,AUDIT,1,"E"))
- . . S @AUDIT@("userWhoModifiedId")=$G(GMRARR(FNBR3,AUDIT,2,"I"))
- . . S @AUDIT@("userWhoModified")=$G(GMRARR(FNBR3,AUDIT,2,"E"))
- . . S @AUDIT@("appendedInternalText")=$G(GMRARR(FNBR3,AUDIT,3,"E"))
- . . S @AUDIT@("additionalText")=$G(GMRARR(FNBR3,AUDIT,4,"E"))
- . . S @AUDIT@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_GMRIEN_S_FNBR2_S_FIEN_S_FNBR3_S_AIEN
+ N IENS2 S IENS2=""
+ F  S IENS2=$O(GMRARR(FNBR2,IENS2)) QUIT:IENS2=""  D
+ . N SELECTION S SELECTION=$NA(GMRTEXT("GMRtext","selections","selection",+IENS2))
+ . S @SELECTION@("selectionId")=$G(GMRARR(FNBR2,IENS2,.01,"I"))
+ . S @SELECTION@("selection")=$G(GMRARR(FNBR2,IENS2,.01,"E"))
+ . S @SELECTION@("appendedInternalText")=$G(GMRARR(FNBR2,IENS2,1,"E"))
+ . S @SELECTION@("additionalText")=$G(GMRARR(FNBR2,IENS2,2,"E"))
+ . S @SELECTION@("added")=$G(GMRARR(FNBR2,IENS2,4,"E"))
+ . S @SELECTION@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,GMRIEN,FNBR2_U_+IENS2)
  ;
- ;I $G(DEBUG) W ! ZWRITE GMRTEXT
+ N IENS3 S IENS3=""
+ F  S IENS3=$O(GMRARR(FNBR3,IENS3)) QUIT:IENS3=""  D
+ . N AUDIT S AUDIT=$NA(GMRTEXT("GMRtext","selections","selection",$P(IENS3,C,2),"auditTrails","auditTrail",+IENS3))
+ . S @AUDIT@("auditTrailDateTime")=$G(GMRARR(FNBR3,IENS3,.01,"E"))
+ . S @AUDIT@("auditTrailDateTimeFM")=$G(GMRARR(FNBR3,IENS3,.01,"I"))
+ . S @AUDIT@("auditTrailDateTimeHL7")=$$FMTHL7^XLFDT($G(GMRARR(FNBR3,IENS3,.01,"I")))
+ . S @AUDIT@("auditTrailDateTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(GMRARR(FNBR3,IENS3,.01,"I")))
+ . S @AUDIT@("modification")=$G(GMRARR(FNBR3,IENS3,1,"E"))
+ . S @AUDIT@("userWhoModifiedId")=$G(GMRARR(FNBR3,IENS3,2,"I"))
+ . S @AUDIT@("userWhoModified")=$G(GMRARR(FNBR3,IENS3,2,"E"))
+ . S @AUDIT@("userWhoModifiedNPI")=$$GET1^DIQ(200,@AUDIT@("userWhoModifiedId")_",",41.99) ;NPI
+ . S @AUDIT@("userWhoModifiedResId")=$$RESID^SYNDHP69("V",SITE,200,"userWhoModifiedId")
+ . S @AUDIT@("appendedInternalText")=$G(GMRARR(FNBR3,IENS3,3,"E"))
+ . S @AUDIT@("additionalText")=$G(GMRARR(FNBR3,IENS3,4,"E"))
+ . S @AUDIT@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,GMRIEN,FNBR2_U_$P(IENS3,C,2)_U_FNBR3_U_+IENS3)
+ ;
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("GMRTEXT")
  ;
  D:$G(RETJSON)="J"!($G(RETJSON)="F") TOJASON^SYNDHPUTL(.GMRTEXT,.GMRTEXTJ)
  ;

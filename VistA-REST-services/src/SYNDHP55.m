@@ -1,4 +1,4 @@
-SYNDHP55 ; HC/art - HealthConcourse - retrieve patient procedures ;04/15/2019
+SYNDHP55 ; HC/art - HealthConcourse - retrieve patient procedures ;08/10/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -33,11 +33,11 @@ SRPRCS(PTIEN,FRDAT,TODAT) ; get surgical procedures for a patient
  . N SURGARR,SURGERR
  . S PIENS=PIEN_","
  . D GETS^DIQ(FNUM,PIENS,FLIST,"EI","SURGARR","SURGERR")  ;specific fields
- . ;I $G(DEBUG),$D(SURGERR) W !,">>ERROR<<",! ZWRITE SURGERR
+ . I $G(DEBUG),$D(SURGERR) W !,">>ERROR<<",! W $$ZW^SYNDHPUTL("SURGERR")
  . QUIT:$D(SURGERR)
- . S PID=$$RESID^SYNDHP69("V",SITE)_S_FNUM_S_PIEN
+ . S PID=$$RESID^SYNDHP69("V",SITE,FNUM,PIEN)
  . S PDATE=SURGARR(FNUM,PIENS,.09,"I") ;date of operation
- . QUIT:((PDATE\1)<FRDAT)!((PDATE\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(PDATE,FRDAT,TODAT)  ;quit if outside of requested date range
  . S PDATEHL=$$FMTHL7^XLFDT(PDATE) ;date of operation, hl7 format
  . S CLINIC=SURGARR(FNUM,PIENS,.021,"E") ;associated clinic
  . S DIVISION=SURGARR(FNUM,PIENS,50,"E") ;division
@@ -88,7 +88,7 @@ SRPRCS(PTIEN,FRDAT,TODAT) ; get surgical procedures for a patient
  . S SEQ=SEQ+1
  . S PROCS(SEQ)=U_SCT_P_SCTPT_P_PRCPTCD_P_PDATEHL_P_PID
  ;
- ;I $G(DEBUG) W ! ZWRITE PROCS
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("PROCS")
  ;
  ;serialize data
  S SERPROCS=""
@@ -96,7 +96,7 @@ SRPRCS(PTIEN,FRDAT,TODAT) ; get surgical procedures for a patient
  F  S SEQ=$O(PROCS(SEQ)) QUIT:SEQ=""  D
  . S SERPROCS=SERPROCS_PROCS(SEQ)
  ;
- ;I $G(DEBUG) W ! ZWRITE SERPROCS
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("SERPROCS")
  ;
  QUIT SERPROCS
  ;
@@ -118,9 +118,9 @@ VSTPRCS(PATIEN,FRDAT,TODAT) ;
  . N VCPT
  . D GET1VCPT^SYNDHP14(.VCPT,PIEN,0)
  . QUIT:$D(VCPT("Vcpt","ERROR"))
- . ;I $G(DEBUG) ZWRITE VCPT
+ . I $G(DEBUG) W $$ZW^SYNDHPUTL("VCPT")
  . S VISITDT=VCPT("Vcpt","visitFM") ;visit/admit date&time
- . QUIT:((VISITDT\1)<FRDAT)!((VISITDT\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(VISITDT,FRDAT,TODAT)  ;quit if outside of requested date range
  . S VISITHL=VCPT("Vcpt","visitHL7") ;hl7 format visit/admit date&time
  . S PID=VCPT("Vcpt","resourceId")
  . S CPT=VCPT("Vcpt","cpt") ;cpt code
@@ -128,21 +128,12 @@ VSTPRCS(PATIEN,FRDAT,TODAT) ;
  . S VISITDT=VCPT("Vcpt","visitFM") ;visit/admit date&time
  . QUIT:(VISITDT<FRDAT)!(VISITDT>TODAT)  ;quit if outside of requested date range
  . S VISITHL=VCPT("Vcpt","visitHL7") ;hl7 format visit/admit date&time
- . ;LOOKUP SNOMED(sct) - cpt, os5
- . S SCT=""
- . ;map cpt to snomed (currently uses very small map)
- . I CPT'="" D
- . . S SCT=$$MAP^SYNDHPMP("sct2cpt",CPT,"I")
- . . S SCT=$S(+SCT=-1:"",1:$P(SCT,U,2))
- . ;if no cpt hit, map os5 to snomed
- . I SCT="",CPT'="" D
- . . S SCT=$$MAP^SYNDHPMP("sct2os5",CPT,"I")
- . . S SCT=$S(+SCT=-1:"",1:$P(SCT,U,2))
+ . S SCT=VCPT("Vcpt","sct")
  . S SEQ=SEQ+1
  . ;SCT code1|descrption|CPT code|date|identifier
  . S PROCS(SEQ)=U_SCT_P_CPTNAME_P_CPT_P_VISITHL_P_PID
  ;
- ;I $G(DEBUG) W ! ZWRITE PROCS
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("PROCS")
  ;
  ;serialize data
  S SERPROCS=""
@@ -150,7 +141,7 @@ VSTPRCS(PATIEN,FRDAT,TODAT) ;
  F  S SEQ=$O(PROCS(SEQ)) QUIT:SEQ=""  D
  . S SERPROCS=SERPROCS_PROCS(SEQ)
  ;
- ;I $G(DEBUG) W ! ZWRITE SERPROCS
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("SERPROCS")
  ;
  QUIT SERPROCS
  ;
@@ -169,7 +160,7 @@ RADPRCS(PATIEN,FRDAT,TODAT) ;
  N IDX S IDX=""
  F  S IDX=$O(RADEX(IDX)) QUIT:IDX=""  D
  . S EXDATE=$P(RADEX(IDX),U,4)
- . QUIT:((EXDATE\1)<FRDAT)!((EXDATE\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(EXDATE,FRDAT,TODAT)  ;quit if outside of requested date range
  . S SCT=$P(RADEX(IDX),U,10)
  . S PROC=$P(RADEX(IDX),U,8)
  . S CPT=$P(RADEX(IDX),U,9)
@@ -179,7 +170,7 @@ RADPRCS(PATIEN,FRDAT,TODAT) ;
  . S SEQ=SEQ+1
  . S PROCS(SEQ)=U_SCT_P_PROC_P_CPT_P_EXDATEHL_P_PID
  ;
- ;I $G(DEBUG) W ! ZWRITE PROCS
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("PROCS")
  ;
  ;serialize data
  N SERPROCS S SERPROCS=""
@@ -187,7 +178,7 @@ RADPRCS(PATIEN,FRDAT,TODAT) ;
  F  S SEQ=$O(PROCS(SEQ)) QUIT:SEQ=""  D
  . S SERPROCS=SERPROCS_PROCS(SEQ)
  ;
- ;I $G(DEBUG) W ! ZWRITE SERPROCS
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("SERPROCS")
  ;
  QUIT SERPROCS
  ;
@@ -213,7 +204,7 @@ RADEXAM(RADEX,PATIEN,RPT,FRDAT,TODAT) ;Radiology procedures, diagnosis, report f
  N IENS S IENS=PATIEN_","
  N RADRPT,PATARR,PATERR
  D GETS^DIQ(FNBR1,IENS,".01;.04;.06","EI","PATARR","PATERR")  ;specific fields
- ;I $G(DEBUG),$D(PATERR) W !,"FNBR1:",FNBR1,!,"IENS:",IENS,!,">>ERROR<<",! ZWRITE PATERR
+ I $G(DEBUG),$D(PATERR) W !,"FNBR1:",FNBR1,!,"IENS:",IENS,!,">>ERROR<<",! W $$ZW^SYNDHPUTL("PATERR")
  QUIT:$D(PATERR)
  N PatDfn S PatDfn=$G(PATARR(FNBR1,IENS,.01,"I")) ;patient dfn
  N CategoryCd S CategoryCd=$G(PATARR(FNBR1,IENS,.04,"I")) ;category code
@@ -226,10 +217,10 @@ RADEXAM(RADEX,PATIEN,RPT,FRDAT,TODAT) ;Radiology procedures, diagnosis, report f
  . N IENS1 S IENS1=REXIEN_","_IENS
  . N REXARR,REXERR
  . D GETS^DIQ(FNBR2,IENS1,".01;2;3;4;5","EI","REXARR","REXERR")  ;specific fields
- . ;I $G(DEBUG),$D(REXERR) W !,">>ERROR<<",! ZWRITE REXERR
+ . I $G(DEBUG),$D(REXERR) W !,">>ERROR<<",! W $$ZW^SYNDHPUTL("REXERR")
  . QUIT:$D(REXERR)
  . N ExamDate S ExamDate=$G(REXARR(FNBR2,IENS1,.01,"I")) ;exam date
- . QUIT:((ExamDate\1)<FRDAT)!((ExamDate\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(ExamDate,FRDAT,TODAT)  ;quit if outside of requested date range
  . N ExamDateHl7 S ExamDateHl7=$$FMTHL7^XLFDT(ExamDate) ;hl7 format exam date
  . ;get examinations
  . N EXIEN S EXIEN=0
@@ -238,7 +229,7 @@ RADEXAM(RADEX,PATIEN,RPT,FRDAT,TODAT) ;Radiology procedures, diagnosis, report f
  . . N IENS2 S IENS2=EXIEN_","_IENS1
  . . N EXARR,EXERR
  . . D GETS^DIQ(FNBR3,IENS2,".01;2;12;13;14;15;17;27","EI","EXARR","EXERR")  ;specific fields
- . . ;I $G(DEBUG),$D(EXERR) W !,">>ERROR<<",! ZWRITE EXERR
+ . . I $G(DEBUG),$D(EXERR) W !,">>ERROR<<",! W $$ZW^SYNDHPUTL("EXERR")
  . . QUIT:$D(EXERR)
  . . S CASENBR=$G(EXARR(FNBR3,IENS2,.01,"I")) ;case number
  . . S PROCIEN=$G(EXARR(FNBR3,IENS2,2,"I")) ;procedure ien
@@ -254,7 +245,7 @@ RADEXAM(RADEX,PATIEN,RPT,FRDAT,TODAT) ;Radiology procedures, diagnosis, report f
  . . S VISITDT=""
  . . S:VISITID'="" VISITDT=$$GET1^DIQ(FNBR4,VISITID_",",.01,"I") ;visit/admit date&time
  . . S VISITHL=$$FMTHL7^XLFDT(VISITDT) ;hl7 format visit/admit date&time
- . . S PID=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_PATIEN_S_FNBR2_S_REXIEN_S_FNBR3_S_EXIEN
+ . . S PID=$$RESID^SYNDHP69("V",SITE,FNBR1,PATIEN,FNBR2_U_REXIEN_U_FNBR3_U_EXIEN)
  . . ;LOOKUP SNOMED(sct) - cpt, os5
  . . S SCT=""
  . . ;map cpt to snomed (currently uses very small map)
@@ -289,7 +280,7 @@ RADEXAM(RADEX,PATIEN,RPT,FRDAT,TODAT) ;Radiology procedures, diagnosis, report f
  . . . D GETRPT(.RADRPT,RPTTEXT,SITE,SEQ,FRDAT,TODAT)
  . . . M RADEX(SEQ)=RADRPT(SEQ)
  ;
- ;I $G(DEBUG) W ! ZWRITE RADEX
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("RADEX")
  ;
  QUIT
  ;
@@ -305,14 +296,14 @@ GETRPT(RADRPT,RPTTEXT,SITE,SEQ,FRDAT,TODAT) ; get radiology diagnostic report
  N FNUM S FNUM=74
  I $G(DEBUG) W "<Radiology Report>"
  N DAYCASE,PRSTA,PRSTATUS,PPROV,PPROVNM,PDATE,PDATEHL
- N PID S PID=$$RESID^SYNDHP69("V",SITE)_"_"_FNUM_"_"_RPTTEXT
+ N PID S PID=$$RESID^SYNDHP69("V",SITE,FNUM,RPTTEXT)
  N PIENS S PIENS=RPTTEXT_","
  N EXARR,EXERR
  D GETS^DIQ(FNUM,PIENS,".01;3;5;9;113","EI","EXARR","EXERR")  ;specific fields
- ;I $G(DEBUG),$D(EXERR) W !,">>ERROR<<",! ZWRITE EXERR
+ I $G(DEBUG),$D(EXERR) W !,">>ERROR<<",! W $$ZW^SYNDHPUTL("EXERR")
  QUIT:$D(EXERR)
  S PDATE=$G(EXARR(FNUM,PIENS,3,"I")) ;exam date/time
- QUIT:((PDATE\1)<FRDAT)!((PDATE\1)>TODAT)  ;quit if outside of requested date range
+ QUIT:'$$RANGECK^SYNDHPUTL(PDATE,FRDAT,TODAT)  ;quit if outside of requested date range
  S PDATEHL=$$FMTHL7^XLFDT(PDATE) ;exam date/time HL7
  S DAYCASE=$G(EXARR(FNUM,PIENS,.01,"I")) ;day case#
  S PRSTA=$G(EXARR(FNUM,PIENS,5,"I")) ;report status
@@ -325,7 +316,7 @@ GETRPT(RADRPT,RPTTEXT,SITE,SEQ,FRDAT,TODAT) ; get radiology diagnostic report
  S RPTTEXT=""
  S IMPTEXT=""
  D GETS^DIQ(FNUM,PIENS,200,,"REPORT","EXERR")
- ;I $G(DEBUG),$D(EXERR) W !,">>ERROR<<",! ZWRITE EXERR
+ I $G(DEBUG),$D(EXERR) W !,">>ERROR<<",! W $$ZW^SYNDHPUTL("EXERR")
  QUIT:$D(EXERR)
  N N S N=0
  F  S N=$O(REPORT(FNUM,PIENS,200,N)) Q:N=""  D
@@ -333,7 +324,7 @@ GETRPT(RADRPT,RPTTEXT,SITE,SEQ,FRDAT,TODAT) ; get radiology diagnostic report
  . S RPTTEXT=RPTTEXT_RPTLINE
  N EXERR
  D GETS^DIQ(FNUM,PIENS,300,,"IMPRESS","EXERR")
- ;I $G(DEBUG),$D(EXERR) W !,">>ERROR<<",! ZWRITE EXERR
+ I $G(DEBUG),$D(EXERR) W !,">>ERROR<<",! W $$ZW^SYNDHPUTL("EXERR")
  QUIT:$D(EXERR)
  N N S N=0
  F  S N=$O(IMPRESS(FNUM,PIENS,300,N)) Q:N=""  D

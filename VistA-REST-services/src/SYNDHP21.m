@@ -1,4 +1,4 @@
-SYNDHP21 ; HC/art - HealthConcourse - get patient lab data ;03/28/2019
+SYNDHP21 ; HC/art - HealthConcourse - get patient lab data ;08/28/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -23,18 +23,18 @@ GETLABS(LABS,LABREF,RETJSON,LABSJ) ;get Patient Labs records
  ;
  N LABSARR,LABSERR,INVDT,RESULT,LOINC
  D GETS^DIQ(FNBR1,IENS1,"**","EI","LABSARR","LABSERR")
- ;I $G(DEBUG) W ! ZWRITE LABSARR
- ;I $G(DEBUG),$D(LABSERR) W !,">>ERROR<<" ZWRITE LABSERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("LABSARR")
+ I $G(DEBUG),$D(LABSERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("LABSERR")
  I $D(LABSERR) D  QUIT
  . S LABS("Lab","ERROR")=LABREF
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.LABS,.LABSJ)
  S LABS("Lab","labsIen")=LABREF
  S LABS("Lab","resourceType")="Laboratory"
- S LABS("Lab","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_LABREF
+ S LABS("Lab","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,LABREF)
  S LABS("Lab","lrDfn")=$G(LABSARR(FNBR1,IENS1,.01,"E"))
  S LABS("Lab","patientName")=$G(LABSARR(FNBR1,IENS1,.03,"E"))
  S LABS("Lab","patientNameId")=$G(LABSARR(FNBR1,IENS1,.03,"I"))
- S LABS("Lab","patientIcn")=$$ICN^SYNDHPUTL(LABS("Lab","patientNameId"))
+ S LABS("Lab","patientNameIcn")=$$ICN^SYNDHPUTL(LABS("Lab","patientNameId"))
  S LABS("Lab","doNotTransfuse")=$G(LABSARR(FNBR1,IENS1,.04,"E"))
  S LABS("Lab","doNotTransfuseCd")=$G(LABSARR(FNBR1,IENS1,.04,"I"))
  S LABS("Lab","aboGroup")=$G(LABSARR(FNBR1,IENS1,.05,"E"))
@@ -57,6 +57,8 @@ GETLABS(LABS,LABREF,RETJSON,LABSJ) ;get Patient Labs records
  . S @CHEMLABS@("dateReportCompletedFHIR")=$$FMTFHIR^SYNDHPUTL($G(LABSARR(FNBR2,IENS2,.03,"I")))
  . S @CHEMLABS@("verifyPerson")=$G(LABSARR(FNBR2,IENS2,.04,"E"))
  . S @CHEMLABS@("verifyPersonId")=$G(LABSARR(FNBR2,IENS2,.04,"I"))
+ . S @CHEMLABS@("verifyPersonNPI")=$$GET1^DIQ(200,@CHEMLABS@("verifyPersonId")_",",41.99) ;NPI
+ . S @CHEMLABS@("verifyPersonResId")=$$RESID^SYNDHP69("V",SITE,200,@CHEMLABS@("verifyPersonId"))
  . S @CHEMLABS@("specimenType")=$G(LABSARR(FNBR2,IENS2,.05,"E"))
  . S @CHEMLABS@("specimenTypeId")=$G(LABSARR(FNBR2,IENS2,.05,"I"))
  . S @CHEMLABS@("accession")=$G(LABSARR(FNBR2,IENS2,.06,"E"))
@@ -65,6 +67,8 @@ GETLABS(LABS,LABREF,RETJSON,LABSJ) ;get Patient Labs records
  . S @CHEMLABS@("sumReportNum")=$G(LABSARR(FNBR2,IENS2,.09,"E"))
  . S @CHEMLABS@("requestingPerson")=$G(LABSARR(FNBR2,IENS2,.1,"E"))
  . S @CHEMLABS@("requestingPersonId")=$G(LABSARR(FNBR2,IENS2,.1,"I"))
+ . S @CHEMLABS@("requestingPersonNPI")=$$GET1^DIQ(200,@CHEMLABS@("requestingPersonId")_",",41.99) ;NPI
+ . S @CHEMLABS@("requestingPersonResId")=$$RESID^SYNDHP69("V",SITE,200,@CHEMLABS@("requestingPersonId"))
  . S @CHEMLABS@("requestingLocation")=$G(LABSARR(FNBR2,IENS2,.11,"E"))
  . S @CHEMLABS@("requestingLocDiv")=$G(LABSARR(FNBR2,IENS2,.111,"E"))
  . S @CHEMLABS@("requestingLocDivId")=$G(LABSARR(FNBR2,IENS2,.111,"I"))
@@ -79,7 +83,7 @@ GETLABS(LABS,LABREF,RETJSON,LABSJ) ;get Patient Labs records
  . S @CHEMLABS@("orderingSiteUid")=$G(LABSARR(FNBR2,IENS2,.342,"E"))
  . S @CHEMLABS@("releasingSite")=$G(LABSARR(FNBR2,IENS2,.345,"E"))
  . S @CHEMLABS@("releasingSiteId")=$G(LABSARR(FNBR2,IENS2,.345,"I"))
- . S @CHEMLABS@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_LABREF_S_FNBR2_S_+IENS2
+ . S @CHEMLABS@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,LABREF,FNBR2_U_+IENS2)
  . ;"secret" data in the results field
  . S INVDT=9999999-@CHEMLABS@("dateTimeSpecimenTakenFM")
  . N RESULT
@@ -98,11 +102,15 @@ GETLABS(LABS,LABREF,RETJSON,LABSJ) ;get Patient Labs records
  . S @CHEMLABS@("workloadCd")=$G(RESULT("workloadCd"))
  . S @CHEMLABS@("workloadProcedure")=$G(RESULT("workloadProcedure"))
  . ;get loinc
- . S LOINC=$$GETLOINC(@CHEMLABS@("labTestId"),@CHEMLABS@("labTestName"),@CHEMLABS@("typographyId"))
- . S @CHEMLABS@("loincCode")=$P(LOINC,U,1)
- . S @CHEMLABS@("loincName")=$P(LOINC,U,2)
+ . I @CHEMLABS@("labTestId")'="",@CHEMLABS@("labTestName")'="",@CHEMLABS@("typographyId")'="" D
+ . . S LOINC=$$GETLOINC(@CHEMLABS@("labTestId"),@CHEMLABS@("labTestName"),@CHEMLABS@("typographyId"))
+ . . S @CHEMLABS@("loincCode")=$P(LOINC,U,1)
+ . . S @CHEMLABS@("loincName")=$P(LOINC,U,2)
+ . E  D
+ . . S @CHEMLABS@("loincCode")=""
+ . . S @CHEMLABS@("loincName")=""
  ;
- ;I $G(DEBUG) W ! ZWRITE LABS
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("LABS")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.LABS,.LABSJ)
  ;

@@ -1,4 +1,4 @@
-SYNDHP24 ; HC/art - HealthConcourse - get TIU note data ;04/25/2019
+SYNDHP24 ; HC/art - HealthConcourse - get TIU note data ;08/28/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -22,27 +22,30 @@ GET1TIU(TIU,TIUIEN,RETJSON,TIUJ) ;get one TIU record
  ;
  N TIUARR,TIUERR
  D GETS^DIQ(FNBR1,IENS1,"**","EI","TIUARR","TIUERR")
- ;I $G(DEBUG) W ! ZWRITE TIUARR
- ;I $G(DEBUG),$D(TIUERR) W !,">>ERROR<<" W ! ZWRITE TIUERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("TIUARR")
+ I $G(DEBUG),$D(TIUERR) W !,">>ERROR<<" W ! W $$ZW^SYNDHPUTL("TIUERR")
  I $D(TIUERR) D  QUIT
  . S TIU("Tiu","ERROR")=TIUIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.TIU,.TIUJ)
  S TIU("Tiu","tiuIen")=TIUIEN
  S TIU("Tiu","resourceType")="TiuNote"
- S TIU("Tiu","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_TIUIEN
+ S TIU("Tiu","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,TIUIEN)
  S TIU("Tiu","documentType")=$G(TIUARR(FNBR1,IENS1,.01,"E"))
  S TIU("Tiu","documentTypeId")=$G(TIUARR(FNBR1,IENS1,.01,"I"))
  S TIU("Tiu","patient")=$G(TIUARR(FNBR1,IENS1,.02,"E"))
  S TIU("Tiu","patientId")=$G(TIUARR(FNBR1,IENS1,.02,"I"))
+ S TIU("Tiu","patientICN")=$$GET1^DIQ(2,TIU("Tiu","patientId")_",",991.1)
  S TIU("Tiu","visit")=$G(TIUARR(FNBR1,IENS1,.03,"E"))
  S TIU("Tiu","visitId")=$G(TIUARR(FNBR1,IENS1,.03,"I"))
  S TIU("Tiu","visitFM")=$$GET1^DIQ(9000010,TIU("Tiu","visitId")_",",.01,"I")
  S TIU("Tiu","visitHL7")=$$FMTHL7^XLFDT(TIU("Tiu","visitFM"))
  S TIU("Tiu","visitFHIR")=$$FMTFHIR^SYNDHPUTL(TIU("Tiu","visitFM"))
+ S TIU("Tiu","visitResId")=$$RESID^SYNDHP69("V",SITE,9000010,TIU("Tiu","visitId"))
  S TIU("Tiu","parentDocumentType")=$G(TIUARR(FNBR1,IENS1,.04,"E"))
  S TIU("Tiu","parentDocumentTypeId")=$G(TIUARR(FNBR1,IENS1,.04,"I"))
  S TIU("Tiu","status")=$G(TIUARR(FNBR1,IENS1,.05,"E"))
  S TIU("Tiu","statusId")=$G(TIUARR(FNBR1,IENS1,.05,"I"))
+ S TIU("Tiu","statusFHIR")=$$NOTSTAT($$LOW^XLFSTR(TIU("Tiu","status")))
  S TIU("Tiu","parent")=$G(TIUARR(FNBR1,IENS1,.06,"E"))
  S TIU("Tiu","parentId")=$G(TIUARR(FNBR1,IENS1,.06,"I"))
  S TIU("Tiu","episodeBeginDateTime")=$G(TIUARR(FNBR1,IENS1,.07,"E"))
@@ -64,17 +67,21 @@ GET1TIU(TIU,TIUIEN,RETJSON,TIUJ) ;get one TIU record
  S TIU("Tiu","reportText")=""
  N Z S Z=""
  F  S Z=$O(TIUARR(FNBR1,IENS1,2,Z)) QUIT:'+Z  D
- . S TIU("Tiu","reportText")=TIU("Tiu","reportText")_$G(TIUARR(FNBR1,IENS1,2,Z))
+ . S TIU("Tiu","reportText")=TIU("Tiu","reportText")_$$ESC^XLFJSON($G(TIUARR(FNBR1,IENS1,2,Z)))_"\n"
  S TIU("Tiu","entryDateTime")=$G(TIUARR(FNBR1,IENS1,1201,"E"))
  S TIU("Tiu","entryDateTimeFM")=$G(TIUARR(FNBR1,IENS1,1201,"I"))
  S TIU("Tiu","entryDateTimeHL7")=$$FMTHL7^XLFDT($G(TIUARR(FNBR1,IENS1,1201,"I")))
  S TIU("Tiu","entryDateTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(TIUARR(FNBR1,IENS1,1201,"I")))
  S TIU("Tiu","authorDictator")=$G(TIUARR(FNBR1,IENS1,1202,"E"))
  S TIU("Tiu","authorDictatorId")=$G(TIUARR(FNBR1,IENS1,1202,"I"))
+ S TIU("Tiu","authorDictatorNPI")=$$GET1^DIQ(200,TIU("Tiu","authorDictatorId")_",",41.99) ;NPI
+ S TIU("Tiu","authorDictatorResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","authorDictatorId"))
  S TIU("Tiu","clinic")=$G(TIUARR(FNBR1,IENS1,1203,"E"))
  S TIU("Tiu","clinicId")=$G(TIUARR(FNBR1,IENS1,1203,"I"))
  S TIU("Tiu","expectedSigner")=$G(TIUARR(FNBR1,IENS1,1204,"E"))
  S TIU("Tiu","expectedSignerId")=$G(TIUARR(FNBR1,IENS1,1204,"I"))
+ S TIU("Tiu","expectedSignerNPI")=$$GET1^DIQ(200,TIU("Tiu","expectedSignerId")_",",41.99) ;NPI
+ S TIU("Tiu","expectedSignerResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","expectedSignerId"))
  S TIU("Tiu","hospitalLocation")=$G(TIUARR(FNBR1,IENS1,1205,"E"))
  S TIU("Tiu","hospitalLocationId")=$G(TIUARR(FNBR1,IENS1,1205,"I"))
  S TIU("Tiu","serviceCreditStop")=$G(TIUARR(FNBR1,IENS1,1206,"E"))
@@ -83,8 +90,12 @@ GET1TIU(TIU,TIUIEN,RETJSON,TIUJ) ;get one TIU record
  S TIU("Tiu","secondaryVisitId")=$G(TIUARR(FNBR1,IENS1,1207,"I"))
  S TIU("Tiu","expectedCosigner")=$G(TIUARR(FNBR1,IENS1,1208,"E"))
  S TIU("Tiu","expectedCosignerId")=$G(TIUARR(FNBR1,IENS1,1208,"I"))
+ S TIU("Tiu","expectedCosignerNPI")=$$GET1^DIQ(200,TIU("Tiu","expectedCosignerId")_",",41.99) ;NPI
+ S TIU("Tiu","expectedCosignerResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","expectedCosignerId"))
  S TIU("Tiu","attendingPhysician")=$G(TIUARR(FNBR1,IENS1,1209,"E"))
  S TIU("Tiu","attendingPhysicianId")=$G(TIUARR(FNBR1,IENS1,1209,"I"))
+ S TIU("Tiu","attendingPhysicianNPI")=$$GET1^DIQ(200,TIU("Tiu","attendingPhysicianId")_",",41.99) ;NPI
+ S TIU("Tiu","attendingPhysicianResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","attendingPhysicianId"))
  S TIU("Tiu","orderNumber")=$G(TIUARR(FNBR1,IENS1,1210,"E"))
  S TIU("Tiu","orderNumberId")=$G(TIUARR(FNBR1,IENS1,1210,"I"))
  S TIU("Tiu","visitLocation")=$G(TIUARR(FNBR1,IENS1,1211,"E"))
@@ -97,6 +108,8 @@ GET1TIU(TIU,TIUIEN,RETJSON,TIUJ) ;get one TIU record
  S TIU("Tiu","referenceDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(TIUARR(FNBR1,IENS1,1301,"I")))
  S TIU("Tiu","enteredBy")=$G(TIUARR(FNBR1,IENS1,1302,"E"))
  S TIU("Tiu","enteredById")=$G(TIUARR(FNBR1,IENS1,1302,"I"))
+ S TIU("Tiu","enteredByNPI")=$$GET1^DIQ(200,TIU("Tiu","enteredById")_",",41.99) ;NPI
+ S TIU("Tiu","enteredByResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","enteredById"))
  S TIU("Tiu","captureMethod")=$G(TIUARR(FNBR1,IENS1,1303,"E"))
  S TIU("Tiu","captureMethodCd")=$G(TIUARR(FNBR1,IENS1,1303,"I"))
  S TIU("Tiu","releaseDateTime")=$G(TIUARR(FNBR1,IENS1,1304,"E"))
@@ -109,6 +122,8 @@ GET1TIU(TIU,TIUIEN,RETJSON,TIUJ) ;get one TIU record
  S TIU("Tiu","verificationDateTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(TIUARR(FNBR1,IENS1,1305,"I")))
  S TIU("Tiu","verifiedBy")=$G(TIUARR(FNBR1,IENS1,1306,"E"))
  S TIU("Tiu","verifiedById")=$G(TIUARR(FNBR1,IENS1,1306,"I"))
+ S TIU("Tiu","verifiedByNPI")=$$GET1^DIQ(200,TIU("Tiu","verifiedById")_",",41.99) ;NPI
+ S TIU("Tiu","verifiedByResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","verifiedById"))
  S TIU("Tiu","dictationDate")=$G(TIUARR(FNBR1,IENS1,1307,"E"))
  S TIU("Tiu","dictationDateFM")=$G(TIUARR(FNBR1,IENS1,1307,"I"))
  S TIU("Tiu","dictationDateHL7")=$$FMTHL7^XLFDT($G(TIUARR(FNBR1,IENS1,1307,"I")))
@@ -136,6 +151,8 @@ GET1TIU(TIU,TIUIEN,RETJSON,TIUJ) ;get one TIU record
  S TIU("Tiu","signatureDateTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(TIUARR(FNBR1,IENS1,1501,"I")))
  S TIU("Tiu","signedBy")=$G(TIUARR(FNBR1,IENS1,1502,"E"))
  S TIU("Tiu","signedById")=$G(TIUARR(FNBR1,IENS1,1502,"I"))
+ S TIU("Tiu","signedByNPI")=$$GET1^DIQ(200,TIU("Tiu","signedById")_",",41.99) ;NPI
+ S TIU("Tiu","signedByResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","signedById"))
  S TIU("Tiu","signatureBlockName")=$G(TIUARR(FNBR1,IENS1,1503,"E"))
  S TIU("Tiu","signatureBlockTitle")=$G(TIUARR(FNBR1,IENS1,1504,"E"))
  S TIU("Tiu","signatureMode")=$G(TIUARR(FNBR1,IENS1,1505,"E"))
@@ -148,20 +165,28 @@ GET1TIU(TIU,TIUIEN,RETJSON,TIUJ) ;get one TIU record
  S TIU("Tiu","cosignatureDateTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(TIUARR(FNBR1,IENS1,1507,"I")))
  S TIU("Tiu","cosignedBy")=$G(TIUARR(FNBR1,IENS1,1508,"E"))
  S TIU("Tiu","cosignedById")=$G(TIUARR(FNBR1,IENS1,1508,"I"))
+ S TIU("Tiu","cosignedByNPI")=$$GET1^DIQ(200,TIU("Tiu","cosignedById")_",",41.99) ;NPI
+ S TIU("Tiu","cosignedByResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","cosignedById"))
  S TIU("Tiu","cosignatureBlockName")=$G(TIUARR(FNBR1,IENS1,1509,"E"))
  S TIU("Tiu","cosignatureBlockTitle")=$G(TIUARR(FNBR1,IENS1,1510,"E"))
  S TIU("Tiu","cosignatureMode")=$G(TIUARR(FNBR1,IENS1,1511,"E"))
  S TIU("Tiu","cosignatureModeCd")=$G(TIUARR(FNBR1,IENS1,1511,"I"))
  S TIU("Tiu","markedSignedOnChartBy")=$G(TIUARR(FNBR1,IENS1,1512,"E"))
  S TIU("Tiu","markedSignedOnChartById")=$G(TIUARR(FNBR1,IENS1,1512,"I"))
+ S TIU("Tiu","markedSignedOnChartByNPI")=$$GET1^DIQ(200,TIU("Tiu","markedSignedOnChartById")_",",41.99) ;NPI
+ S TIU("Tiu","markedSignedOnChartByResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","markedSignedOnChartById"))
  S TIU("Tiu","markedCosignedOnChartBy")=$G(TIUARR(FNBR1,IENS1,1513,"E"))
  S TIU("Tiu","markedCosignedOnChartById")=$G(TIUARR(FNBR1,IENS1,1513,"I"))
+ S TIU("Tiu","markedCosignedOnChartByNPI")=$$GET1^DIQ(200,TIU("Tiu","markedCosignedOnChartById")_",",41.99) ;NPI
+ S TIU("Tiu","markedCosignedOnChartByResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","markedCosignedOnChartById"))
  S TIU("Tiu","amendmentDateTime")=$G(TIUARR(FNBR1,IENS1,1601,"E"))
  S TIU("Tiu","amendmentDateTimeFM")=$G(TIUARR(FNBR1,IENS1,1601,"I"))
  S TIU("Tiu","amendmentDateTimeHL7")=$$FMTHL7^XLFDT($G(TIUARR(FNBR1,IENS1,1601,"I")))
  S TIU("Tiu","amendmentDateTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(TIUARR(FNBR1,IENS1,1601,"I")))
  S TIU("Tiu","amendedBy")=$G(TIUARR(FNBR1,IENS1,1602,"E"))
  S TIU("Tiu","amendedById")=$G(TIUARR(FNBR1,IENS1,1602,"I"))
+ S TIU("Tiu","amendedByNPI")=$$GET1^DIQ(200,TIU("Tiu","amendedById")_",",41.99) ;NPI
+ S TIU("Tiu","amendedByResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","amendedById"))
  S TIU("Tiu","amendmentSigned")=$G(TIUARR(FNBR1,IENS1,1603,"E"))
  S TIU("Tiu","amendmentSignedFM")=$G(TIUARR(FNBR1,IENS1,1603,"I"))
  S TIU("Tiu","amendmentSignedHL7")=$$FMTHL7^XLFDT($G(TIUARR(FNBR1,IENS1,1603,"I")))
@@ -180,6 +205,8 @@ GET1TIU(TIU,TIUIEN,RETJSON,TIUJ) ;get one TIU record
  S TIU("Tiu","archivePurgeDateTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(TIUARR(FNBR1,IENS1,1609,"I")))
  S TIU("Tiu","deletedBy")=$G(TIUARR(FNBR1,IENS1,1610,"E"))
  S TIU("Tiu","deletedById")=$G(TIUARR(FNBR1,IENS1,1610,"I"))
+ S TIU("Tiu","deletedByNPI")=$$GET1^DIQ(200,TIU("Tiu","deletedById")_",",41.99) ;NPI
+ S TIU("Tiu","deletedByResId")=$$RESID^SYNDHP69("V",SITE,200,TIU("Tiu","deletedById"))
  S TIU("Tiu","deletionDate")=$G(TIUARR(FNBR1,IENS1,1611,"E"))
  S TIU("Tiu","deletionDateFM")=$G(TIUARR(FNBR1,IENS1,1611,"I"))
  S TIU("Tiu","deletionDateHL7")=$$FMTHL7^XLFDT($G(TIUARR(FNBR1,IENS1,1611,"I")))
@@ -202,9 +229,54 @@ GET1TIU(TIU,TIUIEN,RETJSON,TIUJ) ;get one TIU record
  S TIU("Tiu","vhaEnterpriseStandardTitle")=$G(TIUARR(FNBR1,IENS1,89261,"E"))
  ;
  ;
- ;I $G(DEBUG) W ! ZWRITE TIU
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("TIU")
  ;
- D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.TIU,.TIUJ)
+ I $G(RETJSON)="J" D
+ . D TOJASON^SYNDHPUTL(.TIU,.TIUJ)
+ . S TIUJ=$$UES^XLFJSON(TIUJ) ;change \\n to \n
  ;
  QUIT
+ ;
+NOTSTAT(X) ; Note status mapping
+ ; the VistA status must map to one of the following FHIR statii
+ ;   preliminary | final | amended | entered-in-error
+ ;
+ ; X is External Status value (8925, .05) converted to lower case
+ ;
+ ;  statii from TIU(8925.6
+ ;    1)="UNDICTATED^preliminary"
+ ;    2)="UNTRANSCRIBED^preliminary"
+ ;    3)="UNRELEASED^preliminary"
+ ;    4)="UNVERIFIED^preliminary"
+ ;    5)="UNSIGNED^preliminary"
+ ;    6)="UNCOSIGNED^preliminary"
+ ;    7)="COMPLETED^final"
+ ;    8)="AMENDED^amended"
+ ;    9)="PURGED^entered-in-error"
+ ;    10)="TEST^entered-in-error"
+ ;    11)="ACTIVE^preliminary"
+ ;    13)="INACTIVE^preliminary"
+ ;    14)="DELETED^enered-in-error"
+ ;    15)="RETRACTED^entered-in-error"
+ ;
+ ; converted to values returned by TIU RPC
+ ;
+ N XNS
+ S XNS("active")="preliminary"
+ S XNS("amended")="amended"
+ S XNS("completed")="final"
+ S XNS("deleted")="enered-in-error"
+ S XNS("inactive")="preliminary"
+ S XNS("purged")="entered-in-error"
+ S XNS("retracted")="entered-in-error"
+ S XNS("test")="entered-in-error"
+ S XNS("uncosigned")="preliminary"
+ S XNS("undictated")="preliminary"
+ S XNS("unreleased")="preliminary"
+ S XNS("unsigned")="preliminary"
+ S XNS("untranscribed")="preliminary"
+ S XNS("unverified")="preliminary"
+ ;
+ QUIT:$D(XNS(X)) $P(XNS(X),U)
+ QUIT "error - composition status not recognised"
  ;

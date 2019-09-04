@@ -1,4 +1,4 @@
-SYNDHPTS1 ;AFHIL DHP/fjf/art - HealthConcourse - DHP REST handlers ;12/04/2018
+SYNDHPTS1 ;AFHIL DHP/fjf/art - HealthConcourse - DHP REST handlers ;16/25/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;
  ;
@@ -11,7 +11,7 @@ CTRL ;
  S DHPICN="" F  S DHPICN=$O(^DPT("AFICN",DHPICN)) Q:DHPICN=""  D
  .;W !,DHPICN Q
  .;D PATLABI
- .;I RETSTA["2000-8" W !!!!!! ZW RETSTA
+ .;I RETSTA["2000-8" W !!!!!! W $$ZW^SYNDHPUTL("RETSTA")
  .;Q
  .S CALL=""
  .F  S CALL=$O(CALLS(CALL)) Q:CALL=""  D
@@ -20,7 +20,7 @@ CTRL ;
  ..;W !!,"Still before",! ;R *R
  ..K RETSTA
  ..D @CALL
- ..W !!!! ZW RETSTA
+ ..W !!!! W $$ZW^SYNDHPUTL("RETSTA")
  Q
 GTCALLS ; set up call list
  F I=1:1 Q:$T(+I)=""  D

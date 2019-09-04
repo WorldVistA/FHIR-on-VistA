@@ -1,4 +1,4 @@
-SYNDHP09 ; HC/fjf/art - HealthConcourse - get patient health factors ;05/04/2019
+SYNDHP09 ; HC/fjf/art - HealthConcourse - get patient health factors ;07/23/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -134,7 +134,7 @@ HLFS(HFARRAY,PATIEN,DHPICN,FRDAT,TODAT) ; get health factors for a patient
  . I $D(HLFACT("HealthFactor","ERROR")) M HFARRAY("HealthFactors",HIEN)=HLFACT QUIT
  . S VISITID=HLFACT("HealthFactor","visitId") ;visit ien
  . S VISITDT=$$GET1^DIQ(FNBR2,VISITID_",",.01,"I") ;visit/admit date&time
- . QUIT:((VISITDT\1)<FRDAT)!((VISITDT\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(VISITDT,FRDAT,TODAT)  ;quit if outside of requested date range
  . S VISITHL=$$FMTHL7^XLFDT(VISITDT) ;hl7 format visit/admit date&time
  . S HID=HLFACT("HealthFactor","resourceId")
  . S HFACT=HLFACT("HealthFactor","hlfNameId") ;health factor ien
@@ -187,6 +187,16 @@ T1 ;
  QUIT
  ;
 T2 ;
+ N ICN S ICN="5000001536V889384"
+ N FRDAT S FRDAT=20150101
+ N TODAT S TODAT=20151231
+ N JSON S JSON=""
+ N RETSTA
+ D PATHLFI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T3 ;
  N ICN S ICN="5000001536V889384"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""

@@ -1,4 +1,4 @@
-SYNDHP53 ; HC/fjf/art - HealthConcourse - get patient labs ;05/04/2019
+SYNDHP53 ; HC/fjf/art - HealthConcourse - get patient labs ;07/24/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -96,7 +96,7 @@ LABS(LLIST,PATIEN,FRDAT,TODAT,DHPICN,LABARRAY) ; return chem labs for patient
  F  S SEQ=$O(LABS("Lab","chemHemToxRiaSerEtcs","chemHemToxRiaSerEtc",SEQ)) QUIT:SEQ=""  D
  . N TEST S TEST=$NA(LABS("Lab","chemHemToxRiaSerEtcs","chemHemToxRiaSerEtc",SEQ))
  . S TESTDT=@TEST@("dateTimeSpecimenTakenFM")
- . QUIT:((TESTDT\1)<FRDAT)!((TESTDT\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(TESTDT,FRDAT,TODAT)  ;quit if outside of requested date range
  . S TESTDTHL=@TEST@("dateTimeSpecimenTakenHL7")
  . S LOINCCD=@TEST@("loincCode")
  . S LOINCNM=@TEST@("loincName")
@@ -114,7 +114,7 @@ LABS(LLIST,PATIEN,FRDAT,TODAT,DHPICN,LABARRAY) ; return chem labs for patient
  . S ARRAY(RETSEQ)=LOINCCD_P_LOINCNM_P_RESULT_P_TESTDTHL_P_LABID
  . M LABARRAY("Labs",PATIEN)=LABS ;
  ;
- ;I $G(DEBUG) W ! ZWRITE ARRAY W !
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("ARRAY") W !
  ;serialize data
  S LLIST=DHPICN
  S RETSEQ=""
@@ -127,7 +127,7 @@ LABS(LLIST,PATIEN,FRDAT,TODAT,DHPICN,LABARRAY) ; return chem labs for patient
  ;
  ; ----------- Unit Test -----------
 T1 ;
- N ICN S ICN="1034989029V875306"
+ N ICN S ICN="5000001536V889384"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N JSON S JSON=""
@@ -137,7 +137,17 @@ T1 ;
  QUIT
  ;
 T2 ;
- N ICN S ICN="1034989029V875306"
+ N ICN S ICN="5000001536V889384"
+ N FRDAT S FRDAT=20140131
+ N TODAT S TODAT=20150131
+ N JSON S JSON=""
+ N RETSTA
+ D PATLABI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T3 ;
+ N ICN S ICN="5000001536V889384"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N JSON S JSON="J"

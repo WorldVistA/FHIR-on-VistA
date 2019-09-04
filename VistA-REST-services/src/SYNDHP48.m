@@ -1,4 +1,4 @@
-SYNDHP48 ; HC/PWC/art - HealthConcourse - retrieve patient medication data ;05/07/2019
+SYNDHP48 ; HC/PWC/art - HealthConcourse - retrieve patient medication data ;08/05/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -57,13 +57,13 @@ STM ;
  .S STATUS=$G(MEDX(55.06,IENS,28,"E"))    ; status
  .S DOSORD=$P($G(^PS(55,PATIEN,5,D1,.2)),U,2)          ; dosage ordered
  .S STDTFM=$G(MEDX(55.06,IENS,10,"I"))      ; start date
- .QUIT:((STDTFM\1)<FRDAT)!((STDTFM\1)>TODAT)  ;quit if outside of requested date range
+ .QUIT:'$$RANGECK^SYNDHPUTL(STDTFM,FRDAT,TODAT)  ;quit if outside of requested date range
  .S STDT=$$FMTHL7^XLFDT($G(MEDX(55.06,IENS,10,"I")))      ; start date
  .S DRUG=$$GET1^DIQ(55.07,1_C_IENS,.01,"E")  ; medication
  .S DRUGI=$$GET1^DIQ(55.07,1_C_IENS,.01,"I")
- .S RXN=$$GETRXN(DRUGI)
+ .S RXN=$$GETRXN^SYNDHPUTL(DRUGI)
  .I RXN?1.N S RXN="RXN"_RXN
- .S IDENT=$$RESID^SYNDHP69("V",SITE)_UL_55_UL_PATIEN_UL_55.06_UL_D1
+ .S IDENT=$$RESID^SYNDHP69("V",SITE,55,PATIEN,55.06_U_D1)
  .S RETDESC=RETDESC_$G(IDENT)_U_$G(STATUS)_U_$G(DRUG)_U_$G(STDT)_U_"REASON"_U_$G(SITEA)_S_$G(ROUTE)_S_$G(DOSORD)_U_$G(QTY)_U_$G(DAYS)_U_$G(RXN)_P
  ;
  ; start here for outpatient orders
@@ -74,13 +74,13 @@ STM ;
  . N MEDX,MEDERR
  . D GETS^DIQ(52,RX_",",".01;1;2;6;7;8;100","IEN","MEDX","MEDERR")
  . QUIT:$D(MEDERR)
- . S IDENT=$$RESID^SYNDHP69("V",SITE)_UL_52_UL_RX
+ . S IDENT=$$RESID^SYNDHP69("V",SITE,52,RX)
  . S IDATEFM=$G(MEDX(52,RX_",",1,"I"))     ;issue date
- . QUIT:((IDATEFM\1)<FRDAT)!((IDATEFM\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(IDATEFM,FRDAT,TODAT)  ;quit if outside of requested date range
  . S IDATE=$$FMTHL7^XLFDT($G(MEDX(52,RX_",",1,"I")))     ;issue date HL7
  . S DRUG=$G(MEDX(52,RX_",",6,"E"))      ;medication
  . S DRUGI=$G(MEDX(52,RX_",",6,"I"))
- . S RXN=$$GETRXN(DRUGI)
+ . S RXN=$$GETRXN^SYNDHPUTL(DRUGI)
  . I RXN?1.N S RXN="RXN"_RXN
  . S QTY=$G(MEDX(52,RX_",",7,"E"))       ;quantity
  . S DAYS=$G(MEDX(52,RX_",",8,"E"))      ;days supply
@@ -89,27 +89,6 @@ STM ;
  . S RETDESC=RETDESC_$G(IDENT)_U_$G(STATUS)_U_$G(DRUG)_U_$G(IDATE)_U_"REASON"_U_$G(SITEA)_S_$G(ROUTE)_S_$G(DOSORD)_U_$G(QTY)_U_$G(DAYS)_U_$G(RXN)_P
  S RETSTA=DHPICN_U_RETDESC
  Q
- ;
-GETRXN(X,IO) ; get RxNorm code for drug
- ;
- N NAME,F50P6IEN,VUID,NDFRT,RXNORM
- S NAME=$$GET1^DIQ(50,X_",",20,"E")
- I $G(DEBUG) W !,"name: ",NAME
- I NAME'="" D
- .S F50P6IEN=$O(^PSNDF(50.6,"B",NAME,""))
- .I $G(DEBUG) W !,"ien: ",F50P6IEN
- .S VUID=$$GET1^DIQ(50.6,F50P6IEN_",",99.99)
- .I $G(DEBUG) W !,"vuid: ",VUID
- .S NDFRT=$$graphmap^SYNGRAPH("ndfrt-map",VUID,"NDFRT")
- .I $G(DEBUG) W !,"ndfrt: ",NDFRT
- .N SCT S SCT=$$MAP^SYNDHPMP("rxn2ndf",NDFRT,"I")
- .I $G(DEBUG) W !,"sct: ",SCT
- .S RXNORM=$S(+SCT=-1:$P(SCT,U,2),1:$P(SCT,U,2))
- .I $G(DEBUG) W !,"rxnorm: ",RXNORM
- I NAME="" S RXNORM="^missing VistA data"
- I $G(DEBUG) W !,"rxnorm: ",RXNORM,!
- Q RXNORM
- ;I NAME="" S NAME=$$GET1^DIQ(50,X_",",26,"E")
  ;
  ; ---------------- Get patient medication administration ----------------------------
 PATMEDA(RETSTA,DHPICN,FRDAT,TODAT) ; Patient medication administration for ICN
@@ -167,9 +146,9 @@ STA ;
  .S STDT=$$FMTHL7^XLFDT($G(MEDX(55.06,IENS,10,"I")))      ; start date
  .S DRUG=$$GET1^DIQ(55.07,1_C_IENS,.01,"E")  ; medication
  .S DRUGI=$$GET1^DIQ(55.07,1_C_IENS,.01,"I")
- .S RXN=$$GETRXN(DRUGI)
+ .S RXN=$$GETRXN^SYNDHPUTL(DRUGI)
  .I RXN?1.N S RXN="RXN"_RXN
- .S IDENT=$$RESID^SYNDHP69("V",SITE)_UL_55_UL_PATIEN_UL_55.06_UL_D1
+ .S IDENT=$$RESID^SYNDHP69("V",SITE,55,PATIEN,55.06_U_D1)
  .S RETDESC=RETDESC_$G(IDENT)_U_$G(STATUS)_U_$G(DRUG)_U_$G(STDT)_U_"REASON"_U_$G(SITEA)_S_$G(ROUTE)_S_$G(DOSORD)_U_$G(QTY)_U_$G(DAYS)_U_$G(RXN)_P
  ;
  ; start here for outpatient orders
@@ -180,13 +159,13 @@ STA ;
  . N MEDX,MEDERR
  . D GETS^DIQ(52,RX_",",".01;1;2;6;7;8;100","IEN","MEDX","MEDERR")
  . QUIT:$D(MEDERR)
- . S IDENT=$$RESID^SYNDHP69("V",SITE)_UL_52_UL_RX
+ . S IDENT=$$RESID^SYNDHP69("V",SITE,52,RX)
  . S IDATEFM=$G(MEDX(52,RX_",",1,"I"))     ;issue date
  . QUIT:((IDATEFM\1)<FRDAT)!((IDATEFM\1)>TODAT)  ;quit if outside of requested date range
  . S IDATE=$$FMTHL7^XLFDT($G(MEDX(52,RX_",",1,"I")))     ;issue date
  . S DRUG=$G(MEDX(52,RX_",",6,"E"))      ;medication
  . S DRUGI=$G(MEDX(52,RX_",",6,"I"))
- . S RXN=$$GETRXN(DRUGI)
+ . S RXN=$$GETRXN^SYNDHPUTL(DRUGI)
  . I RXN?1.N S RXN="RXN"_RXN
  . S QTY=$G(MEDX(52,RX_",",7,"E"))       ;quantity
  . S DAYS=$G(MEDX(52,RX_",",8,"E"))      ;days supply
@@ -247,13 +226,13 @@ PATMEDD(RETSTA,DHPICN,FRDAT,TODAT) ; Patient medication dispense for ICN
  .S STATUS=$G(MEDX(55.06,IENS,28,"E"))    ; status
  .S DOSORD=$P($G(^PS(55,PATIEN,5,D1,.2)),U,2)          ; dosage ordered
  .S STDTFM=$G(MEDX(55.06,IENS,10,"I"))      ; start date
- .QUIT:((STDTFM\1)<FRDAT)!((STDTFM\1)>TODAT)  ;quit if outside of requested date range
+ .QUIT:'$$RANGECK^SYNDHPUTL(STDTFM,FRDAT,TODAT)  ;quit if outside of requested date range
  .S STDT=$$FMTHL7^XLFDT($G(MEDX(55.06,IENS,10,"I")))      ; start date
  .S DRUG=$$GET1^DIQ(55.07,1_C_IENS,.01,"E")  ; medication
  .S DRUGI=$$GET1^DIQ(55.07,1_C_IENS,.01,"I")
- .S RXN=$$GETRXN(DRUGI)
+ .S RXN=$$GETRXN^SYNDHPUTL(DRUGI)
  .I RXN?1.N S RXN="RXN"_RXN
- .S IDENT=$$RESID^SYNDHP69("V",SITE)_UL_55_UL_PATIEN_UL_55.06_UL_D1
+ .S IDENT=$$RESID^SYNDHP69("V",SITE,55,PATIEN,55.06_U_D1)
  .S RETDESC=RETDESC_$G(IDENT)_U_$G(STATUS)_U_$G(DRUG)_U_$G(STDT)_U_"REASON"_U_$G(SITEA)_S_$G(ROUTE)_S_$G(DOSORD)_U_$G(QTY)_U_$G(DAYS)_U_$G(RXN)_P
  ;
  S RETSTA=DHPICN_U_RETDESC
@@ -266,7 +245,7 @@ T1 ;
  N ICN S ICN=""
  F  S ICN=$O(^DPT("AFICN",ICN)) Q:ICN=""  D
  .W !!!,ICN,!!!
- .D PATMEDS(.RETSTA,ICN)
+ .D PATMEDA(.RETSTA,ICN)
  .W $$ZW^SYNDHPUTL("RETSTA")
  .W !!!
  Q
@@ -285,12 +264,12 @@ T3 ;
  F  S ICN=$O(^DPT("AFICN",ICN)) Q:ICN=""  D
  .S XPIEN=$O(^DPT("AFICN",ICN,""))
  .W !,ICN,!,XPIEN,!,^DPT(XPIEN,0),!
- .D PATMEDD(.RETSTA,ICN)
+ .D PATMEDS(.RETSTA,ICN)
  .W $$ZW^SYNDHPUTL("RETSTA"),!!
  Q
  ;
 T4 ;
- N ICN S ICN="10111V183702"
+ N ICN S ICN="5000000341V359724"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N RETSTA
@@ -299,7 +278,16 @@ T4 ;
  QUIT
  ;
 T5 ;
- N ICN S ICN="10111V183702"
+ N ICN S ICN="5000000341V359724"
+ N FRDAT S FRDAT=20100101
+ N TODAT S TODAT=20150101
+ N RETSTA
+ D PATMEDA(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T6 ;
+ N ICN S ICN="5000000341V359724"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N RETSTA
@@ -307,10 +295,28 @@ T5 ;
  W $$ZW^SYNDHPUTL("RETSTA"),!!
  QUIT
  ;
-T6 ;
- N ICN S ICN="10111V183702"
+T7 ;
+ N ICN S ICN="5000000341V359724"
+ N FRDAT S FRDAT=20100101
+ N TODAT S TODAT=20150101
+ N RETSTA
+ D PATMEDD(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T8 ;
+ N ICN S ICN="5000000341V359724"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
+ N RETSTA
+ D PATMEDS(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T9 ;
+ N ICN S ICN="5000000341V359724"
+ N FRDAT S FRDAT=20100101
+ N TODAT S TODAT=20150101
  N RETSTA
  D PATMEDS(.RETSTA,ICN,FRDAT,TODAT)
  W $$ZW^SYNDHPUTL("RETSTA"),!!

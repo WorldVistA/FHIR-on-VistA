@@ -23,7 +23,7 @@ ctrl(nopats,server) ;
  ;
  ; create array of urls of systems to be tested
  s server=$g(server,"none")
- d urlrts
+ d urlrts(server)
  ;
  ; create array of patient data endpoints to be tested
  d endpoints
@@ -52,6 +52,7 @@ ctrl(nopats,server) ;
  ....s RESTurl=$$RESTurl(url,endpoint,icn,,,format)
  ....w !,RESTurl,!
  ....s RET=$$GETURL^XTHC10(RESTurl,,"PDATA")
+ ....i RET'="200^OK" w !,RET q
  ....i '$d(PDATA) w !,"no data" q
  ....s datstr=$$xthc2st(.PDATA)
  ....w !,datstr,!
@@ -68,7 +69,7 @@ icnstr(url) ; create icn string for system at url
  s s=";"
  s icnurl=url_"DHPPATICNALL?JSON=T"
  s RET=$$GETURL^XTHC10(icnurl,,"icnar")
- i +RET=-1 q RET
+ i RET'="200^OK" q RET
  s icnar=""
  s icns=$$xthc2st(.icnar)
  q icns
@@ -97,7 +98,8 @@ RESTurl(url,endpoint,icn,fromdt,todt,format) ; create REST service URL
  s:todt'="" url=url_"&TODAT="_todt
  q url
  ;
-urlrts ; set up roots urls for healthConcourse dev
+urlrts(server) ; set up roots urls for healthConcourse dev
+ s server=$g(server,"none")
  k urlrt
  n s,t
  s s=";"
@@ -126,6 +128,10 @@ urlli ; list of url roots
  ;;https://vista-specialization.dev.openplatform.healthcare/vpr-web/;tarspecshm; tardis specialization shim
  ;;http://shadow.vistaplex.org/;shadvplex;                                       GT.M server
  ;;http://syn.vistaplex.org/;synvplex;                                           GT.M server
+ ;;http://localhost:8001/;localhost;                                             localhost
+ ;;http://localhost:9080/;localhostshm;localhost shim
+ ;;https://vista-sync.dev.openplatform.healthcare/rgnet-web/;gold;
+ ;;https://vista-sync.dev.openplatform.healthcare/vpr-web/;goldshm;
  ;;urlend
  q
  ;

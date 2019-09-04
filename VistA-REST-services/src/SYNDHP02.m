@@ -1,4 +1,4 @@
-SYNDHP02 ; HC/rbd/art - HealthConcourse - get patient immunization data ;05/04/2019
+SYNDHP02 ; HC/rbd/art - HealthConcourse - get patient immunization data ;07/26/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -62,7 +62,7 @@ IMMS(IMMARR,PATIEN,DHPICN,FRDAT,TODAT) ; get immunizations for a patient
  F  S IMCVXCOD=$O(^PXRMINDX(FNUM,"CVX","PI",PATIEN,IMCVXCOD)) Q:IMCVXCOD=""  D
  .S VSTDT=""
  .F  S VSTDT=$O(^PXRMINDX(FNUM,"CVX","PI",PATIEN,IMCVXCOD,VSTDT)) Q:VSTDT=""  D
- ..QUIT:((VSTDT\1)<FRDAT)!((VSTDT\1)>TODAT)  ;quit if outside of requested date range
+ ..QUIT:'$$RANGECK^SYNDHPUTL(VSTDT,FRDAT,TODAT)  ;quit if outside of requested date range
  ..S PTIMMIEN=""
  ..F  S PTIMMIEN=$O(^PXRMINDX(FNUM,"CVX","PI",PATIEN,IMCVXCOD,VSTDT,PTIMMIEN)) Q:PTIMMIEN=""  D
  ...N IMMUNIZE
@@ -71,7 +71,7 @@ IMMS(IMMARR,PATIEN,DHPICN,FRDAT,TODAT) ; get immunizations for a patient
  ...S PTIMMID=IMMUNIZE("Immunize","resourceId")
  ...S IMMDESC=IMMUNIZE("Immunize","immunization")
  ...S VIEN=IMMUNIZE("Immunize","visitId")
- ...S LOCENC=$$GET1^DIQ(9000010,VIEN,.06)
+ ...S LOCENC=IMMUNIZE("Immunize","location")
  ...S SERIES=IMMUNIZE("Immunize","series")
  ...S SERIESID=IMMUNIZE("Immunize","seriesCd")
  ...S IMMGIVEN=IMMUNIZE("Immunize","eventDateAndTimeHL7")
@@ -132,6 +132,16 @@ T1 ;
  QUIT
  ;
 T2 ;
+ N ICN S ICN="10110V004877"
+ N FRDAT S FRDAT=20130801
+ N TODAT S TODAT=20140431
+ N JSON S JSON=""
+ N RETSTA
+ D PATIMMI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T3 ;
  N ICN S ICN="10110V004877"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""

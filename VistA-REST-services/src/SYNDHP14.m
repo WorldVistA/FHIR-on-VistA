@@ -1,4 +1,4 @@
-SYNDHP14 ; HC/art - HealthConcourse - get visit data ;03/21/2019
+SYNDHP14 ; HC/art - HealthConcourse - get visit data ;08/27/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -21,15 +21,15 @@ GET1VSCODE(VSCODE,VSCODEIEN,RETJSON,VSCODEJ) ;get one V Standard Codes record
  ;
  N VSCODEARR,VSCODEERR
  D GETS^DIQ(FNBR1,IENS1,"**","EI","VSCODEARR","VSCODEERR")
- ;I $G(DEBUG) W ! ZWRITE VSCODEARR
- ;I $G(DEBUG),$D(VSCODEERR) W ">>ERROR<<",! ZWRITE VSCODEERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VSCODEARR")
+ I $G(DEBUG),$D(VSCODEERR) W ">>ERROR<<",! W $$ZW^SYNDHPUTL("VSCODEERR")
  I $D(VSCODEERR) S VSCODE("Vscode","ERROR")=VSCODEIEN QUIT
  I $D(VSCODEERR) D  QUIT
  . S VSCODE("Vscode","ERROR")=VSCODEIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.VSCODE,.VSCODEJ)
  S VSCODE("Vscode","vscodeIen")=VSCODEIEN
- S VSCODE("Vscode","resourceType")="Encounter"
- S VSCODE("Vscode","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_VSCODEIEN
+ S VSCODE("Vscode","resourceType")="Procedure"
+ S VSCODE("Vscode","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,VSCODEIEN)
  S VSCODE("Vscode","code")=$G(VSCODEARR(FNBR1,IENS1,.01,"E"))
  S VSCODE("Vscode","patientName")=$G(VSCODEARR(FNBR1,IENS1,.02,"E"))
  S VSCODE("Vscode","patientNameId")=$G(VSCODEARR(FNBR1,IENS1,.02,"I"))
@@ -39,6 +39,7 @@ GET1VSCODE(VSCODE,VSCODEIEN,RETJSON,VSCODEJ) ;get one V Standard Codes record
  S VSCODE("Vscode","visitFM")=$$GET1^DIQ(9000010,VSCODE("Vscode","visitId")_",",.01,"I")
  S VSCODE("Vscode","visitHL7")=$$FMTHL7^XLFDT(VSCODE("Vscode","visitFM"))
  S VSCODE("Vscode","visitFHIR")=$$FMTFHIR^SYNDHPUTL(VSCODE("Vscode","visitFM"))
+ S VSCODE("Vscode","visitResId")=$$RESID^SYNDHP69("V",SITE,9000010,VSCODE("Vscode","visitId"))
  S VSCODE("Vscode","codingSystem")=$G(VSCODEARR(FNBR1,IENS1,.05,"E"))
  S VSCODE("Vscode","problemListEntry")=$G(VSCODEARR(FNBR1,IENS1,.06,"E"))
  S VSCODE("Vscode","problemListEntryId")=$G(VSCODEARR(FNBR1,IENS1,.06,"I"))
@@ -52,8 +53,12 @@ GET1VSCODE(VSCODE,VSCODEIEN,RETJSON,VSCODEJ) ;get one V Standard Codes record
  S VSCODE("Vscode","eventDateAndTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(VSCODEARR(FNBR1,IENS1,1201,"I")))
  S VSCODE("Vscode","orderingProvider")=$G(VSCODEARR(FNBR1,IENS1,1202,"E"))
  S VSCODE("Vscode","orderingProviderId")=$G(VSCODEARR(FNBR1,IENS1,1202,"I"))
+ S VSCODE("Vscode","orderingProviderNPI")=$$GET1^DIQ(200,VSCODE("Vscode","orderingProviderId")_",",41.99) ;NPI
+ S VSCODE("Vscode","orderingProviderResId")=$$RESID^SYNDHP69("V",SITE,200,VSCODE("Vscode","orderingProviderId"))
  S VSCODE("Vscode","encounterProvider")=$G(VSCODEARR(FNBR1,IENS1,1204,"E"))
  S VSCODE("Vscode","encounterProviderId")=$G(VSCODEARR(FNBR1,IENS1,1204,"I"))
+ S VSCODE("Vscode","encounterProviderNPI")=$$GET1^DIQ(200,VSCODE("Vscode","encounterProviderId")_",",41.99) ;NPI
+ S VSCODE("Vscode","encounterProviderResId")=$$RESID^SYNDHP69("V",SITE,200,VSCODE("Vscode","encounterProviderId"))
  S VSCODE("Vscode","editedFlag")=$G(VSCODEARR(FNBR1,IENS1,80101,"E"))
  S VSCODE("Vscode","editedFlagCd")=$G(VSCODEARR(FNBR1,IENS1,80101,"I"))
  S VSCODE("Vscode","auditTrail")=$G(VSCODEARR(FNBR1,IENS1,80102,"E"))
@@ -65,7 +70,7 @@ GET1VSCODE(VSCODE,VSCODEIEN,RETJSON,VSCODEJ) ;get one V Standard Codes record
  S VSCODE("Vscode","dataSource")=$G(VSCODEARR(FNBR1,IENS1,81203,"E"))
  S VSCODE("Vscode","dataSourceId")=$G(VSCODEARR(FNBR1,IENS1,81203,"I"))
  ;
- ;I $G(DEBUG) W ! ZWRITE VSCODE
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VSCODE")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.VSCODE,.VSCODEJ)
  ;
@@ -88,14 +93,14 @@ GET1VCPT(VCPT,VCPTIEN,RETJSON,VCPTJ) ;get one V CPT record
  ;
  N VCPTARR,VCPTERR
  D GETS^DIQ(FNBR1,IENS1,"**","EI","VCPTARR","VCPTERR")
- ;I $G(DEBUG) W ! ZWRITE VCPTARR
- ;I $G(DEBUG),$D(VCPTERR) W ">>ERROR<<",! ZWRITE VCPTERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VCPTARR")
+ I $G(DEBUG),$D(VCPTERR) W ">>ERROR<<",! W $$ZW^SYNDHPUTL("VCPTERR")
  I $D(VCPTERR) D  QUIT
  . S VCPT("Vcpt","ERROR")=VCPTIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.VCPT,.VCPTJ)
  S VCPT("Vcpt","vcptIen")=VCPTIEN
- S VCPT("Vcpt","resourceType")="Encounter"
- S VCPT("Vcpt","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_VCPTIEN
+ S VCPT("Vcpt","resourceType")="Procedure"
+ S VCPT("Vcpt","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,VCPTIEN)
  S VCPT("Vcpt","cpt")=$G(VCPTARR(FNBR1,IENS1,.01,"E"))
  S VCPT("Vcpt","cptId")=$G(VCPTARR(FNBR1,IENS1,.01,"I"))
  S VCPT("Vcpt","cptName")=$$GET1^DIQ(81,VCPT("Vcpt","cptId")_",",2)
@@ -107,6 +112,7 @@ GET1VCPT(VCPT,VCPTIEN,RETJSON,VCPTJ) ;get one V CPT record
  S VCPT("Vcpt","visitFM")=$$GET1^DIQ(9000010,VCPT("Vcpt","visitId")_",",.01,"I")
  S VCPT("Vcpt","visitHL7")=$$FMTHL7^XLFDT(VCPT("Vcpt","visitFM"))
  S VCPT("Vcpt","visitFHIR")=$$FMTFHIR^SYNDHPUTL(VCPT("Vcpt","visitFM"))
+ S VCPT("Vcpt","visitResId")=$$RESID^SYNDHP69("V",SITE,9000010,VCPT("Vcpt","visitId"))
  S VCPT("Vcpt","providerNarrative")=$G(VCPTARR(FNBR1,IENS1,.04,"E"))
  S VCPT("Vcpt","providerNarrativeId")=$G(VCPTARR(FNBR1,IENS1,.04,"I"))
  S VCPT("Vcpt","diagnosis")=$G(VCPTARR(FNBR1,IENS1,.05,"E"))
@@ -139,8 +145,12 @@ GET1VCPT(VCPT,VCPTIEN,RETJSON,VCPTJ) ;get one V CPT record
  S VCPT("Vcpt","eventDateAndTimeFHIR")=$$FMTFHIR^SYNDHPUTL($G(VCPTARR(FNBR1,IENS1,1201,"I")))
  S VCPT("Vcpt","orderingProvider")=$G(VCPTARR(FNBR1,IENS1,1202,"E"))
  S VCPT("Vcpt","orderingProviderId")=$G(VCPTARR(FNBR1,IENS1,1202,"I"))
+ S VCPT("Vcpt","orderingProviderNPI")=$$GET1^DIQ(200,VCPT("Vcpt","orderingProviderId")_",",41.99) ;NPI
+ S VCPT("Vcpt","orderingProviderResId")=$$RESID^SYNDHP69("V",SITE,200,VCPT("Vcpt","orderingProviderId"))
  S VCPT("Vcpt","encounterProvider")=$G(VCPTARR(FNBR1,IENS1,1204,"E"))
  S VCPT("Vcpt","encounterProviderId")=$G(VCPTARR(FNBR1,IENS1,1204,"I"))
+ S VCPT("Vcpt","encounterProviderNPI")=$$GET1^DIQ(200,VCPT("Vcpt","encounterProviderId")_",",41.99) ;NPI
+ S VCPT("Vcpt","encounterProviderResId")=$$RESID^SYNDHP69("V",SITE,200,VCPT("Vcpt","encounterProviderId"))
  S VCPT("Vcpt","editedFlag")=$G(VCPTARR(FNBR1,IENS1,80101,"E"))
  S VCPT("Vcpt","editedFlagCd")=$G(VCPTARR(FNBR1,IENS1,80101,"I"))
  S VCPT("Vcpt","auditTrail")=$G(VCPTARR(FNBR1,IENS1,80102,"E"))
@@ -159,9 +169,21 @@ GET1VCPT(VCPT,VCPTIEN,RETJSON,VCPTJ) ;get one V CPT record
  . S CPTMOD=$NA(VCPT("Vcpt","cptModifiers","cptModifier",+IENS2))
  . S @CPTMOD@("cptModifier")=$G(VCPTARR(FNBR2,IENS2,.01,"E"))
  . S @CPTMOD@("cptModifierId")=$G(VCPTARR(FNBR2,IENS2,.01,"I"))
- . S @CPTMOD@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_VCPTIEN_S_FNBR2_S_+IENS2
+ . S @CPTMOD@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,VCPTIEN,FNBR2_U_+IENS2)
  ;
- ;I $G(DEBUG) W ! ZWRITE VCPT
+ ;LOOKUP SNOMED(sct) - cpt, os5
+ S SCT=""
+ ;map cpt to snomed (currently uses very small map)
+ I VCPT("Vcpt","cpt")'="" D
+ . S SCT=$$MAP^SYNDHPMP("sct2cpt",VCPT("Vcpt","cpt"),"I")
+ . S SCT=$S(+SCT=-1:"",1:$P(SCT,U,2))
+ ;if no cpt hit, map os5 to snomed
+ I SCT="",VCPT("Vcpt","cpt")'="" D
+ . S SCT=$$MAP^SYNDHPMP("sct2os5",VCPT("Vcpt","cpt"),"I")
+ . S SCT=$S(+SCT=-1:"",1:$P(SCT,U,2))
+ S VCPT("Vcpt","sct")=SCT
+ ;
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VCPT")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.VCPT,.VCPTJ)
  ;

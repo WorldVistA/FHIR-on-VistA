@@ -45,21 +45,25 @@ MSTART ;
  I IOE'="I" D  Q STA_U_TAR
  .; call the terminology server
  .S RET=$$GETURL^XTHC10($$TRMURL(IOE),,"MAPJ")
+ .;w !!,RET
  .; check status of web call
  .I +RET'=200 S STA=-1,TAR=+RET_C_$P(RET,U,2) Q
+ .;W !!,RET
  .; check for result returned from exernal server
  .; change numbers in valueString attribute to string
  .D NTS("MAPJ")
  .; decode the JSON into M array
  .D DECODE^XLFJSON("MAPJ","MAPA")
+ .;ZW MAPJ
+ .;ZW MAPA
  .I '$D(MAPA) S STA=-1,TAR="code not mapped" Q
  .; convert the number_" " back to a number
  .D RMS("MAPA")
  .S NODE="MAPA",TAR=""
  .F  S NODE=$Q(@NODE) Q:NODE=""  Q:TAR'=""  D
- ..Q:$QS(NODE,5)'="name"
- ..Q:@NODE'="code"
- ..S TAR=MAPA($QS(NODE,1),$QS(NODE,2),$QS(NODE,3),$QS(NODE,4),"valueString")
+ ..Q:$QS(NODE,6)'="code"
+ ..;Q:@NODE'="code"
+ ..S TAR=MAPA($QS(NODE,1),$QS(NODE,2),$QS(NODE,3),$QS(NODE,4),$QS(NODE,5),"code")
  .I TAR="" S STA=-1,TAR="code not mapped" Q
  ;I IOE'="I" Q 1_U_TAR
  ;
@@ -171,7 +175,7 @@ T4V ;
  S URLMV="https://terminology-service.dev.openplatform.healthcare/vista2/mh2sct?searchString=PHQ-2"
  S RET=$$GETURL^XTHC10(URLMV,,"MAPMV")
  ; now scan json in MPAMV to find string that look like numbers
- ; and convert them to strings by concateneating space
+ ; and convert them to strings by concatenating space
  D NTS("MAPMV")
  ;
  D DECODE^XLFJSON("MAPMV","MAPMVO")
@@ -182,6 +186,28 @@ T4V ;
  ZW MAPMVO
  ;
  Q
+T5 ; new server (vista2) tests
+ ;
+T5V(code) ;
+ ;
+ ; sct2icd vista term server
+ ;
+ S URLSV="https://terminology-service.dev.openplatform.healthcare/vista/sct2icd?searchString="_code
+ S RET=$$GETURL^XTHC10(URLSV,,"MAPSV")
+ D DECODE^XLFJSON("MAPSV","MAPSVO")
+ ; sct2icd vista2 term server
+ S URLSV2="https://terminology-service.dev.openplatform.healthcare/vista2/sct2icd?searchString="_code
+ S RET=$$GETURL^XTHC10(URLSV,,"MAPSV2")
+ D DECODE^XLFJSON("MAPSV2","MAPSVO2")
+ ;
+ W !!,URLSV,!!
+ ZW MAPSVO
+ w !!,URLSV2,!!
+ ZW MAPSVO2
+ ;
+ Q
+ ;
+ ;
 NTS(JSONA) ; change numbers to string to accommodate XTHC10 quirk
  ;
  N N,VALUE

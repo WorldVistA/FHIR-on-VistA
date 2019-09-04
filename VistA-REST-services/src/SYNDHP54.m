@@ -1,4 +1,4 @@
-SYNDHP54 ; HC/rbd/art - HealthConcourse - retrieve patient provider data ;04/12/2019
+SYNDHP54 ; HC/rbd/art - HealthConcourse - retrieve patient provider data ;07/24/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -60,9 +60,9 @@ PRVS(ENCPROV,PATIEN,DHPICN,FRDAT,TODAT) ; get providers for encounters for a pat
  . N VPROV
  . D GET1VPROV^SYNDHP23(.VPROV,PRIEN,0)
  . I $D(VPROV("Vprov","ERROR")) M ENCPROV("EncProv",PRIEN)=VPROV QUIT
- . ;I $G(DEBUG) W ! ZWRITE VPROV
+ . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VPROV")
  . S VSTDT=VPROV("Vprov","visitFM")
- . QUIT:((VSTDT\1)<FRDAT)!((VSTDT\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(VSTDT,FRDAT,TODAT)  ;quit if outside of requested date range
  . S PRID=VPROV("Vprov","resourceId")
  . S PRNAM=VPROV("Vprov","provider")
  . S PRVVIEN=VPROV("Vprov","visitId")
@@ -72,7 +72,7 @@ PRVS(ENCPROV,PATIEN,DHPICN,FRDAT,TODAT) ; get providers for encounters for a pat
  . N PROVARR,PROVERR
  . N IENS S IENS=PRVID_","
  . D GETS^DIQ(200,IENS,"8;.111;.112;.114;.115;.116;.132;41.99","EI","PROVARR","PROVERR")
- . ;I $G(DEBUG),$D(PROVERR) W !,">>ERROR<<" ZWRITE PROVERR
+ . I $G(DEBUG),$D(PROVERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("PROVERR")
  . QUIT:$D(PROVERR)
  . S PRROLE=PROVARR(200,IENS,8,"E")
  . S VPROV("Vprov","provRole")=PRROLE
@@ -108,7 +108,7 @@ PRVS(ENCPROV,PATIEN,DHPICN,FRDAT,TODAT) ; get providers for encounters for a pat
  ;
  ; ----------- Unit Test -----------
 T1 ;
- N ICN S ICN="1095759922V858498"
+ N ICN S ICN="1435855215V947437"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N JSON S JSON=""
@@ -118,7 +118,17 @@ T1 ;
  QUIT
  ;
 T2 ;
- N ICN S ICN="1095759922V858498"
+ N ICN S ICN="1435855215V947437"
+ N FRDAT S FRDAT=20150101
+ N TODAT S TODAT=20150301
+ N JSON S JSON=""
+ N RETSTA
+ D PATPRVI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T3 ;
+ N ICN S ICN="1435855215V947437"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N JSON S JSON="J"

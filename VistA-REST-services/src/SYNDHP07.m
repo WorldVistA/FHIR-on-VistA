@@ -1,4 +1,4 @@
-SYNDHP07 ; HC/rbd/art - HealthConcourse - get patient's nursing care plan data ;05/04/2019
+SYNDHP07 ; HC/rbd/art - HealthConcourse - get patient's nursing care plan data ;07/23/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -65,13 +65,17 @@ GOALS(NCPARR,PATIEN,DHPICN,FRDAT,TODAT) ; get goals for a patient
  . . S PTGOLID=NCP("NurseCarePlan","targetDates","targetDate",TARGNUM,"resourceId")
  . . S ENTRYDT=NCP("NurseCarePlan","targetDates","targetDate",TARGNUM,"dateTimeEntered")
  . . S ENTRYDTFM=NCP("NurseCarePlan","targetDates","targetDate",TARGNUM,"dateTimeEnteredFM")
- . . QUIT:((ENTRYDTFM\1)<FRDAT)!((ENTRYDTFM\1)>TODAT)  ;quit if outside of requested date range
+ . . QUIT:'$$RANGECK^SYNDHPUTL(ENTRYDTFM,FRDAT,TODAT)  ;quit if outside of requested date range
  . . S ENTRDISP=NCP("NurseCarePlan","targetDates","targetDate",TARGNUM,"dateTimeEnteredHL7")
  . . S GOAL=NCP("NurseCarePlan","targetDates","targetDate",TARGNUM,"goalExpectedOutcome")
  . . S TARGDISP=NCP("NurseCarePlan","targetDates","targetDate",TARGNUM,"targetDateHL7")
  . . S ENTUSER=NCP("NurseCarePlan","targetDates","targetDate",TARGNUM,"userWhoEntered")
  . . S GOALSTAT=NCP("NurseCarePlan","targetDates","targetDate",TARGNUM,"goalMetDcdCd")_";"_NCP("NurseCarePlan","targetDates","targetDate",TARGNUM,"goalMetDcd")
  . . S ZARR(DHPICN,ENTRYDTFM,GOAL)=PTGOLID_P_ENTRDISP_P_GOAL_P_TARGDISP_P_ENTUSER_P_GOALSTAT
+ . ;patient data is not included in the NCP record
+ . S NCP("NurseCarePlan","patient")=$$GET1^DIQ(2,PATIEN_",",.01)
+ . S NCP("NurseCarePlan","patientId")=PATIEN
+ . S NCP("NurseCarePlan","patientICN")=DHPICN
  . M NCPARR("NCPS",MRECIEN)=NCP ;
  ;
  ; serialize data
@@ -97,6 +101,16 @@ T1 ;
  QUIT
  ;
 T2 ;
+ N ICN S ICN="1967316818V742124"
+ N FRDAT S FRDAT=19930212
+ N TODAT S TODAT=19930228
+ N JSON S JSON=""
+ N RETSTA
+ D PATGOLI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T3 ;
  N ICN S ICN="1967316818V742124"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""

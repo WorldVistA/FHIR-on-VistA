@@ -1,4 +1,4 @@
-SYNDHP01 ; HC/fjf/art - HealthConcourse - get patient vitals ;05/04/2019
+SYNDHP01 ; HC/fjf/art - HealthConcourse - get patient vitals ;07/23/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -112,6 +112,7 @@ VITS(PATVIT,PATIEN,DHPICN,FRDAT,TODAT) ; get vitals for a patient
  . I $D(VITALS("Vitals","ERROR")) M PATVIT("Vitals",VIEN)=VITALS QUIT
  . S VDATEFM=VITALS("Vitals","dateTimeVitalsTakenFM")
  . QUIT:((VDATEFM\1)<FRDAT)!((VDATEFM\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(VDATEFM,FRDAT,TODAT)  ;quit if outside of requested date range
  . S VID=VITALS("Vitals","resourceId")
  . S VTYPE=VITALS("Vitals","vitalType")
  . S VOBS=VITALS("Vitals","rate")
@@ -134,7 +135,7 @@ VITS(PATVIT,PATIEN,DHPICN,FRDAT,TODAT) ; get vitals for a patient
  ;
  ; ----------- Unit Test -----------
 T1 ;
- N ICN S ICN="2176287883V515136"
+ N ICN S ICN="5000000211V385910"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N JSON S JSON=""
@@ -144,7 +145,7 @@ T1 ;
  QUIT
  ;
 T2 ;
- N ICN S ICN="2176287883V515136"
+ N ICN S ICN="5000000211V385910"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N JSON S JSON="J"
@@ -153,3 +154,12 @@ T2 ;
  W $$ZW^SYNDHPUTL("RETSTA")
  QUIT
  ;
+T3 ;
+ N ICN S ICN="5000000211V385910"
+ N FRDAT S FRDAT=20150220
+ N TODAT S TODAT=20150223
+ N JSON S JSON=""
+ N RETSTA
+ D PATVITI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT

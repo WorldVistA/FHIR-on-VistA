@@ -1,4 +1,4 @@
-SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;04/08/2019
+SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;08/05/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -11,14 +11,14 @@ TOJASON(ARRAY,JSONSTR) ;convert input array to JSON string
  ;
  N ERR,TMP
  D ENCODE^XLFJSON("ARRAY","TMP","ERR")
- ;I $G(DEBUG),$D(ERR) W !,">>ERROR<<" ZWRITE ERR
- ;I $G(DEBUG) W ! ZWRITE TMP
+ I $G(DEBUG),$D(ERR) W !,">>ERROR<<" W $$ZW("ERR")
+ I $G(DEBUG) W ! W $$ZW("TMP")
  ;
  S JSONSTR=""
  N IDX S IDX=""
  F  S IDX=$O(TMP(IDX)) QUIT:IDX=""  D
  . S JSONSTR=JSONSTR_$G(TMP(IDX))
- ;I $G(DEBUG) W ! ZWRITE JSONSTR
+ I $G(DEBUG) W ! W $$ZW("JSONSTR")
  ;
  QUIT
  ;
@@ -46,7 +46,7 @@ meta(fields,fileNbr) ;return field metadata
  . s pointsTo=$s(fieldType="P":+$p($p(node0,U,2),"P",2),1:"")
  . s fields(fieldNbr)=fieldName_U_fieldNameCC_U_fieldType_U_fieldValueSet_U_pointsTo_U
  ;
- ;i $g(DEBUG) w !,"fields",! zwrite fields
+ i $g(DEBUG) w !,"fields",! W $$ZW("fields")
  ;
  QUIT
  ;
@@ -110,6 +110,16 @@ EOF() ;Test for EOF
  ; Output - 1 if end of file has been reached
  ;
  QUIT $$STATUS^%ZISH
+ ;
+RANGECK(DATE,FROMDATE,TODATE) ;Check date range
+ ;Inputs: DATE - date to be compared
+ ;        FROMDATE - begining of range
+ ;        TODATE - end of range
+ ;Returns: 0 - date is outside of requested date range
+ ;         1 - date is within requested date range, null dates are not checked
+ ;
+ IF (DATE'="")&((DATE\1)<FROMDATE)!((DATE\1)>TODATE) QUIT 0  ;date is outside of requested date range
+ QUIT 1
  ;
 GETDFN(ZZPNAME) ;Get patient's DFN
  ;Inputs - ZZPNAME - Patient name
@@ -220,4 +230,25 @@ ICNPAT(ICN) ; patient for ICN
  N PATIEN S PATIEN=$O(^DPT("AFICN",ICN,""))
  N PATNAME S PATNAME=$$GET1^DIQ(2,PATIEN,.01)
  QUIT ICN_U_PATIEN_U_PATNAME
+ ;
+GETRXN(X,IO) ; get RxNorm code for drug
+ ;
+ N NAME,F50P6IEN,VUID,NDFRT,RXNORM
+ S NAME=$$GET1^DIQ(50,X_",",20,"E")
+ I $G(DEBUG) W !,"name: ",NAME
+ I NAME'="" D
+ .S F50P6IEN=$O(^PSNDF(50.6,"B",NAME,""))
+ .I $G(DEBUG) W !,"ien: ",F50P6IEN
+ .S VUID=$$GET1^DIQ(50.6,F50P6IEN_",",99.99)
+ .I $G(DEBUG) W !,"vuid: ",VUID
+ .S NDFRT=$$graphmap^SYNGRAPH("ndfrt-map",VUID,"NDFRT")
+ .I $G(DEBUG) W !,"ndfrt: ",NDFRT
+ .N SCT S SCT=$$MAP^SYNDHPMP("rxn2ndf",NDFRT,"I")
+ .I $G(DEBUG) W !,"sct: ",SCT
+ .S RXNORM=$S(+SCT=-1:$P(SCT,U,2),1:$P(SCT,U,2))
+ .I $G(DEBUG) W !,"rxnorm: ",RXNORM
+ I NAME="" S RXNORM="^missing VistA data"
+ I $G(DEBUG) W !,"rxnorm: ",RXNORM,!
+ Q RXNORM
+ ;I NAME="" S NAME=$$GET1^DIQ(50,X_",",26,"E")
  ;

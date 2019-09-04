@@ -1,4 +1,4 @@
-SYNDHP20 ; HC/art - HealthConcourse - get patient demographic data ;03/01/2019
+SYNDHP20 ; HC/art - HealthConcourse - get patient demographic data ;07/08/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -26,15 +26,18 @@ GETPATIENT(PATIENT,PATIENTIEN,RETJSON,PATIENTJ) ;get one Patient record
  ;
  N PATIENTARR,PATIENTERR
  D GETS^DIQ(FNBR1,IENS1,"**","EI","PATIENTARR","PATIENTERR")
- ;I $G(DEBUG) W ! ZWRITE PATIENTARR
- ;I $G(DEBUG),$D(PATIENTERR) W !,">>ERROR<<" ZWRITE PATIENTERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("PATIENTARR")
+ I $G(DEBUG),$D(PATIENTERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("PATIENTERR")
  I $D(PATIENTERR) D  QUIT
  . S PATIENT("Patient","ERROR")=PATIENTIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.PATIENT,.PATIENTJ)
  S PATIENT("Patient","patientIen")=PATIENTIEN
  S PATIENT("Patient","resourceType")="Patient"
- S PATIENT("Patient","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_PATIENTIEN
+ S PATIENT("Patient","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,PATIENTIEN)
  S PATIENT("Patient","name")=$G(PATIENTARR(FNBR1,IENS1,.01,"E"))
+ S PATIENT("Patient","nameFirst")=$P($P(PATIENT("Patient","name"),",",2)," ",1)
+ S PATIENT("Patient","nameLast")=$P(PATIENT("Patient","name"),",",1)
+ S PATIENT("Patient","nameMiddle")=$P($P(PATIENT("Patient","name"),",",2)," ",2)
  S PATIENT("Patient","sex")=$G(PATIENTARR(FNBR1,IENS1,.02,"E"))
  S PATIENT("Patient","sexCd")=$G(PATIENTARR(FNBR1,IENS1,.02,"I"))
  S PATIENT("Patient","selfIdentifiedGender")=$G(PATIENTARR(FNBR1,IENS1,.024,"E"))
@@ -170,7 +173,7 @@ GETPATIENT(PATIENT,PATIENTIEN,RETJSON,PATIENTJ) ;get one Patient record
  . S @CONFADRS@("confidentialAddressCategoryCd")=$G(PATIENTARR(FNBR2,IENS2,.01,"I"))
  . S @CONFADRS@("confidentialCategoryActive")=$G(PATIENTARR(FNBR2,IENS2,1,"E"))
  . S @CONFADRS@("confidentialCategoryActiveCd")=$G(PATIENTARR(FNBR2,IENS2,1,"I"))
- . S @CONFADRS@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_PATIENTIEN_S_FNBR2_S_+IENS2
+ . S @CONFADRS@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,PATIENTIEN,FNBR2_U_+IENS2)
  N IENS3 S IENS3=""
  F  S IENS3=$O(PATIENTARR(FNBR3,IENS3)) QUIT:IENS3=""  D
  . N ALIAS S ALIAS=$NA(PATIENT("Patient","aliass","alias",+IENS3))
@@ -178,7 +181,7 @@ GETPATIENT(PATIENT,PATIENTIEN,RETJSON,PATIENTJ) ;get one Patient record
  . S @ALIAS@("aliasSsn")=$G(PATIENTARR(FNBR3,IENS3,1,"E"))
  . S @ALIAS@("aliasComponents")=$G(PATIENTARR(FNBR3,IENS3,100.03,"E"))
  . S @ALIAS@("aliasComponentsId")=$G(PATIENTARR(FNBR3,IENS3,100.03,"I"))
- . S @ALIAS@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_PATIENTIEN_S_FNBR3_S_+IENS3
+ . S @ALIAS@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,PATIENTIEN,FNBR3_U_+IENS3)
  N IENS4 S IENS4=""
  F  S IENS4=$O(PATIENTARR(FNBR4,IENS4)) QUIT:IENS4=""  D
  . N RACE S RACE=$NA(PATIENT("Patient","raceInformations","raceInformation",+IENS4))
@@ -186,7 +189,7 @@ GETPATIENT(PATIENT,PATIENTIEN,RETJSON,PATIENTJ) ;get one Patient record
  . S @RACE@("raceInformationId")=$G(PATIENTARR(FNBR4,IENS4,.01,"I"))
  . S @RACE@("methodOfCollection")=$G(PATIENTARR(FNBR4,IENS4,.02,"E"))
  . S @RACE@("methodOfCollectionId")=$G(PATIENTARR(FNBR4,IENS4,.02,"I"))
- . S @RACE@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_PATIENTIEN_S_FNBR4_S_+IENS4
+ . S @RACE@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,PATIENTIEN,FNBR4_U_+IENS4)
  N IENS5 S IENS5=""
  F  S IENS5=$O(PATIENTARR(FNBR5,IENS5)) QUIT:IENS5=""  D
  . N ETHNIC S ETHNIC=$NA(PATIENT("Patient","ethnicityInformations","ethnicityInformation",+IENS5))
@@ -194,9 +197,9 @@ GETPATIENT(PATIENT,PATIENTIEN,RETJSON,PATIENTJ) ;get one Patient record
  . S @ETHNIC@("ethnicityInformationId")=$G(PATIENTARR(FNBR5,IENS5,.01,"I"))
  . S @ETHNIC@("methodOfCollection")=$G(PATIENTARR(FNBR5,IENS5,.02,"E"))
  . S @ETHNIC@("methodOfCollectionId")=$G(PATIENTARR(FNBR5,IENS5,.02,"I"))
- . S @ETHNIC@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_PATIENTIEN_S_FNBR5_S_+IENS5
+ . S @ETHNIC@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,PATIENTIEN,FNBR5_U_+IENS5)
  ;
- ;I $G(DEBUG) W ! ZWRITE PATIENT
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("PATIENT")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.PATIENT,.PATIENTJ)
  ;

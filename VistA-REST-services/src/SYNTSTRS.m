@@ -1,4 +1,4 @@
-SYNTSTRS ; HC/art - HealthConcourse - test rest services ;05/09/2019
+SYNTSTRS ; HC/art - HealthConcourse - test rest services ;08/12/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -10,7 +10,7 @@ EN ;Run service tests
  W #,!,?10,"HealthConcourse Get VistA Data REST Services Unit Tests",!
  ;
  N X,Y,DIR,DTOUT,DUOUT,DIRUT,DIROUT
- S DIR(0)="SO^G:General Service Testing;I:ICN Batch Tests;U:Unit Tests"
+ S DIR(0)="SO^A:API Unit Tests;G:General Service Testing;I:ICN Batch Tests;U:Service Unit Tests:API Unit Tests"
  S DIR("A")="Type"
  ;S DIR("B")=""
  D ^DIR
@@ -19,6 +19,7 @@ EN ;Run service tests
  ;
  I TYPE="U" D UT
  I TYPE="G" D UI
+ I TYPE="A" D EN^SYNTSTAPI
  I TYPE="I" D
  . N X,Y,DIR,DTOUT,DUOUT,DIRUT,DIROUT
  . S DIR(0)="NAO^0:99999999"
@@ -57,6 +58,7 @@ UT ;unit test for get VistA data REST services
  N SERVER S SERVER=$$GETSERVER()
  I MODE="O" N ONAME S ONAME=$$GETSERVICE()
  ;
+ K ^synUnitTestLog
  N LASTRS S LASTRS=""
  N CNTKER S CNTKER=0
  N CNTERR S CNTERR=0
@@ -90,7 +92,7 @@ UT ;unit test for get VistA data REST services
  . W "URL: ",URLSTR,!
  . ; call the service
  . S TIMEOUT=30
- . I (URL["DEMRNG")!(URL["DEMALL") S TIMEOUT=300
+ . I (URL["DEMRNG")!(URL["DEMALL") S TIMEOUT=600
  . ;                    (URL,XT8FLG,XT8RDAT,XT8RHDR,XT8SDAT,XT8SHDR,REDIR)
  . S RET=$$GETURL^XTHC10(URLSTR,TIMEOUT,"RETDATA","RETHDR")
  . ; check status of web call
@@ -98,15 +100,18 @@ UT ;unit test for get VistA data REST services
  . . W ">>Error from Kernel call: ",+RET_":"_$P(RET,U,2),!!
  . . S CNTKER=CNTKER+1
  . . S:PF="P" ANOMALY(IEN)="Test should pass"
+ . . S ^synUnitTestLog(IEN)=">>Error from Kernel call: "_+RET_":"_$P(RET,U,2)_$S(PF="P":"  Test should pass",1:"")
  . S POS=$O(RETDATA(""))
  . I POS="" D  QUIT
  . . W ">>Error: no data returned: ",RET,!!
  . . S CNTERR=CNTERR+1
  . . S:PF="P" ANOMALY(IEN)="Test should pass"
+ . . S ^synUnitTestLog(IEN)=$S(PF="F":"Expected ",1:"")_">>Error: no data returned: "_RET_$S(PF="P":"  Test should pass",1:"")
  . I ($P(RETDATA(POS),U,1)=-1)!(RETDATA(POS)["error")!(RETDATA(POS)["ERROR") D  QUIT
  . . W ">>Error from service: ",RETDATA(POS),!!
  . . S CNTERR=CNTERR+1
  . . S:PF="P" ANOMALY(IEN)="Test should pass"
+ . . S ^synUnitTestLog(IEN)=$S(PF="F":"Expected ",1:"")_">>Error from service: "_RETDATA(POS)_$S(PF="P":"  Test should pass",1:"")
  . S:PF="F" ANOMALY(IEN)="Test should fail"
  . I MODE="O" D
  . . W "Returned data:",!
@@ -119,6 +124,7 @@ UT ;unit test for get VistA data REST services
  . . W !!
  . E  D
  . . W $S($D(RETDATA(POS,1)):"Partial return data: ",1:"Returned data: "),RETDATA(POS),!!
+ . S ^synUnitTestLog(IEN)="Passed"
  . S CNTPASS=CNTPASS+1
  ;
  N ENDTM S ENDTM=$$NOW^XLFDT()
@@ -134,12 +140,24 @@ UT ;unit test for get VistA data REST services
  W "End time:     ",$$FMTE^XLFDT(ENDTM,7),!
  W "Elapsed time: ",ELAPSED,!
  ;
+ S ^synUnitTestLog(0)="HealthConcourse Get VistA Data REST Services Unit Tests"
+ S ^synUnitTestLog(.01)="System: "_SERVER
+ S ^synUnitTestLog(.1)="Total tests:   "_$J(TOTTEST,6)
+ S ^synUnitTestLog(.2)="Total to pass: "_$J(TOTPASS,6)_"    Passed: "_$J(CNTPASS,6)
+ S ^synUnitTestLog(.3)="Total to fail: "_$J(TOTFAIL,6)_"    Failed: "_$J(CNTKER+CNTERR,6)
+ S ^synUnitTestLog(.4)="Kernel call errors:  "_$J(CNTKER,6)
+ S ^synUnitTestLog(.5)="Service call errors: "_$J(CNTERR,6)
+ S ^synUnitTestLog(.6)="Start time:   "_$$FMTE^XLFDT(STARTTM,7)
+ S ^synUnitTestLog(.7)="End time:     "_$$FMTE^XLFDT(ENDTM,7)
+ S ^synUnitTestLog(.8)="Elapsed time: "_ELAPSED
+ ;
  I $D(ANOMALY) D
  . W !,"Anomalies:",!
  . W "Test",?9,"Comment",!
  . S x=""
  . F  S x=$O(ANOMALY(x)) QUIT:x=""  D
  . . W "  ",x,?9,ANOMALY(x),!
+ . . S ^synUnitTestLog(.9,x)=ANOMALY(x)_" - "_x
  ;
  QUIT
  ;
@@ -195,28 +213,13 @@ UI ;User Interface to run service tests
  ;
  QUIT
  ;
- ; check status of web call
- I +RET'=200 D  QUIT
- . W ">>Error from Kernel call: ",+RET_":"_$P(RET,U,2),!!
- . S CNTKER=CNTKER+1
- . S:PF="P" ANOMALY(IEN)="Test should pass"
- S POS=$O(RETDATA(""))
- I POS="" D  QUIT
- . W ">>Error: no data returned: ",RET,!!
- . S CNTERR=CNTERR+1
- . S:PF="P" ANOMALY(IEN)="Test should pass"
- I ($P(RETDATA(POS),U,1)=-1)!(RETDATA(POS)["error")!(RETDATA(POS)["ERROR") D  QUIT
- . W ">>Error from service: ",RETDATA(POS),!!
- . S CNTERR=CNTERR+1
- . S:PF="P" ANOMALY(IEN)="Test should pass"
- S:PF="F" ANOMALY(IEN)="Test should fail"
  ;----------------- functions -----------------
  ;
 GETSERVER() ;Choose a server name
  ;Returns a server name
  ;
  N STR,n,SERVERS,SERVER,DESC
- S SERVERS(1)="http://localhost:8001/"_U_"localhost"
+ S SERVERS(1)="http://localhost:9080/"_U_"localhost"
  W !,"Servers:",!
  W 1,?3,$P(SERVERS(1),"/",3),!
  ;F n=1:1 S STR=$P($T(urlli+n),";;",2) QUIT:STR["urlend"  D
@@ -235,6 +238,7 @@ GETSERVER() ;Choose a server name
  D ^DIR
  I $D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT) QUIT ""
  N SERVNBR S SERVNBR=+Y
+ W !
  ;
  QUIT $P($G(SERVERS(SERVNBR)),U,1)
  ;
@@ -334,6 +338,10 @@ urlli ; list of url roots
  ;;https://vista-specialization.dev.openplatform.healthcare/vpr-web/;tarspecshm; tardis specialization shim
  ;;http://shadow.vistaplex.org/;shadvplex;                                       GT.M server
  ;;http://syn.vistaplex.org/;synvplex;                                           GT.M server
+ ;;http://localhost:8001/;localhost;                                             localhost
+ ;;http://localhost:9080/;localhostshm;localhost shim
+ ;;https://vista-sync.dev.openplatform.healthcare/rgnet-web/;gold;
+ ;;https://vista-sync.dev.openplatform.healthcare/vpr-web/;goldshm;
  ;;urlend
  Q
  ;

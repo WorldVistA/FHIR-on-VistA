@@ -1,5 +1,5 @@
-SYNDHP23 ; HC/art - HealthConcourse - get visit provider data ;03/26/2019
- ;;1.0;DHP;;Jan 17, 2017
+SYNDHP23 ; HC/art - HealthConcourse - get visit provider data ;08/30/2019
+ ;;1.0;DHP;;Jan 17, 2017;Build 5
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -21,16 +21,18 @@ GET1VPROV(VPROV,VPROVIEN,RETJSON,VPROVJ) ;get one V Provider record
  ;
  N VPROVARR,VPROVERR
  D GETS^DIQ(FNBR1,IENS1,"**","EI","VPROVARR","VPROVERR")
- ;I $G(DEBUG) W ! ZWRITE VPROVARR
- ;I $G(DEBUG),$D(VPROVERR) W ">>ERROR<<",! ZWRITE VPROVERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VPROVARR")
+ I $G(DEBUG),$D(VPROVERR) W ">>ERROR<<",! W $$ZW^SYNDHPUTL("VPROVERR")
  I $D(VPROVERR) D  QUIT
  . S VPROV("Vprov","ERROR")=VPROVIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.VPROV,.VPROVJ)
  S VPROV("Vprov","vprovIen")=VPROVIEN
  S VPROV("Vprov","resourceType")="Encounter"
- S VPROV("Vprov","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_VPROVIEN
+ S VPROV("Vprov","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,VPROVIEN)
  S VPROV("Vprov","provider")=$G(VPROVARR(FNBR1,IENS1,.01,"E"))
  S VPROV("Vprov","providerId")=$G(VPROVARR(FNBR1,IENS1,.01,"I"))
+ S VPROV("Vprov","providerNPI")=$$GET1^DIQ(200,VPROV("Vprov","providerId")_",",41.99) ;NPI
+ S VPROV("Vprov","providerResId")=$$RESID^SYNDHP69("V",SITE,200,VPROV("Vprov","providerId"))
  S VPROV("Vprov","patientName")=$G(VPROVARR(FNBR1,IENS1,.02,"E"))
  S VPROV("Vprov","patientNameId")=$G(VPROVARR(FNBR1,IENS1,.02,"I"))
  S VPROV("Vprov","patientICN")=$$GET1^DIQ(2,VPROV("Vprov","patientNameId")_",",991.1)
@@ -39,6 +41,7 @@ GET1VPROV(VPROV,VPROVIEN,RETJSON,VPROVJ) ;get one V Provider record
  S VPROV("Vprov","visitFM")=$$GET1^DIQ(9000010,VPROV("Vprov","visitId")_",",.01,"I")
  S VPROV("Vprov","visitHL7")=$$FMTHL7^XLFDT(VPROV("Vprov","visitFM"))
  S VPROV("Vprov","visitFHIR")=$$FMTFHIR^SYNDHPUTL(VPROV("Vprov","visitFM"))
+ S VPROV("Vprov","visitResId")=$$RESID^SYNDHP69("V",SITE,9000010,VPROV("Vprov","visitId"))
  S VPROV("Vprov","primarySecondary")=$G(VPROVARR(FNBR1,IENS1,.04,"E"))
  S VPROV("Vprov","primarySecondaryCd")=$G(VPROVARR(FNBR1,IENS1,.04,"I"))
  S VPROV("Vprov","primarySecondarySc")=$$SENTENCE^XLFSTR(VPROV("Vprov","primarySecondary"))
@@ -61,7 +64,7 @@ GET1VPROV(VPROV,VPROVIEN,RETJSON,VPROVJ) ;get one V Provider record
  S VPROV("Vprov","dataSource")=$G(VPROVARR(FNBR1,IENS1,81203,"E"))
  S VPROV("Vprov","dataSourceId")=$G(VPROVARR(FNBR1,IENS1,81203,"I"))
  ;
- ;I $G(DEBUG) W ! ZWRITE VPROV
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("VPROV")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.VPROV,.VPROVJ)
  ;

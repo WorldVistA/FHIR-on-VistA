@@ -1,4 +1,4 @@
-SYNDHP04 ; HC/fjf/art - HealthConcourse - retrieve patient procedures ;05/04/2019
+SYNDHP04 ; HC/fjf/art - HealthConcourse - retrieve patient procedures ;07/23/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -122,6 +122,15 @@ T1 ;
  N ICN S ICN="5000000107V310212"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
+ N RETSTA
+ D PATPRCI(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="5000000107V310212"
+ N FRDAT S FRDAT=19980101
+ N TODAT S TODAT=19981231
  N RETSTA
  D PATPRCI(.RETSTA,ICN,FRDAT,TODAT)
  W $$ZW^SYNDHPUTL("RETSTA")

@@ -1,4 +1,4 @@
-SYNDHP19 ; HC/art - HealthConcourse - get care team data ;03/27/2019
+SYNDHP19 ; HC/art - HealthConcourse - get care team data ;08/27/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -18,19 +18,20 @@ ASGNHIST(ASGNHIST,POSIEN,RETJSON,ASGNHISTJ) ;get team position assignment histor
  N FNBR1 S FNBR1=404.52 ;POSITION ASSIGNMENT HISTORY
  N FNBR2 S FNBR2=404.521 ;POSITION ASSIGNMENT HISTORY:FTEE HISTORY
  N S S S="_"
+ N C S C=","
  N SITE S SITE=$P($$SITE^VASITE,"^",3)
  N HISTIEN S HISTIEN=0
  F  S HISTIEN=$O(^SCTM(FNBR1,"B",POSIEN,HISTIEN)) QUIT:+HISTIEN=0  D
  . N IENS S IENS=HISTIEN_","
  . N HISTARR,HISTERR
  . D GETS^DIQ(FNBR1,IENS,"**","EI","HISTARR","HISTERR")
- . ;I $G(DEBUG) W ! ZWRITE HISTARR
- . ;I $G(DEBUG),$D(HISTERR) W !,">>ERROR<<" ZWRITE HISTERR
+ . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("HISTARR")
+ . I $G(DEBUG),$D(HISTERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("HISTERR")
  . I $D(HISTERR) D  QUIT
  . . S ASGNHIST("posAssignHist",HISTIEN,"ERROR")=HISTIEN
  . . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.ASGNHIST,.ASGNHISTJ)
  . N AHIST S AHIST=$NA(ASGNHIST("posAssignHist",HISTIEN))
- . S @AHIST@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_HISTIEN
+ . S @AHIST@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,HISTIEN)
  . S @AHIST@("assignHistIen")=HISTIEN
  . S @AHIST@("teamPositionId")=$G(HISTARR(FNBR1,IENS,.01,"I"))
  . S @AHIST@("teamPositionName")=$G(HISTARR(FNBR1,IENS,.01,"E"))
@@ -40,6 +41,8 @@ ASGNHIST(ASGNHIST,POSIEN,RETJSON,ASGNHISTJ) ;get team position assignment histor
  . S @AHIST@("effectiveDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(HISTARR(FNBR1,IENS,.02,"I")))
  . S @AHIST@("practitionerId")=$G(HISTARR(FNBR1,IENS,.03,"I"))
  . S @AHIST@("practitioner")=$G(HISTARR(FNBR1,IENS,.03,"E"))
+ . S @AHIST@("practitionerNPI")=$$GET1^DIQ(200,@AHIST@("practitionerId")_",",41.99) ;NPI
+ . S @AHIST@("practitionerResId")=$$RESID^SYNDHP69("V",SITE,200,@AHIST@("practitionerId"))
  . S @AHIST@("statusCd")=$G(HISTARR(FNBR1,IENS,.04,"I"))
  . S @AHIST@("status")=$G(HISTARR(FNBR1,IENS,.04,"E"))
  . S @AHIST@("statusReasonId")=$G(HISTARR(FNBR1,IENS,.05,"I"))
@@ -63,10 +66,10 @@ ASGNHIST(ASGNHIST,POSIEN,RETJSON,ASGNHISTJ) ;get team position assignment histor
  . S @AHIST@("inactivatedAutomaticly")=$G(HISTARR(FNBR1,IENS,.011,"E"))
  . S @AHIST@("teamletPositionCd")=$G(HISTARR(FNBR1,IENS,.012,"I"))
  . S @AHIST@("teamletPosition")=$G(HISTARR(FNBR1,IENS,.012,"E"))
+ . ;
  . N FTEE S FTEE=""
  . F  S FTEE=$O(HISTARR(FNBR2,FTEE)) QUIT:FTEE=""  D
- . . N FIEN S FIEN=+FTEE
- . . N FTEEHIST S FTEEHIST=$NA(ASGNHIST("posAssignHist",HISTIEN,"fteeHistory","fteeHist",FIEN))
+ . . N FTEEHIST S FTEEHIST=$NA(ASGNHIST("posAssignHist",HISTIEN,"fteeHistory","fteeHist",+FTEE))
  . . S @FTEEHIST@("fteeHistoryDate")=$G(HISTARR(FNBR2,FTEE,.01,"E"))
  . . S @FTEEHIST@("fteeHistoryDateFM")=$G(HISTARR(FNBR2,FTEE,.01,"I"))
  . . S @FTEEHIST@("fteeHistoryDateHL7")=$$FMTHL7^XLFDT($G(HISTARR(FNBR2,FTEE,.01,"I")))
@@ -74,14 +77,14 @@ ASGNHIST(ASGNHIST,POSIEN,RETJSON,ASGNHISTJ) ;get team position assignment histor
  . . S @FTEEHIST@("value")=$G(HISTARR(FNBR2,FTEE,.02,"I"))
  . . S @FTEEHIST@("userId")=$G(HISTARR(FNBR2,FTEE,.03,"I"))
  . . S @FTEEHIST@("user")=$G(HISTARR(FNBR2,FTEE,.03,"E"))
- . . S @FTEEHIST@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_HISTIEN_S_FNBR2_S_FTEE
+ . . S @FTEEHIST@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,HISTIEN,FNBR2_U_+FTEE)
  ;
- ;I $G(DEBUG) W ! ZWRITE ASGNHIST
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("ASGNHIST")
  ;
  I $G(RETJSON)="J" D
- . N ASGNHISTS M ASGNHISTS("TeamPositionAssignmentHistory")=ASGNHIST
- . D TOJASON^SYNDHPUTL(.ASGNHISTS,.ASGNHISTJ)
- . ;I $G(DEBUG) W ! ZWRITE ASGNHISTSJ
+ . ;N ASGNHISTS M ASGNHISTS("TeamPositionAssignmentHistory")=ASGNHIST
+ . D TOJASON^SYNDHPUTL(.ASGNHIST,.ASGNHISTJ)
+ . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("ASGNHISTJ")
  ;
  QUIT
  ;
@@ -102,13 +105,13 @@ PRECHIST(PRECHIST,POSIEN,RETJSON,PRECHISTJ) ;get preceptor assignment history
  . N IENS S IENS=PRECIEN_","
  . N HISTARR,HISTERR
  . D GETS^DIQ(FNBR1,IENS,"**","EI","HISTARR","HISTERR")
- . ;I $G(DEBUG) W ! ZWRITE HISTARR
- . ;I $G(DEBUG),$D(HISTERR) W !,">>ERROR<<" ZWRITE HISTERR
+ . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("HISTARR")
+ . I $G(DEBUG),$D(HISTERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("HISTERR")
  . I $D(HISTERR) D  QUIT
  . . S PRECHIST("preceptorAssignHist",PRECIEN,"ERROR")=PRECIEN
  . . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.PRECHIST,.PRECHISTJ)
  . N PHIST S PHIST=$NA(PRECHIST("preceptorAssignHist",PRECIEN))
- . S @PHIST@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_PRECIEN
+ . S @PHIST@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,PRECIEN)
  . S @PHIST@("preceptorHistoryIen")=PRECIEN
  . S @PHIST@("teamPositionId")=$G(HISTARR(FNBR1,IENS,.01,"I"))
  . S @PHIST@("teamPositionName")=$G(HISTARR(FNBR1,IENS,.01,"E"))
@@ -128,12 +131,12 @@ PRECHIST(PRECHIST,POSIEN,RETJSON,PRECHISTJ) ;get preceptor assignment history
  . S @PHIST@("dateTimeEnteredFHIR")=$$FMTFHIR^SYNDHPUTL($G(HISTARR(FNBR1,IENS,.08,"I")))
  . S @PHIST@("preceptorNameC")=$G(HISTARR(FNBR1,IENS,200,"E"))
  ;
- ;I $G(DEBUG) W ! ZWRITE PRECHIST
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("PRECHIST")
  ;
  I $G(RETJSON)="J" D
  . N PRECHISTS M PRECHISTS("TeamPreceptorHistory")=PRECHIST
  . D TOJASON^SYNDHPUTL(.PRECHISTS,.PRECHISTJ)
- . ;I $G(DEBUG) W ! ZWRITE PRECHISTSJ
+ . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("PRECHISTSJ")
  ;
  QUIT
  ;

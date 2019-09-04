@@ -1,4 +1,4 @@
-SYNDHP22 ; HC/art - HealthConcourse - get hospital location data ;03/26/2019
+SYNDHP22 ; HC/art - HealthConcourse - get hospital location data ;08/28/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -26,15 +26,15 @@ GETHLOC(HOSPLOC,HLOCIEN,RETJSON,HOSPLOCJ) ;get one Hospital Location record
  ;
  N HOSPLOCARR,HOSPLOCERR
  D GETS^DIQ(FNBR1,IENS1,FIELDS,"EI","HOSPLOCARR","HOSPLOCERR")
- ;I $G(DEBUG) W ! ZWRITE HOSPLOCARR
- ;I $G(DEBUG),$D(HOSPLOCERR) W !,">>ERROR<<" ZWRITE HOSPLOCERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("HOSPLOCARR")
+ I $G(DEBUG),$D(HOSPLOCERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("HOSPLOCERR")
  I $D(HOSPLOCERR) D  QUIT
  . S HOSPLOC("Hosploc","ERROR")=HLOCIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.HOSPLOC,.HOSPLOCJ)
  N HLOC S HLOC=$NA(HOSPLOC("Hosploc"))
  S @HLOC@("hosplocIen")=HLOCIEN
  S @HLOC@("resourceType")="Organization"
- S @HLOC@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_HLOCIEN
+ S @HLOC@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,HLOCIEN)
  S @HLOC@("name")=$G(HOSPLOCARR(FNBR1,IENS1,.01,"E"))
  S @HLOC@("abbreviation")=$G(HOSPLOCARR(FNBR1,IENS1,1,"E"))
  S @HLOC@("type")=$G(HOSPLOCARR(FNBR1,IENS1,2,"E"))
@@ -62,6 +62,7 @@ GETHLOC(HOSPLOC,HLOCIEN,RETJSON,HOSPLOCJ) ;get one Hospital Location record
  S @HLOC@("categoryOfVisit")=$G(HOSPLOCARR(FNBR1,IENS1,15,"E"))
  S @HLOC@("defaultProvider")=$G(HOSPLOCARR(FNBR1,IENS1,16,"E"))
  S @HLOC@("defaultProviderId")=$G(HOSPLOCARR(FNBR1,IENS1,16,"I"))
+ S @HLOC@("defaultProviderNPI")=$$GET1^DIQ(200,@HLOC@("defaultProviderId")_",",41.99) ;NPI
  S @HLOC@("agency")=$G(HOSPLOCARR(FNBR1,IENS1,23,"E"))
  S @HLOC@("agencyId")=$G(HOSPLOCARR(FNBR1,IENS1,23,"I"))
  S @HLOC@("wardLocationFilePointer")=$G(HOSPLOCARR(FNBR1,IENS1,42,"E"))
@@ -94,23 +95,25 @@ GETHLOC(HOSPLOC,HLOCIEN,RETJSON,HOSPLOCJ) ;get one Hospital Location record
  F  S IENS2=$O(HOSPLOCARR(FNBR2,IENS2)) QUIT:IENS2=""  D
  . N SYNONYM S SYNONYM=$NA(HOSPLOC("Hosploc","synonyms","synonym",+IENS2))
  . S @SYNONYM@("synonym")=$G(HOSPLOCARR(FNBR2,IENS2,.01,"E"))
- . S @SYNONYM@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_HLOCIEN_S_FNBR2_S_+IENS2
+ . S @SYNONYM@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,HLOCIEN,FNBR2_U_+IENS2)
  N IENS3 S IENS3=""
  F  S IENS3=$O(HOSPLOCARR(FNBR3,IENS3)) QUIT:IENS3=""  D
  . N ASSLOCTP S ASSLOCTP=$NA(HOSPLOC("Hosploc","associatedLocationTypess","associatedLocationTypes",+IENS3))
  . S @ASSLOCTP@("associatedLocationTypes")=$G(HOSPLOCARR(FNBR3,IENS3,.01,"E"))
  . S @ASSLOCTP@("associatedLocationTypesId")=$G(HOSPLOCARR(FNBR3,IENS3,.01,"I"))
- . S @ASSLOCTP@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_HLOCIEN_S_FNBR3_S_+IENS3
+ . S @ASSLOCTP@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,HLOCIEN,FNBR3_U_+IENS3)
  N IENS4 S IENS4=""
  F  S IENS4=$O(HOSPLOCARR(FNBR4,IENS4)) QUIT:IENS4=""  D
  . N PROVIDER S PROVIDER=$NA(HOSPLOC("Hosploc","providers","provider",+IENS4))
  . S @PROVIDER@("provider")=$G(HOSPLOCARR(FNBR4,IENS4,.01,"E"))
  . S @PROVIDER@("providerId")=$G(HOSPLOCARR(FNBR4,IENS4,.01,"I"))
+ . S @PROVIDER@("providerNPI")=$$GET1^DIQ(200,@PROVIDER@("providerId")_",",41.99) ;NPI
+ . S @PROVIDER@("providerResId")=$$RESID^SYNDHP69("V",SITE,200,@PROVIDER@("providerId"))
  . S @PROVIDER@("defaultProvider")=$G(HOSPLOCARR(FNBR4,IENS4,.02,"E"))
  . S @PROVIDER@("defaultProviderCd")=$G(HOSPLOCARR(FNBR4,IENS4,.02,"I"))
- . S @PROVIDER@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_HLOCIEN_S_FNBR4_S_+IENS4
+ . S @PROVIDER@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,HLOCIEN,FNBR4_U_+IENS4)
  ;
- ;I $G(DEBUG) W ! ZWRITE HOSPLOC
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("HOSPLOC")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.HOSPLOC,.HOSPLOCJ)
  ;

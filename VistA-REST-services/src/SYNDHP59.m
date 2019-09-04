@@ -1,4 +1,4 @@
-SYNDHP59 ; HC/art - HealthConcourse - get care plan data for a patient ;05/07/2019
+SYNDHP59 ; HC/art - HealthConcourse - get care plan data for a patient ;07/24/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -96,7 +96,7 @@ GETALL(RETSTA,PATIEN,FRDAT,TODAT) ;get all care plans for a patient
  . ;I $D(HLFACT("HealthFactor","ERROR")) M HLFACTS("CarePlan",visitId,"Visit",HFIEN)=HLFACT QUIT
  . QUIT:$E(HLFACT("HealthFactor","hlfName"),1,4)'="SYN "
  . I $G(DEBUG) W HLFACT("HealthFactor","visitFM"),!
- . QUIT:((HLFACT("HealthFactor","visitFM")\1)<FRDAT)!((HLFACT("HealthFactor","visitFM")\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(HLFACT("HealthFactor","visitFM"),FRDAT,TODAT)  ;quit if outside of requested date range
  . S visitId=HLFACT("HealthFactor","visitId")
  . M HLFACTS("CarePlan",visitId,"Visit",HFIEN)=HLFACT
  . I $G(RETJSON)'="J",$G(RETJSON)'="F" D
@@ -104,7 +104,7 @@ GETALL(RETSTA,PATIEN,FRDAT,TODAT) ;get all care plans for a patient
  . . S RETSTA=RETSTA_HLFACT("HealthFactor","levelSeverity")_P_HLFACT("HealthFactor","encounterProvider")_P_HLFACT("HealthFactor","eventDateTimeHL7")_P
  . . S RETSTA=RETSTA_HLFACT("HealthFactor","visitHL7")_P_HLFACT("HealthFactor","comments")
  ;
- ;I $G(DEBUG) W ! ZWRITE HLFACTS
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("HLFACTS")
  ;
  ;I $G(RETJSON)="F" D xxx  ;create array for FHIR
  ;
@@ -112,7 +112,7 @@ GETALL(RETSTA,PATIEN,FRDAT,TODAT) ;get all care plans for a patient
  . S RETSTA=""
  . D TOJASON^SYNDHPUTL(.HLFACTS,.RETSTA)
  ;
- ;I $G(DEBUG) W ! ZWRITE RETSTA
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("RETSTA")
  ;
  QUIT
  ;
@@ -135,7 +135,7 @@ PATCP(RETSTA,NAME,SSN,DOB,GENDER,VRESID,RETJSON) ; get Care Plan for a patient b
  ;           - ICN^resourceId|HF SCT|HF Name|levelSeverity|encounterProvider|eventDateTime|visitDateTime|comments^...
  ;         or care plan data in JSON format
  ;
- I $G(VRESID)="" S RETSTA="-1^No visit identifier" QUIT
+ I $G(VRESID)="" S RETSTA="-1^What visit?" QUIT
  ;
  N ICNST
  D PATVAL^SYNDHP43(.ICNST,NAME,SSN,DOB,GENDER)
@@ -186,9 +186,10 @@ GETONE(RETSTA,PATIEN,VRESID) ;get care plan(s) for a visit
  ;
  N P S P="|"
  N S S S="_"
+ N D S D="-"
  ;
  N HLFACTS
- N VISIT S VISIT=$P(VRESID,S,4)
+ N VISIT S VISIT=$P(VRESID,D,4)
  N HFIEN S HFIEN=""
  F  S HFIEN=$O(^AUPNVHF("C",PATIEN,HFIEN)) QUIT:HFIEN=""  D
  . N HLFACT
@@ -204,7 +205,7 @@ GETONE(RETSTA,PATIEN,VRESID) ;get care plan(s) for a visit
  . . S RETSTA=RETSTA_HLFACT("HealthFactor","levelSeverity")_P_HLFACT("HealthFactor","encounterProvider")_P_HLFACT("HealthFactor","eventDateTimeHL7")_P
  . . S RETSTA=RETSTA_HLFACT("HealthFactor","visitHL7")_P_HLFACT("HealthFactor","comments")
  ;
- ;I $G(DEBUG) W ! ZWRITE HLFACTS
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("HLFACTS")
  ;
  ;I $G(RETJSON)="F" D xxx  ;create array for FHIR
  ;
@@ -212,13 +213,13 @@ GETONE(RETSTA,PATIEN,VRESID) ;get care plan(s) for a visit
  . S RETSTA=""
  . D TOJASON^SYNDHPUTL(.HLFACTS,.RETSTA)
  ;
- ;I $G(DEBUG) W ! ZWRITE RETSTA
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("RETSTA")
  ;
  QUIT
  ;
  ; ----------- Unit Test -----------
 T1 ;
- N ICN S ICN="2434609669V691690"
+ N ICN S ICN="1435855215V947437"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N JSON S JSON=""
@@ -228,7 +229,17 @@ T1 ;
  QUIT
  ;
 T2 ;
- N ICN S ICN="2434609669V691690"
+ N ICN S ICN="1435855215V947437"
+ N FRDAT S FRDAT=20000101
+ N TODAT S TODAT=20120101
+ N JSON S JSON=""
+ N RETSTA
+ D PATCPALLI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T3 ;
+ N ICN S ICN="1435855215V947437"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N JSON S JSON="J"
@@ -237,18 +248,18 @@ T2 ;
  W $$ZW^SYNDHPUTL("RETSTA"),!!
  QUIT
  ;
-T3 ;
+T4 ;
  N ICN S ICN="2434609669V691690"
- N VRESID S VRESID="V_500_1000010_34494"
+ N VRESID S VRESID="V-500-1000010-34494"
  N JSON S JSON=""
  N RETSTA
  D PATCPI(.RETSTA,ICN,VRESID,JSON)
  W $$ZW^SYNDHPUTL("RETSTA"),!!
  QUIT
  ;
-T4 ;
+T5 ;
  N ICN S ICN="2434609669V691690"
- N VRESID S VRESID="V_500_1000010_34494"
+ N VRESID S VRESID="V-500-1000010-34494"
  N JSON S JSON="J"
  N RETSTA
  D PATCPI(.RETSTA,ICN,VRESID,JSON)

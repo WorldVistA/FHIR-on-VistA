@@ -1,4 +1,4 @@
-SYNDHP08 ; HC/rbd/art - HealthConcourse - get patient flag data ;05/04/2019
+SYNDHP08 ; HC/rbd/art - HealthConcourse - get patient flag data ;06/24/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -61,7 +61,7 @@ FLAGS(FLAGARR,PATIEN,DHPICN,FRDAT,TODAT) ; get flags for a patient
  . N FLAG
  . D GET1FLAG^SYNDHP17(.FLAG,FLAGIEN,0)
  . I $D(FLAG("Flag","ERROR")) M FLAGARR("Flags",FLAGIEN)=FLAG QUIT
- . ;I $G(DEBUG) W ! ZWRITE FLAG
+ . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("FLAG")
  . S PTFLGID=FLAG("Flag","resourceId")
  . S FLAGDESC=FLAG("Flag","flagName") ;flag name
  . S NATLOC=$S(FLAG("Flag","flagNameId")["26.15":"National",1:"Local")

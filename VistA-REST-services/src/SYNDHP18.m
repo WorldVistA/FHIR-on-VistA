@@ -1,4 +1,4 @@
-SYNDHP18 ; HC/art - HealthConcourse - get care team data ;03/27/2019
+SYNDHP18 ; HC/art - HealthConcourse - get care team data ;08/27/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -22,13 +22,13 @@ GET1TEAM(TEAM,TEAMIEN,RETJSON,TEAMJ) ;get one care team
  N IENS S IENS=TEAMIEN_","
  N TMARR,TMERR
  D GETS^DIQ(FNBR1,IENS,"**","EI","TMARR","TMERR")
- ;I $G(DEBUG) W ! ZWRITE TMARR
- ;I $G(DEBUG),$D(TMERR) W !,">>ERROR<<" ZWRITE TMERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("TMARR")
+ I $G(DEBUG),$D(TMERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("TMERR")
  I $D(TMERR) D  QUIT
  . S TEAM("Team","ERROR")=TEAMIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.TEAM,.TEAMJ)
  S TEAM("Team","resourceType")="CareTeam"
- S TEAM("Team","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_TEAMIEN
+ S TEAM("Team","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,TEAMIEN)
  S TEAM("Team","teamName")=$G(TMARR(FNBR1,IENS,.01,"E"))
  S TEAM("Team","fhirTeamType")="longitudinal"
  S TEAM("Team","teamPhone")=$G(TMARR(FNBR1,IENS,.02,"E"))
@@ -73,8 +73,8 @@ GET1TEAM(TEAM,TEAMIEN,RETJSON,TEAMJ) ;get one care team
  . N IENS2 S IENS2=STATIEN_","
  . N STATARR,STATERR
  . D GETS^DIQ(FNBR2,IENS2,"**","EI","STATARR","STATERR")
- . ;I $G(DEBUG) W ! ZWRITE STATARR
- . ;I $G(DEBUG),$D(STATERR) W !,">>ERROR<<" ZWRITE STATERR
+ . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("STATARR")
+ . I $G(DEBUG),$D(STATERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("STATERR")
  . I $D(STATERR) D  QUIT
  . . S TEAM("Team","teamStatus","status",STATIEN,"ERROR")=STATIEN
  . . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.TEAM,.TEAMJ)
@@ -87,17 +87,17 @@ GET1TEAM(TEAM,TEAMIEN,RETJSON,TEAMJ) ;get one care team
  . S @TEAMSTAT@("effectiveDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(STATARR(FNBR2,IENS2,.02,"I")))
  . S @TEAMSTAT@("statusReasonId")=$G(STATARR(FNBR2,IENS2,.04,"I"))
  . S @TEAMSTAT@("statusReason")=$G(STATARR(FNBR2,IENS2,.04,"E"))
- . S @TEAMSTAT@("statusRecordId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR2_S_STATIEN
+ . S @TEAMSTAT@("statusRecordId")=$$RESID^SYNDHP69("V",SITE,FNBR2,STATIEN)
  ;
  N POSITION
  D TEAMPOS(.POSITION,TEAMIEN,0)
  M TEAM("Team","positions")=POSITION
- ;I $G(DEBUG) W ! ZWRITE TEAM
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("TEAM")
  ;
  I $G(RETJSON)="J" D
  . N TEAMS M TEAMS("Teams",TEAMIEN)=TEAM
  . D TOJASON^SYNDHPUTL(.TEAMS,.TEAMJ)
- . ;I $G(DEBUG) W ! ZWRITE TEAM
+ . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("TEAM")
  ;
  QUIT
  ;
@@ -112,27 +112,27 @@ TEAMPOS(POSITION,TEAMIEN,RETJSON,POSITIONJ) ;get team positions
  N FNBR2 S FNBR2=404.575 ;TEAM POSITION:ASSOCIATED CLINICS
  N FNBR3 S FNBR3=404.59 ;TEAM POSITION HISTORY
  N S S S="_"
- N ROLENAME
  N SITE S SITE=$P($$SITE^VASITE,"^",3)
  N POSIEN S POSIEN=0
  F  S POSIEN=$O(^SCTM(FNBR1,"C",TEAMIEN,POSIEN)) QUIT:+POSIEN=0  D
  . N IENS S IENS=POSIEN_","
  . N POSARR,POSERR
  . D GETS^DIQ(FNBR1,IENS,"**","EI","POSARR","POSERR")
- . ;I $G(DEBUG) W ! ZWRITE POSARR
- . ;I $G(DEBUG),$D(POSERR) W !,">>ERROR<<" ZWRITE POSERR
+ . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("POSARR")
+ . I $G(DEBUG),$D(POSERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("POSERR")
  . I $D(POSERR) D  QUIT
  . . S POSITION("position",POSIEN,"ERROR")=POSIEN
  . . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.POSITION,.POSITIONJ)
  . N TEAMPOS S TEAMPOS=$NA(POSITION("position",POSIEN))
- . S @TEAMPOS@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_POSIEN
+ . S @TEAMPOS@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,POSIEN)
  . S @TEAMPOS@("positionIen")=POSIEN
  . S @TEAMPOS@("positionName")=$G(POSARR(FNBR1,IENS,.01,"E"))
  . S @TEAMPOS@("teamId")=$G(POSARR(FNBR1,IENS,.02,"I"))
  . S @TEAMPOS@("team")=$G(POSARR(FNBR1,IENS,.02,"E"))
  . S @TEAMPOS@("standRoleNameId")=$G(POSARR(FNBR1,IENS,.03,"I"))
  . S @TEAMPOS@("standRoleName")=$G(POSARR(FNBR1,IENS,.03,"E"))
- . S ROLENAME=$G(POSARR(FNBR1,IENS,.03,"E")) ;used below for SCT lookup
+ . N SCT S SCT=$$MAP^SYNDHPMP("ctpos2sct",@TEAMPOS@("standRoleName"),"D")
+ . S @TEAMPOS@("standRoleSct")=$S(+SCT=-1:"",1:$P(SCT,U,2))
  . S @TEAMPOS@("possPrimPractId")=$G(POSARR(FNBR1,IENS,.04,"I"))
  . S @TEAMPOS@("possPrimPract")=$G(POSARR(FNBR1,IENS,.04,"E"))
  . S @TEAMPOS@("max#patients")=$G(POSARR(FNBR1,IENS,.08,"E"))
@@ -140,7 +140,10 @@ TEAMPOS(POSITION,TEAMIEN,RETJSON,POSITIONJ) ;get team positions
  . S @TEAMPOS@("beeperNbr")=$G(POSARR(FNBR1,IENS,.11,"E"))
  . S @TEAMPOS@("canBePreceptor")=$G(POSARR(FNBR1,IENS,.12,"E"))
  . S @TEAMPOS@("userClass")=$G(POSARR(FNBR1,IENS,.13,"E"))
- . S @TEAMPOS@("description")=$G(POSARR(FNBR1,IENS,1,1))_$G(POSARR(FNBR1,IENS,1,2)) ;<<<
+ . S @TEAMPOS@("description")=""
+ . N Z S Z=""
+ . F  S Z=$O(POSARR(FNBR1,IENS,1,Z)) QUIT:'+Z  D
+ . . S @TEAMPOS@("description")=@TEAMPOS@("description")_$G(POSARR(FNBR1,IENS,1,Z))_" "
  . S @TEAMPOS@("deathMsg")=$G(POSARR(FNBR1,IENS,2.01,"E"))
  . S @TEAMPOS@("inpatientMsg")=$G(POSARR(FNBR1,IENS,2.02,"E"))
  . S @TEAMPOS@("teamMsg")=$G(POSARR(FNBR1,IENS,2.03,"E"))
@@ -151,12 +154,6 @@ TEAMPOS(POSITION,TEAMIEN,RETJSON,POSITIONJ) ;get team positions
  . S @TEAMPOS@("precepConsultMsg")=$G(POSARR(FNBR1,IENS,2.08,"E"))
  . S @TEAMPOS@("autoInactMsg")=$G(POSARR(FNBR1,IENS,2.09,"E"))
  . S @TEAMPOS@("precepInactMsg")=$G(POSARR(FNBR1,IENS,2.1,"E"))
- . N IENS2 S IENS2=""
- . F  S IENS2=$O(POSARR(FNBR2,IENS2)) QUIT:IENS2=""  D
- . . N TEAMCLIN S TEAMCLIN=$NA(POSITION("position",POSIEN,"associatedClinics","clinic",+IENS2))
- . . S @TEAMCLIN@("assocClincId")=$G(POSARR(FNBR2,IENS2,.01,"I"))
- . . S @TEAMCLIN@("assocClinc")=$G(POSARR(FNBR2,IENS2,.01,"E"))
- . . S @TEAMCLIN@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_POSIEN_S_FNBR2_S_+IENS2
  . S @TEAMPOS@("curr#PCpatsC")=$G(POSARR(FNBR1,IENS,200,"E"))
  . S @TEAMPOS@("curr#PatientsC")=$G(POSARR(FNBR1,IENS,201,"E"))
  . S @TEAMPOS@("future#PCpatsC")=$G(POSARR(FNBR1,IENS,202,"E"))
@@ -181,14 +178,32 @@ TEAMPOS(POSITION,TEAMIEN,RETJSON,POSITIONJ) ;get team positions
  . S @TEAMPOS@("allowPreceptedChngC")=$G(POSARR(FNBR1,IENS,400,"E"))
  . S @TEAMPOS@("allowPreceptorChngC")=$G(POSARR(FNBR1,IENS,401,"E"))
  . S @TEAMPOS@("inconsistentReasonC")=$G(POSARR(FNBR1,IENS,402,"E"))
+ . ;
+ . ;position assignment history
+ . N ASGNHIST,ASGNHISTJ
+ . ;D ASGNHIST^SYNDHP19(.ASGNHIST,TEAMIEN,0)
+ . D ASGNHIST^SYNDHP19(.ASGNHIST,POSIEN,0)
+ . M POSITION("position",POSIEN,"positionAssignmentHistory")=ASGNHIST
+ . ;
+ . ;preceptor assignment history
+ . N PRECHIST,PRECHISTJ
+ . D PRECHIST^SYNDHP19(.PRECHIST,POSIEN,0)
+ . M POSITION("position",POSIEN,"preceptorAssignmentHistory")=PRECHIST
+ . ;
+ . N IENS2 S IENS2=""
+ . F  S IENS2=$O(POSARR(FNBR2,IENS2)) QUIT:IENS2=""  D
+ . . N TEAMCLIN S TEAMCLIN=$NA(POSITION("position",POSIEN,"associatedClinics","clinic",+IENS2))
+ . . S @TEAMCLIN@("assocClincId")=$G(POSARR(FNBR2,IENS2,.01,"I"))
+ . . S @TEAMCLIN@("assocClinc")=$G(POSARR(FNBR2,IENS2,.01,"E"))
+ . . S @TEAMCLIN@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,POSIEN,FNBR2_U_+IENS2)
  . ;team position history
  . N STATIEN S STATIEN=0
  . F  S STATIEN=$O(^SCTM(FNBR3,"B",POSIEN,STATIEN)) QUIT:+STATIEN=0  D
  . . N IENS3 S IENS3=STATIEN_","
  . . N STATARR,STATERR
  . . D GETS^DIQ(FNBR3,IENS3,"**","EI","STATARR","STATERR")
- . . ;I $G(DEBUG) W ! ZWRITE STATARR
- . . ;I $G(DEBUG),$D(STATERR) W !,">>ERROR<<" ZWRITE STATERR
+ . . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("STATARR")
+ . . I $G(DEBUG),$D(STATERR) W !,">>ERROR<<" W $$ZW^SYNDHPUTL("STATERR")
  . . I $D(STATERR) S POSITION("position",POSIEN,"positionStatus","status",STATIEN,"ERROR")=STATIEN QUIT
  . . N POSSTAT S POSSTAT=$NA(POSITION("position",POSIEN,"positionStatus","status",STATIEN))
  . . S @POSSTAT@("statusCd")=$G(STATARR(FNBR3,IENS3,.03,"I"))
@@ -199,27 +214,14 @@ TEAMPOS(POSITION,TEAMIEN,RETJSON,POSITIONJ) ;get team positions
  . . S @POSSTAT@("effectiveDateFHIR")=$$FMTFHIR^SYNDHPUTL($G(STATARR(FNBR3,IENS3,.02,"I")))
  . . S @POSSTAT@("statusReasonId")=$G(STATARR(FNBR3,IENS3,.04,"I"))
  . . S @POSSTAT@("statusReason")=$G(STATARR(FNBR3,IENS3,.04,"E"))
- . . S @POSSTAT@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR3_S_STATIEN
- . ;
- . N SCT S SCT=$$MAP^SYNDHPMP("ctpos2sct",ROLENAME,"D")
- . S POSITION("position",POSIEN,"standRoleSct")=$S(+SCT=-1:"",1:$P(SCT,U,2))
- . ;
- . ;position assignment history
- . N ASGNHIST,ASGNHISTJ
- . D ASGNHIST^SYNDHP19(.ASGNHIST,TEAMIEN,0)
- . M POSITION("position",POSIEN,"positionAssignmentHistory")=ASGNHIST
- . ;
- . ;preceptor assignment history
- . N PRECHIST,PRECHISTJ
- . D PRECHIST^SYNDHP19(.PRECHIST,POSIEN,0)
- . M POSITION("position",POSIEN,"preceptorAssignmentHistory")=PRECHIST
- . ;
- . ;I $G(DEBUG) W ! ZWRITE POSITION
+ . . S @POSSTAT@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR3,STATIEN)
+ . . ;
+ . . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("POSITION")
  ;
  I $G(RETJSON)="J" D
  . N POSITIONS M POSITIONS("TeamPositions")=POSITION
  . D TOJASON^SYNDHPUTL(.POSITIONS,.POSITIONJ)
- . ;I $G(DEBUG) W ! ZWRITE POSITIONSJ
+ . I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("POSITIONSJ")
  ;
  QUIT
  ;

@@ -1,4 +1,4 @@
-SYNDHP57 ; HC/fjf/art - HealthConcourse - get patient allergies ;05/07/2019
+SYNDHP57 ; HC/fjf/art - HealthConcourse - get patient allergies ;07/23/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -70,7 +70,7 @@ ALLERGIES(ALLARRAY,PATIEN,DHPICN,FRDAT,TODAT) ; get allergies for a patient
  . I $D(ALLERGY("Allergy","ERROR")) M ALLARRAY("Allergies",ALLIEN)=ALLERGY QUIT
  . S AID=ALLERGY("Allergy","resourceId")
  . S ADATEFM=ALLERGY("Allergy","originationDateTimeFM")
- . QUIT:((ADATEFM\1)<FRDAT)!((ADATEFM\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(ADATEFM,FRDAT,TODAT)  ;quit if outside of requested date range
  . S ADATE=ALLERGY("Allergy","originationDateTimeHL7")
  . S REACTANT=ALLERGY("Allergy","reactant")
  . S FT=" ( FREE TEXT )"
@@ -111,7 +111,7 @@ ALLERGIES(ALLARRAY,PATIEN,DHPICN,FRDAT,TODAT) ; get allergies for a patient
  . . W "RE85IEN:",RE85IEN,!
  . . W "RSEV:",RSEV,!
  ;
- ;I $G(DEBUG) W ! ZWRITE ALLERGIES W !
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("ALLERGIES") W !
  ;
  ; serialize data
  N N,SCT,AIEN,ALGN,ALGE,ADATE,ATYPET,AVERT,RSEV,AID,ATYNODE,ATYPTX,ATYPET,GMRID
@@ -278,6 +278,16 @@ T1 ;
  QUIT
  ;
 T2 ;
+ N ICN S ICN="10111V183702"
+ N FRDAT S FRDAT=20000101
+ N TODAT S TODAT=20050101
+ N JSON S JSON=""
+ N RETSTA
+ D PATALLI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA"),!!
+ QUIT
+ ;
+T3 ;
  N ICN S ICN="10111V183702"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""

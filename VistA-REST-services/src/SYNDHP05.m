@@ -1,4 +1,4 @@
-SYNDHP05 ; HC/fjf/art - HealthConcourse - retrieve patient diagnostic reports ;05/08/2019
+SYNDHP05 ; HC/fjf/art - HealthConcourse - retrieve patient diagnostic reports ;07/23/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -122,7 +122,7 @@ DXRAD(DXRPTRAD,PATIEN,FRDAT,TODAT) ; get radiology diagnostic report
  . QUIT:'$D(RADEX(IDX,1))  ;there is no rad diag rpt for this exam
  . S PRSTA="final" ;status
  . S PDATE=$P($G(RADEX(IDX,1)),U,3) ;exam date (FM)
- . QUIT:((PDATE\1)<FRDAT)!((PDATE\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(PDATE,FRDAT,TODAT)  ;quit if outside of requested date range
  . S PDATEHL=$P($G(RADEX(IDX,1)),U,4) ;exam date (HL7)
  . S PPROV=$P($G(RADEX(IDX,1)),U,8) ;verifying provider
  . S PID=$P($G(RADEX(IDX,1)),U,1) ;resource id
@@ -134,8 +134,8 @@ DXRAD(DXRPTRAD,PATIEN,FRDAT,TODAT) ; get radiology diagnostic report
  . S TEXT=$G(RADEX(IDX,"REPORT"))
  . S DXRRAD=DXRRAD_U_"IMG"_P_PRSTA_P_PDATEHL_P_PPROV_P_PID_P_PRCPT_P_SCT_P_DESC_P_PRIMEDX_P_DXSCT_P_TEXT
  ;
- ;I $G(DEBUG) W ! ZWRITE DXRRAD
- ;I $G(DEBUG) W ! ZWRITE DXRPTRAD
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("DXRRAD")
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("DXRPTRAD")
  ;
  QUIT DXRRAD
  ;   RETSTA  - ICN^"IMG"|status|dateTime|provider|identifier|CPT|SCT|desc|primary dx|dx SCT|conclusion^...
@@ -153,7 +153,7 @@ BLDARRAY(RADEX,DXRPTRAD) ;Build an array from data returned by RADEXAM^SYNDHP55
  F  S IDX=$O(RADEX(IDX)) QUIT:IDX=""  D
  . QUIT:'$D(RADEX(IDX,1))  ;there is no rad diag rpt for this exam
  . S PDATE=$P($G(RADEX(IDX,1)),U,3) ;exam date (FM)
- . QUIT:(PDATE<FRDAT)!(PDATE>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(PDATE,FRDAT,TODAT)  ;quit if outside of requested date range
  . N RADEXAM S RADEXAM=$NA(DXRPTRAD("DxReportRad",IDX,"RadExam"))
  . S @RADEXAM@("resourceType")="DiagnosticReport"
  . S @RADEXAM@("resourceId")=$P($G(RADEX(IDX)),U,1)
@@ -215,9 +215,9 @@ DXMH(DXRPTMH,PATIEN,FRDAT,TODAT) ;get Mental Health Diagnosis
  . D GET1MHDX^SYNDHP17(.DXMH,MHIEN,0)
  . QUIT:$D(DXMH("Mhdiag","ERROR"))
  . I $D(DXMH("Mhdiag","ERROR")) M DXRPTMH("DxReportMH",MHIEN)=DXMH QUIT
- . ;I $G(DEBUG) ZWRITE DXMH
+ . I $G(DEBUG) W $$ZW^SYNDHPUTL("DXMH")
  . S DXDTFM=DXMH("Mhdiag","dateTimeOfDiagnosisFM") ;date/time of diagnosis fm format
- . QUIT:((DXDTFM\1)<FRDAT)!((DXDTFM\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(DXDTFM,FRDAT,TODAT)  ;quit if outside of requested date range
  . S DXDTHL=DXMH("Mhdiag","dateTimeOfDiagnosisHL7") ;hl7 format date/time of diagnosis
  . S DXBY=DXMH("Mhdiag","diagnosisBy") ;diagnosed by
  . S DXCODE=DXMH("Mhdiag","diagnosis") ;diagnosis
@@ -229,11 +229,10 @@ DXMH(DXRPTMH,PATIEN,FRDAT,TODAT) ;get Mental Health Diagnosis
  . ;^category|status|dateTime|provider|identifier|diag code|SCT|diag desc^...
  . S SEQ=SEQ+1
  . S MHDXRS(SEQ)=U_"MHDX"_P_STATUS_P_DXDTHL_P_DXBY_P_PID_P_DXCODE_P_SNOMED_P_SDESC
- . ;I $G(DEBUG) ZWRITE MHDXRS(SEQ)
  . M DXRPTMH("DxReportMH",MHIEN)=DXMH ;
  ;
- ;I $G(DEBUG) W ! ZWRITE MHDXRS
- ;I $G(DEBUG) W ! ZWRITE DXRPTMH
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("MHDXRS")
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("DXRPTMH")
  ;
  ;serialize data
  S SERMHDXRS=""
@@ -241,7 +240,7 @@ DXMH(DXRPTMH,PATIEN,FRDAT,TODAT) ;get Mental Health Diagnosis
  F  S SEQ=$O(MHDXRS(SEQ)) QUIT:SEQ=""  D
  . S SERMHDXRS=SERMHDXRS_MHDXRS(SEQ)
  ;
- ;I $G(DEBUG) W ! ZWRITE SERMHDXRS
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("SERMHDXRS")
  ;
  QUIT SERMHDXRS
  ;
@@ -260,7 +259,7 @@ DXVISIT(DXRPTV,PATIEN,FRDAT,TODAT) ; get visit diagnostic report
  . S VPOV("V POV","resourceType")="DiagnosticReport"
  . S STATUS="final"
  . S DXDTFM=VPOV("V POV","visitFM")
- . QUIT:((DXDTFM\1)<FRDAT)!((DXDTFM\1)>TODAT)  ;quit if outside of requested date range
+ . QUIT:'$$RANGECK^SYNDHPUTL(DXDTFM,FRDAT,TODAT)  ;quit if outside of requested date range
  . S DXDTHL=VPOV("V POV","visitHL7")
  . S PROV=VPOV("V POV","encounterProvider")
  . S RESID=VPOV("V POV","resourceId")
@@ -277,8 +276,8 @@ DXVISIT(DXRPTV,PATIEN,FRDAT,TODAT) ; get visit diagnostic report
  F  S SEQ=$O(DXVISIT(SEQ)) QUIT:SEQ=""  D
  . S SERPOV=SERPOV_DXVISIT(SEQ)
  ;
- ;I $G(DEBUG) W ! ZWRITE SERPOV
- ;I $G(DEBUG) W ! ZWRITE DXRPTV
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("SERPOV")
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("DXRPTV")
  ;
  QUIT SERPOV
  ;
@@ -294,6 +293,16 @@ T1 ;
  QUIT
  ;
 T2 ;
+ N ICN S ICN="10101V964144"
+ N FRDAT S FRDAT=20000101
+ N TODAT S TODAT=20100101
+ N JSON S JSON=""
+ N RETSTA
+ D PATDXRI(.RETSTA,ICN,FRDAT,TODAT,JSON)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T3 ;
  N ICN S ICN="10101V964144"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""

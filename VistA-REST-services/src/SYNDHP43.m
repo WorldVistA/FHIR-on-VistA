@@ -1,4 +1,4 @@
-SYNDHP43 ; HC/fjf/art - HealthConcourse - validate a patient's traits ;05/04/2019
+SYNDHP43 ; HC/fjf/art - HealthConcourse - validate a patient's traits ;07/24/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -83,26 +83,32 @@ ICN(IEN) ; obtain ICN
  ;
 TESTP ;
  D PATVAL(.RETSTA,"ZERO,PATIENT",666000000,19350505,"M","SCHMIDT")
+ W $$ZW^SYNDHPUTL("RETSTA")
  Q
  ;
 TESTF1 ; SSN fail
  D PATVAL(.RETSTA,"ZERO,PATIENT",566000000,19350505,"M","SCHMIDT")
+ W $$ZW^SYNDHPUTL("RETSTA")
  Q
  ;
 TESTF2 ; name fail
  D PATVAL(.RETSTA,"FRAUNOFER,PATIENT",666000000,19350505,"M","SCHMIDT")
+ W $$ZW^SYNDHPUTL("RETSTA")
  Q
  ;
 TESTF3 ; DOB fail
  D PATVAL(.RETSTA,"ZERO,PATIENT",666000000,19270928,"M","SCHMIDT")
+ W $$ZW^SYNDHPUTL("RETSTA")
  Q
  ;
 TESTF4 ; gender fail
  D PATVAL(.RETSTA,"ZERO,PATIENT",666000000,19350505,"F","SCHMIDT")
+ W $$ZW^SYNDHPUTL("RETSTA")
  Q
  ;
 TESTF5 ; mother's maiden name fail
  D PATVAL(.RETSTA,"ZERO,PATIENT",666000000,19350505,"M","SCHROEDINGER")
+ W $$ZW^SYNDHPUTL("RETSTA")
  Q
  ;
 T3 ;

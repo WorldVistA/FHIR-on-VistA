@@ -1,4 +1,4 @@
-SYNDHP41 ; HC/rdb/art - HealthConcourse - retrieve patient appointments ;05/04/2019
+SYNDHP41 ; HC/rdb/art - HealthConcourse - retrieve patient appointments ;07/23/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -7,7 +7,7 @@ SYNDHP41 ; HC/rdb/art - HealthConcourse - retrieve patient appointments ;05/04/2
  ;
  ; ---------------- Get patient appointment information ------------------------------
  ;
-PATAPTI(RETSTA,DHPICN,FRDAT,TODAT) ; Patient appointments for ICN
+PATAPTI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient appointments for ICN
  ;
  ; Return patient appointments for a given patient ICN
  ; Returns a patient's appointments from PATIENT:APPOINTMENT (2:1900)
@@ -16,6 +16,9 @@ PATAPTI(RETSTA,DHPICN,FRDAT,TODAT) ; Patient appointments for ICN
  ;   ICN     - unique patient identifier across all VistA systems
  ;   FRDAT   - from date (inclusive), optional, compared to appointment date/time
  ;   TODAT   - to date (inclusive), optional, compared to appointment date/time
+ ;   RETJSON - J = Return JSON
+ ;             F = Return FHIR
+ ;             0 or null = Return string (default)
  ; Output:
  ;   RETSTA  - a delimited string that lists patient appointment information
  ;          ICN ^ Patient IEN _ Appt Date (HL7) | Clinic | Appt Status | purpose of visit | Appt Type | Resource ID ^...
@@ -49,43 +52,72 @@ PATAPTI(RETSTA,DHPICN,FRDAT,TODAT) ; Patient appointments for ICN
  S PATIEN=$O(^DPT("AFICN",DHPICN,""))
  I PATIEN="" S RETSTA="-1^Internal data structure error" QUIT
  ;
- S RETSTA=$$APPTS(PATIEN,DHPICN,FRDAT,TODAT)
- Q
+ N PATAPPT
+ S RETSTA=$$APPTS(.PATAPPT,PATIEN,DHPICN,FRDAT,TODAT)
  ;
-APPTS(PATIEN,DHPICN,FRDAT,TODAT) ; get appointments for a patient
+ ;I $G(RETJSON)="F" D xxx  ;create array for FHIR
  ;
- N HLFCTS,FNUM,SITE,APPTDTTM,PTAPTID,CLNAM,APDTDISP,APPTSTAT,APPTPURP,APPTTYPE,ZARR
- N C,P,S
- S C=",",P="|",S="_"
- S SITE=$P($$SITE^VASITE,"^",3)
- S FNUM=2.98      ;  patient appointment sub-file
- ; scan PATIENT "S" index for Appointments
- S APPTDTTM=0
- F  S APPTDTTM=$O(^DPT(PATIEN,"S",APPTDTTM)) Q:APPTDTTM=""  D
- .QUIT:((APPTDTTM\1)<FRDAT)!((APPTDTTM\1)>TODAT)  ;quit if outside of requested date range
- .S PTAPTID=$$RESID^SYNDHP69("V",SITE)_S_2_S_PATIEN_S_FNUM_S_APPTDTTM
- .S CLNAM=$$GET1^DIQ(FNUM,APPTDTTM_","_PATIEN,.01) ;clinic
- .S APDTDISP=$$FMTHL7^XLFDT(APPTDTTM) ;appt. date/time
- .S APPTSTAT=$$GET1^DIQ(FNUM,APPTDTTM_","_PATIEN,3) ;status
- .S APPTPURP=$$GET1^DIQ(FNUM,APPTDTTM_","_PATIEN,9) ;purpose of visit
- .S APPTTYPE=$$GET1^DIQ(FNUM,APPTDTTM_","_PATIEN,9.5) ;appt. type
- .S ZARR(DHPICN,APPTDTTM)=PATIEN_S_APDTDISP_P_CLNAM_P_APPTSTAT_P_APPTPURP_P_APPTTYPE_P_PTAPTID
+ I $G(RETJSON)="J"!($G(RETJSON)="F") D
+ . S RETSTA=""
+ . D TOJASON^SYNDHPUTL(.PATAPPT,.RETSTA)
+ ;
+ QUIT
+ ;
+APPTS(PATAPPT,PATIEN,DHPICN,FRDAT,TODAT) ; get appointments for a patient
+ ;
+ N P S P="|"
+ N S S S="_"
+ ;
+ D GETPATAPPT^SYNDHP25(.PATAPPT,PATIEN,0) ;get patient appointment records
+ I $D(PATAPPT("Patappt","ERROR")) QUIT
+ ;
+ N APPTDTTM,PTAPTID,CLNAM,APDTDISP,APPTSTAT,APPTPURP,APPTTYPE,ZARR
+ S APPTDTTM=""
+ F  S APPTDTTM=$O(PATAPPT("Patappt","appointments","appointment",APPTDTTM)) Q:APPTDTTM=""  D
+ . QUIT:'$$RANGECK^SYNDHPUTL(APPTDTTM,FRDAT,TODAT)  ;quit if outside of requested date range
+ . N APPT S APPT=$NA(PATAPPT("Patappt","appointments","appointment",APPTDTTM))
+ . S PTAPTID=@APPT@("resourceId")
+ . S CLNAM=@APPT@("clinic") ;clinic
+ . S APDTDISP=@APPT@("appointmentDateTimeFHIR") ;appt. date/time
+ . S APPTSTAT=@APPT@("status") ;status
+ . S APPTPURP=@APPT@("purposeOfVisit") ;purpose of visit
+ . S APPTTYPE=@APPT@("appointmentType") ;appt. type
+ . S ZARR(DHPICN,APPTDTTM)=PATIEN_S_APDTDISP_P_CLNAM_P_APPTSTAT_P_APPTPURP_P_APPTTYPE_P_PTAPTID
  ; serialize data
  S APPTDTTM=""
  N APPTREC
- S HLFCTS=DHPICN
+ N APPTS S APPTS=DHPICN
  F  S APPTDTTM=$O(ZARR(DHPICN,APPTDTTM)) Q:APPTDTTM=""  D
  .S APPTREC=ZARR(DHPICN,APPTDTTM)
- .S HLFCTS=HLFCTS_U_APPTREC
- Q HLFCTS
+ .S APPTS=APPTS_U_APPTREC
+ Q APPTS
  ;
  ; ----------- Unit Test -----------
 T1 ;
- N ICN S ICN="1198013374V588739"
+ N ICN S ICN="1435855215V947437"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N RETSTA
  D PATAPTI(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T2 ;
+ N ICN S ICN="1435855215V947437"
+ N FRDAT S FRDAT=20150201
+ N TODAT S TODAT=20160101
+ N RETSTA
+ D PATAPTI(.RETSTA,ICN,FRDAT,TODAT)
+ W $$ZW^SYNDHPUTL("RETSTA")
+ QUIT
+ ;
+T3 ;
+ N ICN S ICN="1435855215V947437"
+ N FRDAT S FRDAT=""
+ N TODAT S TODAT=""
+ N JSON S JSON="J"
+ N RETSTA
+ D PATAPTI(.RETSTA,ICN,FRDAT,TODAT,JSON)
  W $$ZW^SYNDHPUTL("RETSTA")
  QUIT
  ;

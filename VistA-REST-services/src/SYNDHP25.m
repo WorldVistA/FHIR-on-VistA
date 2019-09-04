@@ -1,4 +1,4 @@
-SYNDHP25 ; HC/art - HealthConcourse - get patient appointment data ;05/08/2019
+SYNDHP25 ; HC/art - HealthConcourse - get patient appointment data ;06/25/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -23,14 +23,14 @@ GETPATAPPT(PATAPPT,PATIEN,RETJSON,PATAPPTJ) ;get patient appointment records
  ;
  N PATAPPTARR,PATAPPTERR
  D GETS^DIQ(FNBR1,IENS1,FIELDS,"EI","PATAPPTARR","PATAPPTERR")
- I $G(DEBUG) W ! ZWRITE PATAPPTARR
- I $G(DEBUG),$D(PATAPPTERR) W !,">>ERROR<<" W ! ZWRITE PATAPPTERR
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("PATAPPTARR")
+ I $G(DEBUG),$D(PATAPPTERR) W !,">>ERROR<<" W ! W $$ZW^SYNDHPUTL("PATAPPTERR")
  I $D(PATAPPTERR) D  QUIT
  . S PATAPPT("Patappt","ERROR")=PATIEN
  . D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.PATAPPT,.PATAPPTJ)
  S PATAPPT("Patappt","patIen")=PATIEN
  S PATAPPT("Patappt","resourceType")="Appointment"
- S PATAPPT("Patappt","resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_PATIEN
+ S PATAPPT("Patappt","resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,PATIEN)
  S PATAPPT("Patappt","name")=$G(PATAPPTARR(FNBR1,IENS1,.01,"E"))
  S PATAPPT("Patappt","sex")=$G(PATAPPTARR(FNBR1,IENS1,.02,"E"))
  S PATAPPT("Patappt","sexCd")=$G(PATAPPTARR(FNBR1,IENS1,.02,"I"))
@@ -128,9 +128,9 @@ GETPATAPPT(PATAPPT,PATIEN,RETJSON,PATAPPTJ) ;get patient appointment records
  . S @APPOINT@("followUpVisit")=$G(PATAPPTARR(FNBR2,IENS2,28,"E"))
  . S @APPOINT@("followUpVisitCd")=$G(PATAPPTARR(FNBR2,IENS2,28,"I"))
  . S @APPOINT@("currentStatus")=$G(PATAPPTARR(FNBR2,IENS2,100,"E"))
- . S @APPOINT@("resourceId")=$$RESID^SYNDHP69("V",SITE)_S_FNBR1_S_PATIEN_S_FNBR2_S_+IENS2
+ . S @APPOINT@("resourceId")=$$RESID^SYNDHP69("V",SITE,FNBR1,PATIEN,FNBR2_U_+IENS2)
  ;
- ;I $G(DEBUG) W ! ZWRITE PATAPPT
+ I $G(DEBUG) W ! W $$ZW^SYNDHPUTL("PATAPPT")
  ;
  D:$G(RETJSON)="J" TOJASON^SYNDHPUTL(.PATAPPT,.PATAPPTJ)
  ;

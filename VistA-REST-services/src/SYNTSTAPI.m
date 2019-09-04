@@ -1,4 +1,4 @@
-SYNTSTAPI ; HC/art - HealthConcourse - run in code unit tests ;05/07/2019
+SYNTSTAPI ; HC/art - HealthConcourse - run in code unit tests ;07/30/2019
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -7,103 +7,215 @@ SYNTSTAPI ; HC/art - HealthConcourse - run in code unit tests ;05/07/2019
  ;
 EN ;Run unit tests
  ;
- N STARTTM S STARTTM=$$NOW^XLFDT()
+ W !!!,"----- Patient Vitals",!
+ I $$DOIT D
+ .D T1^SYNDHP01
+ .W !!
+ .D T2^SYNDHP01
+ .W !!
+ .D T3^SYNDHP01
+ W !!!,"----- Patient Immunizations",!
+ I $$DOIT D
+ .D T1^SYNDHP02
+ .W !!
+ .D T2^SYNDHP02
+ .W !!
+ .D T3^SYNDHP02
+ W !!!,"----- Patient Conditions",!
+ I $$DOIT D
+ .D T1^SYNDHP03
+ .W !!
+ .D T2^SYNDHP03
+ .W !!
+ .D T6^SYNDHP03
+ .W !!
+ .D T7^SYNDHP03
+ .W !!!,"----- Patients with a Condition",!
+ .D T3^SYNDHP03
+ .W !!
+ .D T4^SYNDHP03
+ .W !!
+ .D T5^SYNDHP03
+ W !!!,"----- Patient Procedures",!
+ I $$DOIT D
+ .D T1^SYNDHP04
+ .W !!
+ .D T2^SYNDHP04
+ W !!!,"----- Patient Diagnostic Reports",!
+ I $$DOIT D
+ .D T1^SYNDHP05
+ .W !!
+ .D T2^SYNDHP05
+ .W !!
+ .D T3^SYNDHP05
+ W !!!,"----- Institution Details for Hospital Location",!
+ I $$DOIT D
+ .D T1^SYNDHP06
+ .W !!
+ .D T2^SYNDHP06
+ W !!!,"----- Patient Nursing Care Plan Goals",!
+ I $$DOIT D
+ .D T1^SYNDHP07
+ .W !!
+ .D T2^SYNDHP07
+ .W !!
+ .D T3^SYNDHP07
+ W !!!,"----- Patient Flags",!
+ I $$DOIT D
+ .D T1^SYNDHP08
+ .W !!
+ .D T2^SYNDHP08
+ W !!!,"----- Patient Health Factors",!
+ I $$DOIT D
+ .D T1^SYNDHP09
+ .W !!
+ .D T2^SYNDHP09
+ .W !!
+ .D T3^SYNDHP09
+ .;D HLFTEST0^SYNDHP09
+ .;D HLFTEST1^SYNDHP09
+ W !!!,"----- Patient Encounters",!
+ I $$DOIT D
+ .D T1^SYNDHP40
+ .W !!
+ .D T2^SYNDHP40
+ .W !!
+ .D T3^SYNDHP40
+ W !!!,"----- Patient Appointments",!
+ I $$DOIT D
+ .D T1^SYNDHP41
+ .W !!
+ .D T2^SYNDHP41
+ .W !!
+ .D T3^SYNDHP41
+ W !!!,"----- validate patient",!
+ I $$DOIT D
+ .D TESTP^SYNDHP43
+ .W !!
+ .D TESTF1^SYNDHP43
+ .W !!
+ .D TESTF2^SYNDHP43
+ .W !!
+ .D TESTF3^SYNDHP43
+ .W !!
+ .D TESTF4^SYNDHP43
+ .W !!
+ .D TESTF5^SYNDHP43
+ .W !!
+ .D T3^SYNDHP43
+ W !!!,"----- Patient Demographics",!
+ I $$DOIT D
+ .D T1^SYNDHP47
+ .W !!
+ .D T2^SYNDHP47
+ .W !!
+ .D T3^SYNDHP47
+ .W !!
+ .D T4^SYNDHP47
+ .;D T5^SYNDHP47  ;all patients
+ W !!!,"----- Patient Medication Administration",!
+ I $$DOIT D
+ .;D T1^SYNDHP48  ;all ICNs
+ .D T4^SYNDHP48
+ .W !!
+ .D T5^SYNDHP48
+ W !!!,"----- Patient Medication Dispense",!
+ I $$DOIT D
+ .;D T2^SYNDHP48  ;all ICNs
+ .D T6^SYNDHP48
+ .W !!
+ .D T7^SYNDHP48
+ W !!!,"----- Patient Medication Statement",!
+ I $$DOIT D
+ .;D T3^SYNDHP48  ;all ICNs
+ .D T8^SYNDHP48
+ .W !!
+ .D T9^SYNDHP48
+ W !!!,"----- Patient Chem Labs",!
+ I $$DOIT D
+ .D T1^SYNDHP53
+ .W !!
+ .D T2^SYNDHP53
+ .W !!
+ .D T3^SYNDHP53
+ W !!!,"----- Patient Providers for Encounters",!
+ I $$DOIT D
+ .D T1^SYNDHP54
+ .W !!
+ .D T2^SYNDHP54
+ .W !!
+ .D T3^SYNDHP54
+ W !!!,"----- Patient Observations",!
+ I $$DOIT D
+ .D T1^SYNDHP56
+ .W !!
+ .D T2^SYNDHP56
+ .W !!
+ .D T3^SYNDHP56
+ W !!!,"----- Patient Allergies",!
+ I $$DOIT D
+ .D T1^SYNDHP57
+ .W !!
+ .D T2^SYNDHP57
+ .W !!
+ .D T3^SYNDHP57
+ .W !!
+ .D ALLTEST0^SYNDHP57
+ .;D PROTEST^SYNDHP57
+ W !!!,"----- Care Team",!
+ I $$DOIT D
+ .D T1^SYNDHP58
+ .W !!
+ .D T2^SYNDHP58
+ W !!!,"----- Care Teams",!
+ I $$DOIT D
+ .D T3^SYNDHP58
+ .W !!
+ .D T4^SYNDHP58
+ .W !!
+ .D T5^SYNDHP58
+ W !!!,"----- Patient Care Plans",!
+ I $$DOIT D
+ .D T1^SYNDHP59
+ .W !!
+ .D T2^SYNDHP59
+ .W !!
+ .D T3^SYNDHP59
+ W !!!,"----- Patient Care Plan for a Visit",!
+ I $$DOIT D
+ .D T4^SYNDHP59
+ .W !!
+ .D T5^SYNDHP59
+ W !!!,"----- Patient TIU Notes",!
+ I $$DOIT D
+ .D T1^SYNDHP67
+ .W !!
+ .D T2^SYNDHP67
+ .W !!
+ .D T3^SYNDHP67
+ .W !!
+ .D T4^SYNDHP67
+ .W !!
+ .D T5^SYNDHP67
+ W !!!,"----- M Unit Test",!
+ .;D T1^SYNDHP69
+ W !!!,"----- VistA Record by Resource ID",!
+ I $$DOIT D
+ .D T1^SYNDHP99
+ .W !!
+ .D T2^SYNDHP99
  ;
- W !!,"----- Patient Vitals",!!
- D T1^SYNDHP01
- D T2^SYNDHP01
- W !!,"----- Patient Immunizations",!!
- D T1^SYNDHP02
- D T2^SYNDHP02
- W !!,"----- Patient Conditions",!!
- D T1^SYNDHP03
- W !!,"----- Patients with a Condition",!!
- D T2^SYNDHP03
- D T3^SYNDHP03
- W !!,"----- Patient Procedures",!!
- D T1^SYNDHP04
- W !!,"----- Patient Diagnostic Reports",!!
- D T1^SYNDHP05
- D T2^SYNDHP05
- W !!,"----- Institution Details for Hospital Location",!!
- D T1^SYNDHP06
- D T2^SYNDHP06
- W !!,"----- Patient Nursing Care Plan Goals",!!
- D T1^SYNDHP07
- D T2^SYNDHP07
- W !!,"----- Patient Flags",!!
- D T1^SYNDHP08
- D T2^SYNDHP08
- W !!,"----- Patient Health Factors",!!
- D T1^SYNDHP09
- D T2^SYNDHP09
- ;D HLFTEST0^SYNDHP09
- ;D HLFTEST1^SYNDHP09
- W !!,"----- Patient Encounters",!!
- D T1^SYNDHP40
- W !!,"----- Patient Appointments",!!
- D T1^SYNDHP41
- W !!,"----- validate patient",!!
- D TESTP^SYNDHP43
- D TESTF1^SYNDHP43
- D TESTF2^SYNDHP43
- D TESTF3^SYNDHP43
- D TESTF4^SYNDHP43
- D TESTF5^SYNDHP43
- D T3^SYNDHP43
- W !!,"----- Patient Demographics",!!
- D T1^SYNDHP47
- D T2^SYNDHP47
- D T3^SYNDHP47
- D T4^SYNDHP47
- ;D T5^SYNDHP47
- D DEMTEST0^SYNDHP47
- W !!,"----- Patient Medication Statement",!!
- ;D T1^SYNDHP48
- D T6^SYNDHP48
- W !!,"----- Patient Medication Dispense",!!
- ;D T2^SYNDHP48
- D T5^SYNDHP48
- W !!,"----- Patient Medication Administration",!!
- ;D T3^SYNDHP48
- D T4^SYNDHP48
- W !!,"----- Patient Providers for Encounters",!!
- D T1^SYNDHP54
- D T2^SYNDHP54
- W !!,"----- Patient Observations",!!
- D T1^SYNDHP56
- W !!,"----- Patient Allergies",!!
- D T1^SYNDHP57
- D T2^SYNDHP57
- D ALLTEST0^SYNDHP57
- ;D PROTEST^SYNDHP57
- W !!,"----- Care Team",!!
- D T1^SYNDHP58
- D T2^SYNDHP58
- W !!,"----- Care Teams",!!
- D T3^SYNDHP58
- D T4^SYNDHP58
- W !!,"----- Patient Care Plans",!!
- D T1^SYNDHP59
- D T2^SYNDHP59
- W !!,"----- Patient Care Plan for a Visit",!!
- D T3^SYNDHP59
- D T4^SYNDHP59
- W !!,"----- Patient TIU Notes",!!
- D T1^SYNDHP67
- D T2^SYNDHP67
- D T3^SYNDHP67
- W !!,"----- M Unit Test",!!
- ;D T1^SYNDHP69
- W !!,"----- VistA Record by Resource ID",!!
- D T1^SYNDHP99
- ;
- N ENDTM S ENDTM=$$NOW^XLFDT()
- N ELAPSED S ELAPSED=$$FMDIFF^XLFDT(ENDTM,STARTTM,3)
- ;
- W !!,"Start time:   ",$$FMTE^XLFDT(STARTTM,7),!
- W "End time:     ",$$FMTE^XLFDT(ENDTM,7),!
- W "Elapsed time: ",ELAPSED,!
  ;
  QUIT
+ ;
+DOIT() ;
+ N X,Y,DIR,DTOUT,DUOUT,DIRUT,DIROUT
+ S DIR(0)="YAO"
+ S DIR("A")="Do you want to run these? (Y/N): "
+ S DIR("B")="N"
+ S DIR("?")="Enter Y to run, N to skip."
+ ;S DIR("??")="Enter Y to run, N to skip."
+ D ^DIR
+ I $D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT) QUIT 0
+ QUIT Y
  ;
