@@ -1,5 +1,5 @@
-SYNDHPMP ; AFHIL/FJF - HealthConcourse - terminology mapping ;03/26/2019
- ;;0.1;VISTA SYNTHETIC DATA LOADER;;Aug 17, 2018
+SYNDHPMP ; AFHIL/FJF - HealthConcourse - terminology mapping ;2019-10-17  11:18 AM
+ ;;0.3;VISTA SYNTHETIC DATA LOADER;;Jul 01, 2019;Build 1
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -201,9 +201,9 @@ T5V(code) ;
  D DECODE^XLFJSON("MAPSV2","MAPSVO2")
  ;
  W !!,URLSV,!!
- ZW MAPSVO
+ ZWRITE MAPSVO
  w !!,URLSV2,!!
- ZW MAPSVO2
+ ZWRITE MAPSVO2
  ;
  Q
  ;
