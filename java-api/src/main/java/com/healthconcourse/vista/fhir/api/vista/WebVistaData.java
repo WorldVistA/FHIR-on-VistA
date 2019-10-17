@@ -21,7 +21,7 @@ import org.hl7.fhir.dstu3.model.Condition;
 import org.hl7.fhir.dstu3.model.Enumerations.AdministrativeGender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import java.lang.UnsupportedOperationException;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -104,7 +104,7 @@ public class WebVistaData implements VistaData {
 
     @Override
     public String getObservationsByIcnAndCode(String icn, String code) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
