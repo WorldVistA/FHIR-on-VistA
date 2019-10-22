@@ -19,13 +19,14 @@ package com.healthconcourse.vista.fhir.api.service;
 import org.hl7.fhir.dstu3.model.*;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public interface PatientService {
 
     Patient getPatientById(String id);
     List<Patient> findPatient(String name, Date dob, String ssn, Enumerations.AdministrativeGender gender);
-    List<Patient> getAllPatients();
+    List<Patient> getAllPatients(HashMap<String, String> options);
     List<Condition> getCodesByIcn(String patientIcn);
     List<Encounter> getEncountersForPatient(String patientIcn);
     List<Observation> getObservationsByIcn(String id);

@@ -63,8 +63,8 @@ public class VistaPatientService implements PatientService {
     }
 
     @Override
-    public List<Patient> getAllPatients() {
-        String httpBody = service.getAllPatients();
+    public List<Patient> getAllPatients(HashMap<String, String> options) {
+        String httpBody = service.getAllPatients(options);
 
         PatientParser parser = new PatientParser();
 

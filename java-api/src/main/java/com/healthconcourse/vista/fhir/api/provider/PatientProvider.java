@@ -16,29 +16,60 @@ limitations under the License.
 */
 package com.healthconcourse.vista.fhir.api.provider;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.jaxrs.server.AbstractJaxRsResourceProvider;
-
-import ca.uhn.fhir.rest.annotation.*;
-import ca.uhn.fhir.rest.api.server.RequestDetails;
-import ca.uhn.fhir.rest.api.Constants;
-import ca.uhn.fhir.rest.param.DateParam;
-import ca.uhn.fhir.rest.param.DateRangeParam;
-import ca.uhn.fhir.rest.param.StringParam;
-import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import com.healthconcourse.vista.fhir.api.HcConstants;
-import com.healthconcourse.vista.fhir.api.service.PatientService;
-import com.healthconcourse.vista.fhir.api.service.VistaPatientService;
-import com.healthconcourse.vista.fhir.api.vista.VistaData;
-import org.hl7.fhir.dstu3.model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.*;
+
+import org.hl7.fhir.dstu3.model.AllergyIntolerance;
+import org.hl7.fhir.dstu3.model.Appointment;
+import org.hl7.fhir.dstu3.model.Bundle;
+import org.hl7.fhir.dstu3.model.CarePlan;
+import org.hl7.fhir.dstu3.model.Composition;
+import org.hl7.fhir.dstu3.model.Condition;
+import org.hl7.fhir.dstu3.model.DiagnosticReport;
+import org.hl7.fhir.dstu3.model.DomainResource;
+import org.hl7.fhir.dstu3.model.Encounter;
+import org.hl7.fhir.dstu3.model.Flag;
+import org.hl7.fhir.dstu3.model.Goal;
+import org.hl7.fhir.dstu3.model.IdType;
+import org.hl7.fhir.dstu3.model.Immunization;
+import org.hl7.fhir.dstu3.model.MedicationAdministration;
+import org.hl7.fhir.dstu3.model.MedicationDispense;
+import org.hl7.fhir.dstu3.model.MedicationStatement;
+import org.hl7.fhir.dstu3.model.Meta;
+import org.hl7.fhir.dstu3.model.Observation;
+import org.hl7.fhir.dstu3.model.Patient;
+import org.hl7.fhir.dstu3.model.Practitioner;
+import org.hl7.fhir.dstu3.model.Procedure;
+import org.hl7.fhir.dstu3.model.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.healthconcourse.vista.fhir.api.service.PatientService;
+import com.healthconcourse.vista.fhir.api.service.VistaPatientService;
+import com.healthconcourse.vista.fhir.api.vista.VistaData;
+
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.jaxrs.server.AbstractJaxRsResourceProvider;
+import ca.uhn.fhir.rest.annotation.IdParam;
+import ca.uhn.fhir.rest.annotation.Operation;
+import ca.uhn.fhir.rest.annotation.OptionalParam;
+import ca.uhn.fhir.rest.annotation.Read;
+import ca.uhn.fhir.rest.annotation.Search;
+import ca.uhn.fhir.rest.api.Constants;
+import ca.uhn.fhir.rest.api.server.RequestDetails;
+import ca.uhn.fhir.rest.param.DateParam;
+import ca.uhn.fhir.rest.param.NumberParam;
+import ca.uhn.fhir.rest.param.StringParam;
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 
 
 /**
@@ -305,8 +336,34 @@ public class PatientProvider extends AbstractJaxRsResourceProvider<Patient> {
     }
 
     @Search
-    public List<Patient> getAllPatients() {
-        List<Patient> results = service.getAllPatients();
+    public Bundle getAllPatients(
+            @OptionalParam(name = Patient.SP_IDENTIFIER) final StringParam identifier,
+            @OptionalParam(name = Patient.SP_NAME)       final StringParam name,
+            @OptionalParam(name = Patient.SP_GENDER)     final StringParam gender,
+            @OptionalParam(name = Patient.SP_FAMILY)     final StringParam family,
+            @OptionalParam(name = Patient.SP_GIVEN)      final StringParam given,
+            @OptionalParam(name = Patient.SP_BIRTHDATE)  final DateParam   dob,
+            @OptionalParam(name = Constants.PARAM_COUNT) final NumberParam count,
+            @OptionalParam(name = "_page")               final NumberParam page,
+            RequestDetails request
+            )
+    {
+        int defaultServerCount = 100;
+
+        Bundle bundle = createBundle(String.format("%s/%s", request.getFhirServerBase(), request.getRequestPath()));
+
+        HashMap<String, String> options = new HashMap<String, String>();
+        if (identifier != null) options.put(Patient.SP_IDENTIFIER, identifier.getValue());
+        if (name       != null) options.put(Patient.SP_NAME,       name.getValue());
+        if (gender     != null) options.put(Patient.SP_GENDER,     gender.getValue());
+        if (family     != null) options.put(Patient.SP_FAMILY,     family.getValue());
+        if (given      != null) options.put(Patient.SP_GIVEN,      given.getValue());
+        if (dob        != null) options.put(Patient.SP_BIRTHDATE,  dob.getValueAsString());
+        if (count      != null) options.put(Constants.PARAM_COUNT, count.getValue().toPlainString());
+        // page is not a FHIR standard thing; but our own. FHIR doesn't have it.
+        if (page       != null) options.put("_page",               page.getValue().toPlainString());
+
+        List<Patient> results = service.getAllPatients(options);
 
         if(results.isEmpty()) {
             String message = "No patients found";
@@ -314,7 +371,64 @@ public class PatientProvider extends AbstractJaxRsResourceProvider<Patient> {
             throw new ResourceNotFoundException(message);
         }
 
-        return results;
+        for(Resource item : results){
+            bundle.addEntry().setResource(item);
+        }
+
+        bundle.setTotal(results.size());
+
+        Bundle.BundleLinkComponent nextlink = new Bundle.BundleLinkComponent();
+        Bundle.BundleLinkComponent prevlink = new Bundle.BundleLinkComponent();
+        List<Bundle.BundleLinkComponent> links = new ArrayList<>();
+        String baseUrl = bundle.getLink(Constants.LINK_SELF).getUrl();
+        String urlWithParameters = baseUrl + "?";
+
+        FhirContext c = getFhirContext();
+        if (identifier != null) urlWithParameters += Patient.SP_IDENTIFIER + "=" + identifier.getValueAsQueryToken(c) + "&";
+        if (name       != null) urlWithParameters += Patient.SP_NAME +       "=" + name.getValueAsQueryToken(c)       + "&";
+        if (gender     != null) urlWithParameters += Patient.SP_GENDER +     "=" + gender.getValueAsQueryToken(c)     + "&";
+        if (family     != null) urlWithParameters += Patient.SP_FAMILY +     "=" + family.getValueAsQueryToken(c)     + "&";
+        if (given      != null) urlWithParameters += Patient.SP_GIVEN  +     "=" + given.getValueAsQueryToken(c)      + "&";
+        if (dob        != null) urlWithParameters += Patient.SP_BIRTHDATE +  "=" + dob.getValueAsQueryToken(c)        + "&";
+
+        int contextCount;
+        if (count      != null) contextCount = count.getValue().intValue();
+        else                    contextCount = defaultServerCount;
+        urlWithParameters += Constants.PARAM_COUNT + "=" + contextCount + "&";
+
+        // Page is special
+        if (page != null) {
+            int originalPage = page.getValue().intValue();
+
+            // If we have less results than the max, we are at the end, and no need to have next page
+            if (!(results.size() < contextCount)) {
+                String nextUrl = urlWithParameters;
+                nextUrl += "_page=" + page.setValue(BigDecimal.valueOf(originalPage + 1)).getValueAsQueryToken(c);
+                nextlink.setRelation(Constants.LINK_NEXT);
+                nextlink.setUrl(nextUrl);
+                links.add(nextlink);
+            }
+
+            if (originalPage != 1)
+            {
+                String prevUrl = urlWithParameters;
+                prevUrl += "_page=" + page.setValue(BigDecimal.valueOf(originalPage - 1)).getValueAsQueryToken(c);
+                prevlink.setRelation(Constants.LINK_PREVIOUS);
+                prevlink.setUrl(prevUrl);
+                links.add(prevlink);
+            }
+        }
+        else {
+            urlWithParameters += "_page=2";
+            String nextUrl = urlWithParameters;
+            nextlink.setRelation(Constants.LINK_NEXT);
+            nextlink.setUrl(nextUrl);
+            links.add(nextlink);
+        }
+
+        bundle.setLink(links);
+
+        return bundle;
     }
 
     @Search(compartmentName = "Composition")

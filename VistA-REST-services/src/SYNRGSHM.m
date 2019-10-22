@@ -1,4 +1,4 @@
-SYNRGSHM ;ven/gpl - RGNET SHIM ;2018-08-17  3:28 PM
+SYNRGSHM ;ven/gpl - RGNET SHIM ;2019-10-21  1:52 PM
  ;;0.1;VISTA FHIR SERVER;;Aug 17, 2018
  ;
  ; Authored by George P. Lilly 2019
@@ -50,6 +50,7 @@ WSRGNET(RTN,FILTER) ; web service shim for RGNET web services
  . S X=ZI
  . X ^%ZOSF("UPPERCASE")
  . Q:Y=""
+ . S Y=$TR(Y,"_")
  . S @Y=$G(FILTER(ZI))
  ;D ^ZTER
  ;
@@ -61,7 +62,7 @@ WSRGNET(RTN,FILTER) ; web service shim for RGNET web services
  ;ZWR RETSTA
  ;
  ;M RTN=RETSTA
- S RTN=RETSTA_$C(13,10)
+ S RTN=RETSTA
  ;
  Q
  ;
@@ -125,4 +126,3 @@ DHPPARMS(ARY,CMD) ; pulls the DHP and other parameters out of the line
  . S @ARY@(ZP1)=""
  Q
  ;
-

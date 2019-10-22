@@ -20,7 +20,6 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jaxrs.server.AbstractJaxRsResourceProvider;
 import ca.uhn.fhir.rest.annotation.*;
 import ca.uhn.fhir.rest.param.DateParam;
-import ca.uhn.fhir.rest.param.DateRangeParam;
 import ca.uhn.fhir.rest.param.StringParam;
 import ca.uhn.fhir.rest.api.Constants;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
@@ -39,7 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.Date;
 import java.util.List;
 
 

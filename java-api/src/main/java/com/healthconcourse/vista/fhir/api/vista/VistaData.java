@@ -20,6 +20,7 @@ import org.hl7.fhir.dstu3.model.Condition;
 import org.hl7.fhir.dstu3.model.Enumerations.AdministrativeGender;
 
 import java.util.Date;
+import java.util.HashMap;
 
 public interface VistaData {
 
@@ -73,7 +74,7 @@ public interface VistaData {
 
     String getCarePlan(String code);
 
-    String getAllPatients();
+    String getAllPatients(HashMap<String, String> options);
 
     String getTiuNotes(String icn);
 

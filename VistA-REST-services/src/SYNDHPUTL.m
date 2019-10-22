@@ -1,4 +1,4 @@
-SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;08/05/2019
+SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;2019-10-21  10:49 AM
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -215,10 +215,79 @@ CTRLS(X) ; strip control characters
 ZW(VAR) ; simulate Caché or GT.M ZW or ZWRITE fuction
  ; VAR - variable to be ZWritten
  ;
- N TSUB,I
- W $G(@VAR)
- S TSUB=VAR F I=1:1 S TSUB=$Q(@TSUB) Q:TSUB'[VAR  W !,TSUB,"=",@TSUB
- Q ""
+ D ZWRITE(VAR)
+ QUIT
+ ;
+ZWRITE(NAME,QS,QSREP) ; Replacement for ZWRITE ; Public Proc
+ ; Pass NAME by name as a closed reference. lvn and gvn are both supported.
+ ; QS = Query Subscript to replace. Optional.
+ ; QSREP = Query Subscrpt replacement. Optional, but must be passed if QS is.
+ ;
+ ; : syntax is not supported (yet)
+ S QS=$G(QS),QSREP=$G(QSREP)
+ I QS,'$L(QSREP) S $EC=",U-INVALID-PARAMETERS,"
+ N NL ; new line
+ ; E  N CRLF S CRLF=$C(13,10)_",*-3",NL=$NA(CRLF) ; Weirdness b/c we have to @NL.
+ N INCEXPN S INCEXPN=""
+ I $L(QSREP) S INCEXPN="S $G("_QSREP_")="_QSREP_"+1"
+ N L S L=$L(NAME) ; Name length
+ I $E(NAME,L-2,L)=",*)" S NAME=$E(NAME,1,L-3)_")" ; If last sub is *, remove it and close the ref
+ N ORIGNAME S ORIGNAME=NAME          ;
+ N ORIGQL S ORIGQL=$QL(NAME)         ; Number of subscripts in the original name
+ I $D(@NAME)#2 W $S(QS:$$SUBNAME(NAME,QS,QSREP),1:NAME),"=",$$FORMAT1(@NAME),! ; Write base if it exists
+ ; $QUERY through the name.
+ ; Stop when we are out.
+ ; Stop when the last subscript of the original name isn't the same as
+ ; the last subscript of the Name.
+ F  S NAME=$Q(@NAME) Q:NAME=""  Q:$NA(@ORIGNAME,ORIGQL)'=$NA(@NAME,ORIGQL)  D
+ . W $S(QS:$$SUBNAME(NAME,QS,QSREP),1:NAME),"=",$$FORMAT1(@NAME),!
+ QUIT
+ ;
+SUBNAME(N,QS,QSREP) ; Substitue subscript QS's value with QSREP in name reference N
+ N VARCR S VARCR=$NA(@N,QS-1) ; Closed reference of name up to the sub we want to change
+ N VAROR S VAROR=$S($E(VARCR,$L(VARCR))=")":$E(VARCR,1,$L(VARCR)-1)_",",1:VARCR_"(") ; Open ref
+ N B4 S B4=$NA(@N,QS),B4=$E(B4,1,$L(B4)-1) ; Before sub piece, only used in next line
+ N AF S AF=$P(N,B4,2,99) ; After sub piece
+ QUIT VAROR_QSREP_AF
+ ;
+FORMAT1(V) ; Add quotes, replace control characters if necessary; Public $$
+ ;If numeric, nothing to do.
+ ;If no encoding required, then return as quoted string.
+ ;Otherwise, return as an expression with $C()'s and strings.
+ I +V=V Q V       ; If numeric, just return the value.
+ N QT S QT=""""   ; Quote
+ I $F(V,QT) D     ; chk if V contains any Quotes
+ . N P S P=0                  ;position pointer into V
+ . F  S P=$F(V,QT,P) Q:'P  D  ;find next "
+ . . S $E(V,P-1)=QT_QT        ;double each "
+ . . S P=P+1                  ;skip over new "
+ I $$CCC(V) D  Q V     ; If control character is present do this and quit
+ . S V=$$RCC(QT_V_QT)  ; Replace control characters in "V"
+ . S:$E(V,1,3)="""""_" $E(V,1,3)="" ; Replace doubled up quotes at start
+ . N L S L=$L(V) S:$E(V,L-2,L)="_""""" $E(V,L-2,L)="" ; Replace doubled up quotes at end
+ Q QT_V_QT ; If no control charactrrs, quit with "V"
+ ;
+CCC(S) ;test if S Contains a Control Character or $C(255); Public $$
+ Q:S?.E1C.E 1
+ Q:$F(S,$C(255)) 1
+ Q 0
+ ;
+RCC(NA) ;Replace control chars in NA with $C( ). Returns encoded string; Public $$
+ Q:'$$CCC(NA) NA                         ;No embedded ctrl chars
+ N OUT S OUT=""                          ;holds output name
+ N CC S CC=0                             ;count ctrl chars in $C(
+ N C255 S C255=$C(255)                   ;$C(255) which Mumps may not classify as a Control
+ N C                                     ;temp hold each char
+ N I F I=1:1:$L(NA) S C=$E(NA,I) D           ;for each char C in NA
+ . I C'?1C,C'=C255 D  S OUT=OUT_C Q      ;not a ctrl char
+ . . I CC S OUT=OUT_")_""",CC=0          ;close up $C(... if one is open
+ . I CC D
+ . . I CC=256 S OUT=OUT_")_$C("_$A(C),CC=0  ;max args in one $C(
+ . . E  S OUT=OUT_","_$A(C)              ;add next ctrl char to $C(
+ . E  S OUT=OUT_"""_$C("_$A(C)
+ . S CC=CC+1
+ . Q
+ Q OUT
  ;
 ICNPAT(ICN) ; patient for ICN
  ; Input: ICN

@@ -1,4 +1,4 @@
-SYNDHP47 ; HC/fjf/art - HealthConcourse - retrieve patient demographics ;05/07/2019
+SYNDHP47 ; HC/fjf/art - HealthConcourse - retrieve patient demographics ;2019-10-22  8:58 AM
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -80,33 +80,33 @@ PATDEMI(RETSTA,DHPICN,RETJSON) ; get demographics for patient by ICN
  ;
  QUIT
  ;
-GETPATS(PATARRAY,PATIEN) ; get demographics for patient
+GETPATS(PATARRAY,DFN) ; get demographics for patient
+ N VA,VADM,VAPA,VAERR
+ ; Next two calls: ICR 10061
+ D DEM^VADPT
+ D ADD^VADPT
  ;
- N C,S,RESID,NAME,PHONE,SEX,DOB,ADRS1,ADRS2,ADRS3,CITY,STATE,ZIP,ICN
- S C=","
- S S="_"
+ N RESID,NAME,PHONE,SEX,DOB,ADRS1,ADRS2,ADRS3,CITY,STATE,ZIP,ICN
+ N SITE S SITE=$P($$SITE^VASITE,"^",3)
+ S RESID=$$RESID^SYNDHP69("V",SITE,2,DFN)
+ S NAME=VADM(1)
+ S SEX=$P(VADM(5),U,2)
+ S DOB=$$FMTHL7^XLFDT($P(VADM(3),U)) ; ICR #10103
+ S PHONE=VAPA(8)
+ S ADRS1=VAPA(1)
+ S ADRS2=VAPA(2)
+ S ADRS3=VAPA(3)
+ S CITY=VAPA(4)
+ S STATE=VAPA(5)
+ S ZIP=VAPA(6)
  ;
- N PATIENT
- D GETPATIENT^SYNDHP20(.PATIENT,PATIEN,0,"")
- I $D(PATIENT("Patient","ERROR")) QUIT "-1^error reading patient file"
- S RESID=PATIENT("Patient","resourceId")
- S NAME=PATIENT("Patient","name")
- S PHONE=PATIENT("Patient","phoneNumberResidence")
- S SEX=PATIENT("Patient","sex")
- S DOB=PATIENT("Patient","dateOfBirthHL7")
- S ADRS1=PATIENT("Patient","streetAddressLine1")
- S ADRS2=PATIENT("Patient","streetAddressLine2")
- S ADRS3=PATIENT("Patient","streetAddressLine3")
- S CITY=PATIENT("Patient","city")
- S STATE=PATIENT("Patient","state")
- S ZIP=PATIENT("Patient","zipCode")
- S ICN=PATIENT("Patient","fullICN")
+ S ICN=$$GETICN^MPIF001(DFN) ; ICR 2701
+ I +ICN=-1 S ICN=""
+ N C S C=","
  S PATSTR=ICN_U_NAME_U_PHONE_U_SEX_U_DOB_U_ADRS1_C_ADRS2_C_ADRS3_C_U_CITY_U_STATE_U_ZIP_U_RESID
- M PATARRAY("Patients",PATIEN)=PATIENT
- ;
  QUIT PATSTR
  ;
-PATDEMAL(RETSTA,DHPICN,RETJSON) ; get demographics for all patients
+PATDEMAL(RETSTA,DHPICN,RETJSON) ; [PUBLIC URL] /DHPPATDEMALL? get demographics for all patients
  ;
  ; Return patient demographics for all patients
  ;
@@ -121,33 +121,139 @@ PATDEMAL(RETSTA,DHPICN,RETJSON) ; get demographics for all patients
  ;             data for each patient is separated by "|"
  ;          or patient demographics in JSON format
  ;
- I $G(DHPICN)'="ALL" S RETSTA="-1^please specify ICN=ALL" QUIT
  I ($G(RETJSON)="J"!($G(RETJSON)="F")) S RETSTA="-1^JSON for all patients is currently not supported" QUIT
  ;
- N C,S,CT
- S C=","
- S S="_"
- S CT=0
- K ^TMP("DHPPATALL",$J)
- S ^TMP("DHPPATALL",$J)=""
- K ^SYNDHPTMP("DHPCOUNT")
+ ; New Variables for EN1^DIP
+ N L,DIC,FLDS,BY,DR,TO
+ N HDH,DIASKHD,DIPCRIT,PG,DHIT
+ N DIOEND,DIOBEG
+ N DCOPIES
+ N IOP,%ZIS
+ N DQTIME
+ N DIS,DISUPNO,DISPAR
+ N DISTOP
  ;
- N PATARRAY,PATSTR
- N PATIEN S PATIEN=0
- F  S PATIEN=$O(^DPT(PATIEN)) Q:+PATIEN=0  D
- .S PATSTR=$$GETPATS(.PATARRAY,PATIEN)
- .S ^TMP("DHPPATALL",$J)=^TMP("DHPPATALL",$J)_PATSTR_"|"
- .S CT=CT+1
- .S ^SYNDHPTMP("DHPCOUNT",$J,CT)=PATSTR
- S RETSTA=^TMP("DHPPATALL",$J)
+ ; Output variables
+ N SYNCT S SYNCT=0
+ K ^TMP("SYNPATALL",$J)
  ;
- ;I $G(RETJSON)="F" D xxx  ;create array for FHIR
+ ; Setup minimum environment for Fileman
+ N DIQUIET S DIQUIET=1
+ D DT^DICRW
  ;
+ ; Set-up main variables for ^DIP
+ S DIC=2                        ; Patient File
+ S FLDS="NUMBER"                ; Print IEN only
+ S DHD="@@"                     ; No headers
+ S DHIT="D COLLECT^"_$T(+0)     ; Call back on each entry
+ S %ZIS="0"                     ; DO NOT OPEN HOME DEVICE! SOOO IMPORTANT!
+ S IOP="NULL"                   ; Send output to null device
+ I $D(SYNDEBUG) S IOP="0;132;9999999",%ZIS="" ; or send output to screen if debugging
+ ;
+ ; FN as FR,TO subscript
+ N FN S FN=1
+ ;
+ ; If we have an identifier, don't sort on anything else. Figure this out and send it off.
+ I $data(HTTPARGS("identifier")) do  do PRINT quit
+ . n hasType,type,id
+ . s hasType=HTTPARGS("identifier")["|"
+ . i 'hasType s type="icn",id=HTTPARGS("identifier")
+ . i hasType do
+ .. n typeNote s typeNote=$p(HTTPARGS("identifier"),"|")
+ .. s id=$p(HTTPARGS("identifier"),"|",2)
+ .. i typeNote["icn"    s type="icn"
+ .. e  i typeNote["dfn" s type="dfn"
+ .. e  i typeNote["ssn" s type="ssn"
+ .. e  s type="icn"
+ . ;
+ . if type="icn" S BY="'@991.1"
+ . if type="dfn" S BY="'NUMBER"
+ . if type="ssn" S BY="'@.09"
+ . S FR(FN)=id
+ . S TO(FN)=id
+ ;
+ ; BY for DIP
+ ; Default sort; Sort output by name
+ S BY=".01"
+ S FR(FN)="",TO(FN)=""
+ ;
+ ; Name or Last Name
+ ; Reuse first level sort
+ i $data(HTTPARGS("name"))!($data(HTTPARGS("family"))) do
+ . n name
+ . i $data(HTTPARGS("name"))   s name=HTTPARGS("name")
+ . i $data(HTTPARGS("family")) s name=HTTPARGS("family")
+ . S FR(1)=name
+ . S TO(1)=name_$get(^DD("OS",^DD("OS"),"HIGHESTCHAR"),"z")
+ ;
+ ; DOB
+ I $data(HTTPARGS("birthdate")) do
+ . n birthdate s birthdate=HTTPARGS("birthdate")
+ . n start,stop
+ . i $l(birthdate,"-")=3 s (start,stop)=birthdate
+ . i $l(birthdate,"-")=2 d
+ .. s birthdate=$p(birthdate,"-",2)_"-"_$p(birthdate,"-",1) ; VA Fileman can't interpret 1905-08 but can 08-1905.
+ .. s start=birthdate
+ .. s stop=$p(birthdate,"-")+1_"-"_$p(birthdate,"-",2)
+ . i $l(birthdate,"-")=1 s start=birthdate,stop=birthdate+1
+ . S FN=FN+1
+ . S BY=BY_",'@.03"
+ . S FR(FN)=start
+ . S TO(FN)=stop
+ ;
+ ; Sex
+ I $data(HTTPARGS("gender")) do
+ . N SEX S SEX=$$UP^XLFSTR($E(HTTPARGS("gender")))
+ . S FN=FN+1
+ . S BY=BY_",'@.02"
+ . S FR(FN)=SEX
+ . S TO(FN)=SEX
+ ;
+ ; Given Name. Walk over to name components and search that file.
+ if $data(HTTPARGS("given")) do
+ . S FN=FN+1
+ . S BY=BY_",'@1.01:2"
+ . S FR(FN)=HTTPARGS("given")
+ . S TO(FN)=HTTPARGS("given")_$get(^DD("OS",^DD("OS"),"HIGHESTCHAR"),"z")
+ ;
+PRINT ; [Fall through]
+ ; Paging support SYNMAX and SYNSKIPTO
+ N SYNMAX
+ I $d(HTTPARGS("_count")) set SYNMAX=HTTPARGS("_count")
+ else  set SYNMAX=100
+ ;
+ N SYNSKIPTO
+ I $d(HTTPARGS("_page")) set SYNSKIPTO=(HTTPARGS("_page")-1)*SYNMAX
+ else  set SYNSKIPTO=0
+ ;
+ ; Central Call. Will call back COLLECT at each entry.
+ D EN1^DIP
+ ;
+ I $G(^TMP("SYNPATALL",$J,SYNCT))'="" S $E(^TMP("SYNPATALL",$J,SYNCT),$L(^TMP("SYNPATALL",$J,SYNCT)))=""  ; remove trailing "|"
+ ;
+ ; Return variable
+ S RETSTA=$NA(^TMP("SYNPATALL",$J))
+ ;
+ ; Currently not used
  I $G(RETJSON)="J"!($G(RETJSON)="F") D
  . S RETSTA=""
  . D TOJASON^SYNDHPUTL(.PATARRAY,.RETSTA)
+ QUIT
  ;
- Q
+COLLECT ; [Internal; call back from EN1^DIP
+ ; Skip previous "pages"
+ I SYNSKIPTO>0 S SYNSKIPTO=SYNSKIPTO-1 QUIT
+ ;
+ ; Count entry
+ S SYNCT=SYNCT+1
+ N PATARRAY,PATSTR ; PATARRAY not used
+ S PATSTR=$$GETPATS(.PATARRAY,D0)
+ S ^TMP("SYNPATALL",$J,SYNCT)=PATSTR_"|"
+ I SYNCT>(SYNMAX-1) S DN=0,D0=-1 ; Stop Print loop
+ QUIT
+ ;
+ ;I $G(RETJSON)="F" D xxx  ;create array for FHIR
+ ;
  ;
 PATDEMRNG(RETSTA,DHPPATS,RETJSON) ; get demographics for range of patients
  ;
@@ -199,6 +305,8 @@ PATDEMRNG(RETSTA,DHPPATS,RETJSON) ; get demographics for range of patients
  Q
  ;
  ; ----------- Unit Test -----------
+TEST D EN^%ut($t(+0),3) quit
+SETUP N X S X=0 X ^%ZOSF("RM") quit
 T1 ;
  N ICN S ICN="1034989029V875306"
  N JSON S JSON=""
@@ -231,11 +339,169 @@ T4 ;
  W $$ZW^SYNDHPUTL("RETSTA"),!!
  QUIT
  ;
-T5 ;
+
+T5 ; @TEST Get all Patients
  N ICN S ICN="ALL"
  N JSON S JSON=""
  N RETSTA
  D PATDEMAL(.RETSTA,ICN,JSON)
- W $$ZW^SYNDHPUTL("RETSTA"),!!
+ w ! D ZWRITE^SYNDHPUTL(RETSTA)
+ D CHKTF^%ut($O(@RETSTA@(0))>0)
  QUIT
+ ;
+T6 ; @TEST Get some patients by Given Name (AB)
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("given")="AB"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ d CHKTF^%ut($O(@RETSTA@(0))>0)
+ quit
+ ;
+T7 ; @TEST Get some patients by Last (B) and Given names (AL)
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("given")="AL"
+ s HTTPARGS("family")="B"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ d CHKTF^%ut($O(@RETSTA@(0))>0)
+ quit
+ ;
+T8 ; @TEST Get some patients by exact DOB 2010-01-17
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("birthdate")="2010-01-17"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ d CHKTF^%ut($O(@RETSTA@(0))>0)
+ quit
+ ;
+T9 ; @TEST Get some patients by inexact DOB 2010-01
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("birthdate")="2010-01"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ d CHKTF^%ut($O(@RETSTA@(0))>0)
+ quit
+ ;
+T10 ; @TEST Get some patients by inexact DOB 2010
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("birthdate")="2010"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ d CHKTF^%ut($O(@RETSTA@(0))>0)
+ quit
+T11 ; @TEST Get patients with inexact DOB 2010 and given name starting with A
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("birthdate")="2010"
+ s HTTPARGS("given")="A"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ d CHKTF^%ut($O(@RETSTA@(0))>0)
+ quit
+ ;
+T12 ; @TEST Get patients with identifier by DFN
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("identifier")="dfn|1"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ d CHKTF^%ut($O(@RETSTA@(0))>0)
+ quit
+ ;
+T13 ; @TEST Get patients with identifier by SSN
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("identifier")="ssn|999998562"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ d CHKTF^%ut($O(@RETSTA@(0))>0)
+ quit
+ ;
+T14 ; @TEST Get patients with identifier by ICN
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("identifier")="icn|4068085986V151374"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ d CHKTF^%ut($O(@RETSTA@(0))>0)
+ quit
+ ;
+T15 ; @TEST Get patients with no _count (expect 100)
+ n RETSTA
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ n cnt s cnt=0
+ n i f i=0:0 s i=$O(@RETSTA@(i)) q:'i  s cnt=cnt+1
+ d CHKEQ^%ut(cnt,100)
+ quit
+ ;
+T16 ; @TEST Get patients with _count = 10
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("_count")=10
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ n cnt s cnt=0
+ n i f i=0:0 s i=$O(@RETSTA@(i)) q:'i  s cnt=cnt+1
+ d CHKEQ^%ut(cnt,10)
+ quit
+ ;
+T17 ; @TEST Get patients with _count 10 and page 1
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("_count")=10
+ s HTTPARGS("_page")=1
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ n cnt s cnt=0
+ n i f i=0:0 s i=$O(@RETSTA@(i)) q:'i  s cnt=cnt+1
+ d CHKEQ^%ut(cnt,10)
+ quit
+ ;
+T18 ; @TEST Get patients with _count 10 and page 2
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("_count")=10
+ s HTTPARGS("_page")=2
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ n cnt s cnt=0
+ n i f i=0:0 s i=$O(@RETSTA@(i)) q:'i  s cnt=cnt+1
+ d CHKEQ^%ut(cnt,10)
+ ; Make sure 1st patient is 11th patient in B index
+ n cnt s cnt=0
+ n i s i="" f  s i=$o(^DPT("B",i)),cnt=cnt+1 q:i=""  q:cnt=11  w i," "
+ n name s name=$p(@RETSTA@(1),U,2)
+ d CHKEQ^%ut(name,i)
+ quit
+ ;
+T19 ; @TEST Get patients all females with paging
+ n RETSTA
+ n HTTPARGS
+ s HTTPARGS("_count")=100
+ s HTTPARGS("_page")=1
+ s HTTPARGS("gender")="female"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ s HTTPARGS("_count")=100
+ s HTTPARGS("_page")=2
+ s HTTPARGS("gender")="female"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ s HTTPARGS("_count")=100
+ s HTTPARGS("_page")=3
+ s HTTPARGS("gender")="female"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ k HTTPARGS
+ s HTTPARGS("_count")=10000
+ s HTTPARGS("gender")="female"
+ d PATDEMAL(.RETSTA)
+ w ! d ZWRITE^SYNDHPUTL(RETSTA)
+ quit
  ;

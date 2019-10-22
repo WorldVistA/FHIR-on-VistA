@@ -19,7 +19,6 @@ package com.healthconcourse.vista.fhir.api.parser;
 import org.hl7.fhir.dstu3.model.Resource;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface VistaParser<T extends Resource> {
 

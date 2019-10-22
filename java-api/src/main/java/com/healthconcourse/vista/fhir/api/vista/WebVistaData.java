@@ -207,9 +207,9 @@ public class WebVistaData implements VistaData {
     }
 
     @Override
-    public String getAllPatients() {
-
-        return queryVista("DHPPATDEMALL", createMapForSingleParameter("ALL"));
+    public String getAllPatients(HashMap<String, String> options) {
+        if (options.isEmpty()) return queryVista("DHPPATDEMALL", createMapForSingleParameter("ALL"));
+        return queryVista("DHPPATDEMALL", options);
     }
 
     @Override
@@ -233,6 +233,7 @@ public class WebVistaData implements VistaData {
             Request request = new Request.Builder()
                     .url(createUrl(path, parameters))
                     .build();
+            LOG.info("Calling URL: " + request.url());
             okhttp3.Response response = mClient.newCall(request).execute();
 
             return processResponse(response);

@@ -21,6 +21,7 @@ import org.hl7.fhir.dstu3.model.Condition;
 import org.hl7.fhir.dstu3.model.Enumerations.AdministrativeGender;
 
 import java.util.Date;
+import java.util.HashMap;
 
 public class MockVistaData implements VistaData {
 
@@ -264,7 +265,7 @@ public class MockVistaData implements VistaData {
     }
 
     @Override
-    public String getAllPatients() {
+    public String getAllPatients(HashMap<String, String> options) {
         return "1003672118V388695^ZZZRETFIVEFORTYSEVEN,PATIENT^^MALE^11/05/1938^,,,|1005701355V934125^BCMA,EIGHTYTWO-PATIENT^^MALE^11/16/1944^,,,|1006145121V631417^BHIEPATIENT,J TEN^^MALE^12/28/1933^,,,|1006147126V079083^BHIEPATIENT,I NINE^^MALE^02/10/1995^,,,|1006147276V569483^BHIEPATIENT,H EIGHT^^MALE^02/10/1965^,,,|1006151329V503966^BHIEPATIENT,F SIX^^MALE^02/15/1997^,,,|1006152719V948936^BHIEPATIENT,G SEVEN^^MALE^04/05/1951^,,,|1006167324V385420^BHIEPATIENT,C THREE^^MALE^09/08/1962^,,,|1006170580V294705^BHIEPATIENT,E FIVE^^MALE^02/09/1984^,,,";
     }
 
