@@ -230,7 +230,7 @@ ZW(VAR) ; simulate Caché or GT.M ZW or ZWRITE fuction
  ; VAR - variable to be ZWritten
  ;
  D ZWRITE(VAR)
- QUIT
+ QUIT:$Q "" QUIT
  ;
 ZWRITE(NAME,QS,QSREP) ; Replacement for ZWRITE ; Public Proc
  ; Pass NAME by name as a closed reference. lvn and gvn are both supported.
