@@ -1,4 +1,4 @@
-SYNDHP73 ;AFHIL DHP/fjf/art - HealthConcourse - DHP REST handlers ;05/31/2019
+SYNDHP73 ;AFHIL DHP/fjf/art - HealthConcourse - DHP REST handlers ;2019-10-23  3:54 PM
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -133,7 +133,6 @@ PATCONI ; get patient conditions for one patient by ICN
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATCONI^SYNDHP03(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  --------------------------------------------------------
