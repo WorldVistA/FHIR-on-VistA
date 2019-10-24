@@ -1,6 +1,7 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
 (c) 2017-2019 Perspecta
+(c) 2019 OSEHRA
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,18 +17,29 @@ limitations under the License.
 */
 package com.healthconcourse.vista.fhir.api.parser;
 
-import com.healthconcourse.vista.fhir.api.HcConstants;
-import com.healthconcourse.vista.fhir.api.utils.InputValidator;
-import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
-import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.*;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.dstu3.model.CodeableConcept;
+import org.hl7.fhir.dstu3.model.Coding;
+import org.hl7.fhir.dstu3.model.Condition;
+import org.hl7.fhir.dstu3.model.Condition.ConditionClinicalStatus;
+import org.hl7.fhir.dstu3.model.Condition.ConditionVerificationStatus;
+import org.hl7.fhir.dstu3.model.DateTimeType;
+import org.hl7.fhir.dstu3.model.Reference;
+import org.hl7.fhir.dstu3.model.codesystems.ConditionCategory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.healthconcourse.vista.fhir.api.HcConstants;
+import com.healthconcourse.vista.fhir.api.utils.InputValidator;
+import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
+
 public class ConditionParser implements VistaParser<Condition> {
+    private static final Logger LOG = LoggerFactory.getLogger(ConditionParser.class);
 
     @Override
     public List<Condition> parseList(String httpData) {
@@ -68,9 +80,15 @@ public class ConditionParser implements VistaParser<Condition> {
             Coding code = new Coding();
 
             String[] diagnosisParts = parts[index + 1].split(";");
-            if (diagnosisParts.length == 2) {
+            // NB: Don't encode R69. (Unknown illness); we always have a good SNOMED code instead.
+            if (diagnosisParts.length == 3 && !diagnosisParts[0].equals("R69.")) {
+                if (diagnosisParts[2].equals("10D")) code.setSystem(HcConstants.ICD_10);
+                else if (diagnosisParts[2].equals("ICD")) code.setSystem(HcConstants.ICD_9);
+                else {
+                    LOG.warn("Found a problem with Unknown coding system: " + records[i]);
+                    code.setSystem("unknown");
+                }
 
-                code.setSystem(HcConstants.ICD_9);
                 code.setCode(diagnosisParts[0]);
                 code.setDisplay(diagnosisParts[1]);
                 concept.addCoding(code);
@@ -96,6 +114,43 @@ public class ConditionParser implements VistaParser<Condition> {
             condition.setSubject(ref);
 
             condition.setMeta(ResourceHelper.getVistaMeta());
+
+            // Clinical Status
+            String status = parts[index + 4];
+            Optional<Date> resolutionDate = InputValidator.parseAnyDate(parts[index + 5]);
+            if (resolutionDate.isPresent())
+            {
+                condition.setAbatement(new DateTimeType(resolutionDate.get()));
+                condition.setClinicalStatus(ConditionClinicalStatus.RESOLVED);
+            }
+            else
+            {
+                if (status.equals("ACTIVE")) condition.setClinicalStatus(ConditionClinicalStatus.ACTIVE);
+                else                         condition.setClinicalStatus(ConditionClinicalStatus.INACTIVE);
+            }
+
+            // Verification Status
+            // This is always the case from VistA. There is no "provisional" dx there.
+            condition.setVerificationStatus(ConditionVerificationStatus.CONFIRMED);
+
+            // Category
+            CodeableConcept categoryConcept = new CodeableConcept();
+            Coding conceptCode;
+            if (parts[index + 6].equals("problem")) {
+                conceptCode = new Coding(ConditionCategory.PROBLEMLISTITEM.getSystem(),
+                    ConditionCategory.PROBLEMLISTITEM.toCode(), ConditionCategory.PROBLEMLISTITEM.getDisplay());
+            }
+            else if (parts[index + 6].equals("encounter")) {
+                conceptCode = new Coding(ConditionCategory.ENCOUNTERDIAGNOSIS.getSystem(),
+                    ConditionCategory.ENCOUNTERDIAGNOSIS.toCode(), ConditionCategory.ENCOUNTERDIAGNOSIS.getDisplay());
+            }
+            else {
+                LOG.warn("Found a condition with unknown type: " + records[i]);
+                conceptCode = new Coding(ConditionCategory.NULL.getSystem(),
+                    ConditionCategory.NULL.toCode(), ConditionCategory.NULL.getDisplay());
+            }
+            categoryConcept.addCoding(conceptCode);
+            condition.addCategory(categoryConcept);
 
             result.add(condition);
        }

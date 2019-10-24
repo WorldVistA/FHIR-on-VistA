@@ -1,6 +1,7 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
 (c) 2017-2019 Perspecta
+(c) 2019 OSEHRA
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,7 +28,8 @@ public class HcConstants {
 
     public static final String URN_VISTA_ICN = "urn:dxc:vista:icn";
     public static final String URN_VISTA_SOURCE = "urn:dxc:vista:source";
-    public static final String ICD_9 = "http://hl7.org/fhir/sid/icd-9-cm";
+    public static final String ICD_9  = "http://hl7.org/fhir/sid/icd-9-cm";
+    public static final String ICD_10 = "http://hl7.org/fhir/sid/icd-10-cm";
     public static final String LOINC = "http://loinc.org";
     public static final String CPT = "http://www.ama-assn.org/go/cpt";
     public static final String RX_NORM = "http://www.nlm.nih.gov/research/umls/rxnorm";

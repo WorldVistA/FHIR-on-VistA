@@ -77,7 +77,7 @@ public class PatientProviderTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         String json = response.getBody();
         int recordCount = JsonPath.parse(json).read("$.total");
-        assertEquals("should return five records", 7, recordCount);
+        assertEquals("should return six records", 6, recordCount);
     }
 
     @Test

@@ -81,7 +81,7 @@ public class VistaPatientServiceTest {
     @Test
     public void TestGetConditionsForPatientFailure () {
 
-        List<Condition> results = service.getCodesByIcn("444");
+        List<Condition> results = service.getConditionsForPatient("444");
 
         Assert.assertEquals(0, results.size());
     }
@@ -89,9 +89,9 @@ public class VistaPatientServiceTest {
     @Test
     public void TestGetConditionsForPatientSuccess () {
 
-        List<Condition> results = service.getCodesByIcn("5000001534V744140");
+        List<Condition> results = service.getConditionsForPatient("5000001534V744140");
 
-        Assert.assertEquals(7, results.size());
+        Assert.assertEquals(6, results.size());
     }
 
     @Test

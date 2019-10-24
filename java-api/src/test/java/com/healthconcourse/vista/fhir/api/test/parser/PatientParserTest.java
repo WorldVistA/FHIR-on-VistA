@@ -93,13 +93,13 @@ public class PatientParserTest {
     @Test
     public void TestSuccessfulCodeParse() {
 
-        String input = "5000001533V676621^926^250.00;DIABETES MELLITUS W/O MENTION OF COMPLICATION, TYPE II (NIDDM) (ADULT ONSET OR UNSPECIFIED TYPE), NOT STATED AS UNCONTROLLED^1/5/2010^;|927^311.;DEPRESSIVE DISORDER, NOT ELSEWHERE CLASSIFIED^1/8/2013^;|928^401.9;UNSPECIFIED ESSENTIAL HYPERTENSION^1/11/2010^38341003;Hypertensive disorder|929^272.4;OTHER AND UNSPECIFIED HYPERLIPIDEMIA^^55822004;Hyperlipidemia|930^733.90;DISORDER OF BONE AND CARTILAGE, UNSPECIFIED^1/8/2013^312894000;Osteopenia|931^V10.87;PERSONAL HISTORY OF MALIGNANT NEOPLASM OF THYROID^1/1/2002^429254008;History of malignant neoplasm of thyroid|932^244.0;POSTSURGICAL HYPOTHYROIDISM^1/1/2002^27059002;Postoperative hypothyroidism|";
+        String input = "7849159139V519746^V-999-9000011-1225^473.9;UNSPECIFIED SINUSITIS (CHRONIC);ICD^19381021^;^INACTIVE^^problem|V-999-9000011-1226^R69.;Illness, unspecified;10D^19810323065524-0400^68496003;Polyp of colon^ACTIVE^^problem|V-999-9000011-1227^R69.;Illness, unspecified;10D^19900304121344-0400^53741008;Coronary arteriosclerosis^ACTIVE^^problem|V-999-9000011-1228^R69.;Illness, unspecified;10D^19970511231944-0400^68496003;Polyp of colon^ACTIVE^^problem|V-999-9000011-1229^R69.;Illness, unspecified;10D^19980625101218-0400^713197008;Recurrent rectal polyp^ACTIVE^^problem|V-999-9000011-1230^R69.;Illness, unspecified;10D^19980702065943-0400^109838007;Overlapping malignant neoplasm of colon^ACTIVE^^problem|";
 
         ConditionParser parser = new ConditionParser();
 
         List<Condition> result = parser.parseList(input);
 
-        Assert.assertEquals("Correct number of items", 7, result.size());
+        Assert.assertEquals("Correct number of items", 6, result.size());
     }
 
     @Test

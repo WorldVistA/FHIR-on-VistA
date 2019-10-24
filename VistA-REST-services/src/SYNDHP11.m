@@ -96,8 +96,15 @@ GET1PROB(PROBLEM,PROBIEN,RETJSON,PROBLEMJ) ;get one Patient Problem (Condition) 
  S @PROBCOND@("service")=$G(PROBARR(FNBR1,IENS,1.06,"E"))
  S @PROBCOND@("dateResolved")=$G(PROBARR(FNBR1,IENS,1.07,"E"))
  S @PROBCOND@("dateResolvedFM")=$G(PROBARR(FNBR1,IENS,1.07,"I"))
- S @PROBCOND@("dateResolvedHL7")=$$FMTHL7^XLFDT($G(PROBARR(FNBR1,IENS,1.07,"I")))
- S @PROBCOND@("dateResolvedFHIR")=$$FMTFHIR^SYNDHPUTL($G(PROBARR(FNBR1,IENS,1.07,"I")))
+ ; If onset and resolution dates are the same, delete resolution dates
+ I @PROBCOND@("dateResolvedFM")>@PROBCOND@("dateOfOnsetFM") D
+ . S @PROBCOND@("dateResolvedHL7")=$$FMTHL7^XLFDT(@PROBCOND@("dateResolvedFM"))
+ . S @PROBCOND@("dateResolvedFHIR")=$$FMTFHIR^SYNDHPUTL(@PROBCOND@("dateResolvedFM"))
+ E  D
+ . S @PROBCOND@("dateResolved")=""
+ . S @PROBCOND@("dateResolvedFM")=""
+ . S @PROBCOND@("dateResolvedHL7")=""
+ . S @PROBCOND@("dateResolvedFHIR")=""
  S @PROBCOND@("clinicId")=$G(PROBARR(FNBR1,IENS,1.08,"I"))
  S @PROBCOND@("clinic")=$G(PROBARR(FNBR1,IENS,1.08,"E"))
  S @PROBCOND@("dateRecorded")=$G(PROBARR(FNBR1,IENS,1.09,"E"))

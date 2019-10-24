@@ -70,7 +70,7 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  ;             0 or null = Return string (default)
  ; Output:
  ;   RETSTA  - a delimited string that lists the following information
- ;      PatientICN ^ resourceId ^ DiagnosisCode ; DiagnosisName ^ DateOfOnset ^ SNOMED CT Code ; SNOMED CT Name |
+ ;      PatientICN ^ resourceId ^ DiagnosisCode ; DiagnosisName ; Coding System (ICD or 10D)^ DateOfOnset ^ SNOMED CT Code ; SNOMED CT Name ^ Status ^ Resolution Date ^ Condition Type (problem or encounter) |
  ;      and continue this for every diagnosis for a particular patient ICN
  ;    or patient conditions in JSON format
  ;
@@ -94,7 +94,7 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  S RETSTA=DHPICN
  N RETDESC S RETDESC=""
  ;
- N CONDITION,DIAGC,DIAGN,ONSET,DONSET,SNOMEDC,SNOMEDN,IDENT
+ N CONDITION,DIAGC,DIAGN,DIGNCS,ONSET,DONSET,SNOMEDC,SNOMEDN,IDENT,CONTYPE
  N PROBIEN S PROBIEN=""
  F  S PROBIEN=$O(^AUPNPROB("AC",PATIEN,PROBIEN)) Q:PROBIEN=""  D
  . N PROBLEM
@@ -104,11 +104,15 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  . QUIT:'$$RANGECK^SYNDHPUTL(ONSET,FRDAT,TODAT)  ;quit if outside of requested date range
  . S DIAGC=PROBLEM("Problem","diagnosis")
  . S DIAGN=PROBLEM("Problem","diagnosisText")
+ . S DIGNCS=PROBLEM("Problem","codingSystem")
  . S DONSET=PROBLEM("Problem","dateOfOnsetHL7")  ;date of onset set to HL7 format
  . S SNOMEDC=PROBLEM("Problem","snomedCTconceptCode")
  . S SNOMEDN=PROBLEM("Problem","snomedCTconceptCodeText")
  . S IDENT=PROBLEM("Problem","resourceId")
- . S RETDESC=RETDESC_IDENT_U_$G(DIAGC)_S_$G(DIAGN)_U_$G(DONSET)_U_$G(SNOMEDC)_S_$G(SNOMEDN)_P
+ . N STATUS S STATUS=PROBLEM("Problem","status")
+ . N RESDT  S RESDT=PROBLEM("Problem","dateResolvedHL7")
+ . N CONTYPE S CONTYPE="problem" ; or (future enhancement) encounter
+ . S RETDESC=RETDESC_IDENT_U_DIAGC_S_DIAGN_S_DIGNCS_U_DONSET_U_SNOMEDC_S_SNOMEDN_U_STATUS_U_RESDT_U_CONTYPE_P
  . M CONDITION("Conditions",PROBIEN)=PROBLEM
  S RETSTA=RETSTA_U_RETDESC
  ;
@@ -169,13 +173,15 @@ PATCONAL(RETSTA,DHPSCT,RETJSON) ; Patients for a given active condition
  Q
  ;
  ; ----------- Unit Test -----------
-T1 ;
- N ICN S ICN="2676604935V204585"
+TEST D EN^%ut($T(+0),3) QUIT
+T1 ; @TEST
+ ;N ICN S ICN="2676604935V204585"
+ N ICN S ICN="2421492932V802082"
  N FRDAT S FRDAT=""
  N TODAT S TODAT=""
  N RETSTA
  D PATCONI(.RETSTA,ICN,FRDAT,TODAT)
- W $$ZW^SYNDHPUTL("RETSTA")
+ N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
  QUIT
  ;
 T2 ;
