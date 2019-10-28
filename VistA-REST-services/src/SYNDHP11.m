@@ -1,4 +1,4 @@
-SYNDHP11 ; HC/art - HealthConcourse - get problem record ;2019-10-23  4:56 PM
+SYNDHP11 ; HC/art - HealthConcourse - get problem record ;2019-10-25  12:21 PM
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -74,10 +74,11 @@ GET1PROB(PROBLEM,PROBIEN,RETJSON,PROBLEMJ) ;get one Patient Problem (Condition) 
  S @PROBCOND@("status")=$G(PROBARR(FNBR1,IENS,.12,"E"))
  S @PROBCOND@("dateOfOnset")=$G(PROBARR(FNBR1,IENS,.13,"E"))
  S @PROBCOND@("dateOfOnsetFM")=$G(PROBARR(FNBR1,IENS,.13,"I")) ; date of onset may be imprecise
- S:$E(@PROBCOND@("dateOfOnsetFM"),4,5)="00" $E(@PROBCOND@("dateOfOnsetFM"),4,5)="01"
- S:$E(@PROBCOND@("dateOfOnsetFM"),6,7)="00" $E(@PROBCOND@("dateOfOnsetFM"),6,7)="01"
- S @PROBCOND@("dateOfOnsetHL7")=$$FMTHL7^XLFDT(@PROBCOND@("dateOfOnsetFM"))
- S @PROBCOND@("dateOfOnsetFHIR")=$$FMTFHIR^SYNDHPUTL(@PROBCOND@("dateOfOnsetFM"))
+ N ADJDATE S ADJDATE=@PROBCOND@("dateOfOnsetFM")
+ S:$E(@PROBCOND@("dateOfOnsetFM"),4,5)="00" $E(ADJDATE,4,5)="01"
+ S:$E(@PROBCOND@("dateOfOnsetFM"),6,7)="00" $E(ADJDATE,6,7)="01"
+ S @PROBCOND@("dateOfOnsetHL7")=$$FMTHL7^XLFDT(ADJDATE)
+ S @PROBCOND@("dateOfOnsetFHIR")=$$FMTFHIR^SYNDHPUTL(ADJDATE)
  S @PROBCOND@("problemId")=$G(PROBARR(FNBR1,IENS,1.01,"I"))
  S @PROBCOND@("problem")=$G(PROBARR(FNBR1,IENS,1.01,"E"))
  S @PROBCOND@("conditionCd")=$G(PROBARR(FNBR1,IENS,1.02,"I"))

@@ -206,7 +206,7 @@ public class PatientProvider extends AbstractJaxRsResourceProvider<Patient> {
     @Search(compartmentName = "Condition")
     public List<Condition> findConditions(@IdParam IdType theId) {
 
-        List<Condition> results = service.getCodesByIcn(theId.getIdPart());
+        List<Condition> results = service.getConditionsForPatient(theId.getIdPart());
 
         if(results.isEmpty()) {
             String message = "No conditions found for patient: " + theId.getIdPart();

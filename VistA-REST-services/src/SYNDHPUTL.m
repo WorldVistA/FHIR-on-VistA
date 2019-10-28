@@ -1,4 +1,4 @@
-SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;2019-10-23  5:03 PM
+SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;2019-10-24  3:55 PM
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -334,4 +334,14 @@ GETRXN(X,IO) ; get RxNorm code for drug
  I $G(DEBUG) W !,"rxnorm: ",RXNORM,!
  Q RXNORM
  ;I NAME="" S NAME=$$GET1^DIQ(50,X_",",26,"E")
+ ;
+ERRMSG(CODE,MESSAGE) ;
+ ; fhir OperationOutcome
+ K ^TMP("HTTPERR",$J)
+ S HTTPERR=CODE
+ S ^TMP("HTTPERR",$J,1,"resourceType")="OperationOutcome"
+ S ^TMP("HTTPERR",$J,1,"issue",1,"severity")="error"
+ S ^TMP("HTTPERR",$J,1,"issue",1,"code")="processing"
+ S ^TMP("HTTPERR",$J,1,"issue",1,"diagnostics")=MESSAGE
+ QUIT:$Q "" QUIT
  ;

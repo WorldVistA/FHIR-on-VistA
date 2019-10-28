@@ -1,6 +1,7 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
 (c) 2017-2019 Perspecta
+(c) 2019 OSERHA
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -72,9 +73,19 @@ public class VistaPatientService implements PatientService {
     }
 
     @Override
-    public List<Condition> getCodesByIcn(String patientIcn) {
+    public List<Condition> getConditionsForPatient(HashMap<String, String> options) {
 
-        String httpBody = service.getConditions(patientIcn);
+        String httpBody = service.getConditions(options);
+
+        ConditionParser parser = new ConditionParser();
+
+        return parser.parseList(httpBody);
+    }
+
+    @Override
+    public List<Condition> getConditionsForPatient(String ICN) {
+
+        String httpBody = service.getConditions(ICN);
 
         LOG.debug(httpBody);
 
@@ -403,7 +414,7 @@ public class VistaPatientService implements PatientService {
                     return null;
                 });
 
-        CompletableFuture<List<Condition>> condition = CompletableFuture.supplyAsync(() -> getCodesByIcn(patientIcn))
+        CompletableFuture<List<Condition>> condition = CompletableFuture.supplyAsync(() -> getConditionsForPatient(patientIcn))
                 .whenComplete((conditions, exception) -> {
                     if (exception == null) {
                         results.addAll(conditions);

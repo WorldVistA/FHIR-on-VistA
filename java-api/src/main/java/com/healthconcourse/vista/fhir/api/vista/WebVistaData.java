@@ -1,6 +1,7 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
 (c) 2017-2019 Perspecta
+(c) 2019 OSEHRA
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -74,8 +75,12 @@ public class WebVistaData implements VistaData {
 
     @Override
     public String getConditions(String icn) {
-
         return queryVista("DHPPATCONICN", createMapForSingleParameter(icn));
+    }
+
+    @Override
+    public String getConditions(HashMap<String,String> options) {
+        return queryVista("DHPPATCONICN", options);
     }
 
     @Override
@@ -354,7 +359,7 @@ public class WebVistaData implements VistaData {
         String DTM = getVistaFormattedDate(theCondition.getOnset().primitiveValue()); // "20171002-0700";
         String RID = ""; //"422"; //mec... "500_EXT";
 
-        //mec... yoyo... TODO... BAG the hardcode 
+        //mec... yoyo... TODO... BAG the hardcode
         //"ICN":"5482156687V807096","SCT":"95668009","DES":"158482014","ROV":"9990006675","DTM":"20171002-0700","RID":"500_EXT"
         ICN = "5482156687V807096"; //mec... yoyo... fix errored hardcode
         //ROV = "9990006675"; //mec... BAG HARDCODE
@@ -392,6 +397,7 @@ public class WebVistaData implements VistaData {
         try {
             if (response.body() != null) {
                 body = response.body().string();
+                LOG.debug(body);
             }
         } catch (IOException e) {
             LOG.error("Unable to fetch body", e);

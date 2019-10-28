@@ -1,6 +1,7 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
 (c) 2017-2019 Perspecta
+(c) 2019 OSEHRA
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,7 +28,8 @@ public interface PatientService {
     Patient getPatientById(String id);
     List<Patient> findPatient(String name, Date dob, String ssn, Enumerations.AdministrativeGender gender);
     List<Patient> getAllPatients(HashMap<String, String> options);
-    List<Condition> getCodesByIcn(String patientIcn);
+    List<Condition> getConditionsForPatient(String patientIcn);
+    List<Condition> getConditionsForPatient(HashMap<String, String> options);
     List<Encounter> getEncountersForPatient(String patientIcn);
     List<Observation> getObservationsByIcn(String id);
     List<Observation> getObservationsByIcnAndCode(String id, String code);
