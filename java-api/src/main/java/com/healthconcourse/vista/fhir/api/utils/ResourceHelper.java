@@ -73,7 +73,6 @@ public class ResourceHelper {
         referenceId.setValue(id);
 
         Reference reference = new Reference();
-        reference.setIdentifier(referenceId);
         reference.setDisplay(display);
 
         switch (type) {
