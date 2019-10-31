@@ -25,7 +25,7 @@ import ca.uhn.fhir.rest.api.Constants;
 import com.healthconcourse.vista.fhir.api.service.LocationService;
 import com.healthconcourse.vista.fhir.api.service.VistaLocationService;
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
-import org.hl7.fhir.dstu3.model.Location;
+import org.hl7.fhir.r4.model.Location;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.ws.rs.Path;
@@ -41,7 +41,7 @@ public class LocationProvider extends AbstractJaxRsResourceProvider<Location> {
     @Autowired
     public LocationProvider(VistaData data) {
 
-        super(FhirContext.forDstu3(), LocationProvider.class);
+        super(FhirContext.forR4(), LocationProvider.class);
 
         service = new VistaLocationService(data);
     }

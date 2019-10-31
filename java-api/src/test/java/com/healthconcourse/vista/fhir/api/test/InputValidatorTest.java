@@ -18,7 +18,7 @@ package com.healthconcourse.vista.fhir.api.test;
 
 import ca.uhn.fhir.rest.param.StringParam;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
-import org.hl7.fhir.dstu3.model.Enumerations.AdministrativeGender;
+import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
 import org.junit.Assert;
 import org.junit.Test;
 

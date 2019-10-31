@@ -18,8 +18,8 @@ package com.healthconcourse.vista.fhir.api.service;
 
 import com.healthconcourse.vista.fhir.api.parser.ObservationParser;
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
-import org.hl7.fhir.dstu3.model.Enumerations;
-import org.hl7.fhir.dstu3.model.Observation;
+import org.hl7.fhir.r4.model.Enumerations;
+import org.hl7.fhir.r4.model.Observation;
 
 import java.util.Date;
 import java.util.List;

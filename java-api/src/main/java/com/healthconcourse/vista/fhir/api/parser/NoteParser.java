@@ -20,8 +20,8 @@ import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.Composition;
-import org.hl7.fhir.dstu3.model.Narrative;
+import org.hl7.fhir.r4.model.Composition;
+import org.hl7.fhir.r4.model.Narrative;
 import org.hl7.fhir.utilities.xhtml.NodeType;
 import org.hl7.fhir.utilities.xhtml.XhtmlNode;
 

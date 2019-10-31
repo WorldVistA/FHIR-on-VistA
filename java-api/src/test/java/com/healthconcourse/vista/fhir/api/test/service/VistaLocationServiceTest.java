@@ -19,7 +19,7 @@ package com.healthconcourse.vista.fhir.api.test.service;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.healthconcourse.vista.fhir.api.service.VistaLocationService;
 import com.healthconcourse.vista.fhir.api.test.mocks.MockVistaData;
-import org.hl7.fhir.dstu3.model.Location;
+import org.hl7.fhir.r4.model.Location;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

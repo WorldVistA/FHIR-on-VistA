@@ -20,7 +20,7 @@ import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +74,7 @@ public class DiagnosticReportParser implements VistaParser<DiagnosticReport> {
 
         // category
         try {
-            result.setCategory((new CodeableConcept()).setText(fields[0]));
+            result.addCategory((new CodeableConcept()).setText(fields[0]));
         } catch (Exception ex) {
             LOG.error("Invalid DiagnosticReport Category, exception " + ex.getMessage());
         }
@@ -108,8 +108,7 @@ public class DiagnosticReportParser implements VistaParser<DiagnosticReport> {
         }
 
         if(fields.length > 7) {
-            result.setCodedDiagnosis(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.SNOMED_URN, fields[8], fields[7]));
-
+            result.addConclusionCode(ResourceHelper.createCodeableConcept(HcConstants.SNOMED_URN, fields[8], fields[7]));
         }
 
         // conclusion
@@ -131,15 +130,13 @@ public class DiagnosticReportParser implements VistaParser<DiagnosticReport> {
         return result;
     }
 
-    private List<DiagnosticReport.DiagnosticReportPerformerComponent> getPerformers(String actor) {
+    private List<Reference> getPerformers(String actor) {
 
-        List<DiagnosticReport.DiagnosticReportPerformerComponent> result = new ArrayList<>(1);
+        List<Reference> result = new ArrayList<>(1);
 
-        DiagnosticReport.DiagnosticReportPerformerComponent component = new DiagnosticReport.DiagnosticReportPerformerComponent();
-        component.setActor(new Reference().setDisplay(actor));
-
-        result.add(component);
-
+        Reference performer = new Reference();
+        performer.setDisplay(actor);
+        result.add(performer);
         return result;
     }
 

@@ -18,8 +18,8 @@ package com.healthconcourse.vista.fhir.api.test.service;
 
 import com.healthconcourse.vista.fhir.api.service.VistaObservationService;
 import com.healthconcourse.vista.fhir.api.test.mocks.MockVistaData;
-import org.hl7.fhir.dstu3.model.Enumerations;
-import org.hl7.fhir.dstu3.model.Observation;
+import org.hl7.fhir.r4.model.Enumerations;
+import org.hl7.fhir.r4.model.Observation;
 import org.junit.Assert;
 import org.junit.Test;
 

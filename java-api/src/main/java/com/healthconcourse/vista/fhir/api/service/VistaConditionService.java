@@ -19,10 +19,10 @@ package com.healthconcourse.vista.fhir.api.service;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import com.healthconcourse.vista.fhir.api.parser.PatientParser;
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
-import org.hl7.fhir.dstu3.model.CodeableConcept;
-import org.hl7.fhir.dstu3.model.Condition;
-import org.hl7.fhir.dstu3.model.OperationOutcome;
-import org.hl7.fhir.dstu3.model.Patient;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.OperationOutcome;
+import org.hl7.fhir.r4.model.Patient;
 
 
 import java.util.List;

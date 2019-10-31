@@ -53,18 +53,19 @@ repositories {
 
 def springVersion = '4.3.6.RELEASE'
 def springBootVersion = '2.1.4.RELEASE'
-def hapiVersion = '3.7.0'
+def hapiVersion = '4.0.3'
 
 dependencies {
 
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
-    implementation group: 'ca.uhn.hapi.fhir', name: 'hapi-fhir-structures-dstu3', version: hapiVersion
+    implementation group: 'ca.uhn.hapi.fhir', name: 'hapi-fhir-structures-r4', version: hapiVersion
     implementation group: 'ca.uhn.hapi.fhir', name: 'hapi-fhir-jaxrsserver-base', version: hapiVersion
     implementation group: 'org.springframework', name: 'spring-web', version: springVersion
     implementation group: 'org.thymeleaf', name: 'thymeleaf', version:'3.0.2.RELEASE'
     implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version:'2.0.1'
     implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.8.1'
     implementation group: 'com.jayway.jsonpath', name: 'json-path', version: '2.4.0'
+    implementation group: 'com.github.ben-manes.caffeine', name: 'caffeine', version: '2.8.0'
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
     testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '3.8.1'

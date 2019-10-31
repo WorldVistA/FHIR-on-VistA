@@ -31,7 +31,7 @@ import com.healthconcourse.vista.fhir.api.service.PatientService;
 import com.healthconcourse.vista.fhir.api.service.VistaConditionService;
 import com.healthconcourse.vista.fhir.api.service.VistaPatientService;
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
-import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.ws.rs.*;
@@ -50,7 +50,7 @@ public class ConditionProvider extends AbstractJaxRsResourceProvider<Condition> 
     private final PatientService patientService;
 
     public ConditionProvider(VistaData data) {
-        super(FhirContext.forDstu3(), ConditionProvider.class);
+        super(FhirContext.forR4(), ConditionProvider.class);
         patientService   = new VistaPatientService(data);
         conditionService = new VistaConditionService(data);
     }

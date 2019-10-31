@@ -18,12 +18,12 @@ package com.healthconcourse.vista.fhir.api.parser;
 
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
 import org.apache.commons.lang.StringUtils;
-import org.hl7.fhir.dstu3.model.Practitioner;
+import org.hl7.fhir.r4.model.Practitioner;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class PractitionerParser implements VistaParser {
+public class PractitionerParser implements VistaParser<Practitioner> {
 
     @Override
     public List<Practitioner> parseList(String httpData) {

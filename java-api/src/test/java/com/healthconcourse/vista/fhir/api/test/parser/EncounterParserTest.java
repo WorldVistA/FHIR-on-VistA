@@ -17,7 +17,7 @@ limitations under the License.
 package com.healthconcourse.vista.fhir.api.test.parser;
 
 import com.healthconcourse.vista.fhir.api.parser.EncounterParser;
-import org.hl7.fhir.dstu3.model.Encounter;
+import org.hl7.fhir.r4.model.Encounter;
 import org.junit.Assert;
 import org.junit.Test;
 

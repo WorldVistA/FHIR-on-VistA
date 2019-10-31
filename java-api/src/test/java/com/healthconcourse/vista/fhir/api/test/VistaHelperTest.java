@@ -17,7 +17,7 @@ limitations under the License.
 package com.healthconcourse.vista.fhir.api.test;
 
 import com.healthconcourse.vista.fhir.api.vista.VistaHelper;
-import org.hl7.fhir.dstu3.model.Enumerations;
+import org.hl7.fhir.r4.model.Enumerations;
 import org.junit.Assert;
 import org.junit.Test;
 

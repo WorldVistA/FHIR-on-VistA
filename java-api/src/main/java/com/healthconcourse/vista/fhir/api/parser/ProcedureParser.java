@@ -20,12 +20,10 @@ import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
 import org.apache.commons.lang.StringUtils;
-import org.hl7.fhir.dstu3.model.CodeableConcept;
-import org.hl7.fhir.dstu3.model.Coding;
-import org.hl7.fhir.dstu3.model.DateTimeType;
-import org.hl7.fhir.dstu3.model.Procedure;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.Procedure;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,7 +32,7 @@ import java.util.Optional;
 
 public class ProcedureParser implements VistaParser<Procedure> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ObservationParser.class);
+    @Override
     public List<Procedure> parseList(String httpData) {
 
         List<Procedure> result = new ArrayList<>();

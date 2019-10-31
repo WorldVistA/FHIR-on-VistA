@@ -18,7 +18,7 @@ package com.healthconcourse.vista.fhir.api.service;
 
 import com.healthconcourse.vista.fhir.api.parser.CareTeamParser;
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
-import org.hl7.fhir.dstu3.model.CareTeam;
+import org.hl7.fhir.r4.model.CareTeam;
 
 import java.util.List;
 

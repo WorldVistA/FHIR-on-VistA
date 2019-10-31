@@ -50,7 +50,7 @@ public class HcFhirServlet extends RestfulServer {
     @Autowired
     HcFhirServlet(VistaData dataService, Environment environment) {
 
-        super(FhirContext.forDstu3());
+        super(FhirContext.forR4());
         this.service = dataService;
         this.env = environment;
     }

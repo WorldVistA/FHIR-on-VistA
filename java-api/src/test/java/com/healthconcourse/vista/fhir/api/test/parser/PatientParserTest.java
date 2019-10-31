@@ -18,8 +18,8 @@ package com.healthconcourse.vista.fhir.api.test.parser;
 
 import com.healthconcourse.vista.fhir.api.parser.ConditionParser;
 import com.healthconcourse.vista.fhir.api.parser.PatientParser;
-import org.hl7.fhir.dstu3.model.*;
-import org.hl7.fhir.dstu3.model.Enumerations.AdministrativeGender;
+import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
 import org.junit.Assert;
 import org.junit.Test;
 

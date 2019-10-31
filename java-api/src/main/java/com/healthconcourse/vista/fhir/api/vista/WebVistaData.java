@@ -18,8 +18,8 @@ limitations under the License.
 package com.healthconcourse.vista.fhir.api.vista;
 
 import okhttp3.*;
-import org.hl7.fhir.dstu3.model.Condition;
-import org.hl7.fhir.dstu3.model.Enumerations.AdministrativeGender;
+import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.lang.UnsupportedOperationException;

@@ -17,7 +17,7 @@ limitations under the License.
 package com.healthconcourse.vista.fhir.api.test.parser;
 
 import com.healthconcourse.vista.fhir.api.parser.LocationParser;
-import org.hl7.fhir.dstu3.model.Location;
+import org.hl7.fhir.r4.model.Location;
 import org.junit.Test;
 
 import java.util.Optional;

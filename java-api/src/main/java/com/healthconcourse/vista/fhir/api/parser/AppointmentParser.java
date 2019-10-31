@@ -20,8 +20,8 @@ import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.Appointment;
-import org.hl7.fhir.dstu3.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Appointment;
+import org.hl7.fhir.r4.model.CodeableConcept;
 
 import java.util.ArrayList;
 import java.util.Date;

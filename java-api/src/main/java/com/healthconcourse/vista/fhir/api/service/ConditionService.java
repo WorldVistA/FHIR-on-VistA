@@ -18,8 +18,8 @@ package com.healthconcourse.vista.fhir.api.service;
 
 
 import ca.uhn.fhir.rest.api.MethodOutcome;
-import org.hl7.fhir.dstu3.model.Patient;
-import org.hl7.fhir.dstu3.model.Condition;
+import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Condition;
 
 import java.util.List;
 

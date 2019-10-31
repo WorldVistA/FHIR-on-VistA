@@ -26,7 +26,7 @@ import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.healthconcourse.vista.fhir.api.service.CareTeamService;
 import com.healthconcourse.vista.fhir.api.service.VistaCareTeamService;
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
-import org.hl7.fhir.dstu3.model.CareTeam;
+import org.hl7.fhir.r4.model.CareTeam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +47,7 @@ public class CareTeamProvider extends AbstractJaxRsResourceProvider<CareTeam> {
     @Autowired
     public CareTeamProvider(VistaData data) {
 
-        super(FhirContext.forDstu3(), ConditionProvider.class);
+        super(FhirContext.forR4(), ConditionProvider.class);
 
         service = new VistaCareTeamService(data);
     }

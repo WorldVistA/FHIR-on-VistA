@@ -23,8 +23,8 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.ReadContext;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.CareTeam;
-import org.hl7.fhir.dstu3.model.Period;
+import org.hl7.fhir.r4.model.CareTeam;
+import org.hl7.fhir.r4.model.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class CareTeamParser implements VistaParser<CareTeam> {
                 String status = ctx.read(basePath + "currentStatusC");
                 careTeam.setStatus(getStatus(status));
                 String teamType = ctx.read(basePath + "fhirTeamType");
-                careTeam.setCategory(ResourceHelper.createSingleCodeableConceptAsList("http://hl7.org/fhir/care-team-category", teamType, this.getCategoryDesc(teamType)));
+                careTeam.setCategory(ResourceHelper.createSingleCodeableConceptAsList("http://hl7.org/fhir/care-team-category", teamType, getCategoryDesc(teamType)));
                 String institution = ctx.read(basePath + "institution");
                 if (!StringUtils.isEmpty(institution)) {
                     Integer institutionId = ctx.read(basePath + "institutionId");
@@ -104,7 +104,7 @@ public class CareTeamParser implements VistaParser<CareTeam> {
             String role = context.read(basePath + "positions.position[" + positionIndex + "].standRoleName");
             if (!StringUtils.isEmpty(role)) {
                 Integer roleId = context.read(basePath + "positions.position[" + positionIndex + "].standRoleNameId");
-                participant.setRole(ResourceHelper.createCodeableConcept(HcConstants.URN_VISTA_CARETEAM_ROLE, roleId.toString(), role));
+                participant.addRole(ResourceHelper.createCodeableConcept(HcConstants.URN_VISTA_CARETEAM_ROLE, roleId.toString(), role));
             }
             result.add(participant);
         }

@@ -16,7 +16,7 @@ limitations under the License.
 */
 package com.healthconcourse.vista.fhir.api.service;
 
-import org.hl7.fhir.dstu3.model.Location;
+import org.hl7.fhir.r4.model.Location;
 
 @FunctionalInterface
 public interface LocationService {

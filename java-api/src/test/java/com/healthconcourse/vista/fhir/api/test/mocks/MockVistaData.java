@@ -17,8 +17,8 @@ limitations under the License.
 package com.healthconcourse.vista.fhir.api.test.mocks;
 
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
-import org.hl7.fhir.dstu3.model.Condition;
-import org.hl7.fhir.dstu3.model.Enumerations.AdministrativeGender;
+import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
 
 import java.util.Date;
 import java.util.HashMap;

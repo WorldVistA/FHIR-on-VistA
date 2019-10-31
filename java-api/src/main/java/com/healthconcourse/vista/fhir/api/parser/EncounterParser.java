@@ -20,9 +20,9 @@ import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.Encounter;
-import org.hl7.fhir.dstu3.model.Period;
-import org.hl7.fhir.dstu3.model.Reference;
+import org.hl7.fhir.r4.model.Encounter;
+import org.hl7.fhir.r4.model.Period;
+import org.hl7.fhir.r4.model.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,7 +112,7 @@ public class EncounterParser implements VistaParser<Encounter> {
     private static void setReason(final String rawData, Encounter encounter) {
 
         if(!rawData.isEmpty()) {
-            encounter.setReason(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.URN_VISTA_ENCOUNTER_REASON, "UNKNOWN", rawData));
+            encounter.addReasonCode(ResourceHelper.createCodeableConcept(HcConstants.URN_VISTA_ENCOUNTER_REASON, "UNKNOWN", rawData));
         }
     }
 

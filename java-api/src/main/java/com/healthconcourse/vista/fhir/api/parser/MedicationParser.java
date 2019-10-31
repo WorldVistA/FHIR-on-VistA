@@ -20,7 +20,8 @@ import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
 import org.apache.commons.lang.StringUtils;
-import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Dosage.DosageDoseAndRateComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,11 +167,7 @@ public class MedicationParser {
         result.setSubject(ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, mPatientId, "", ResourceHelper.ReferenceType.Patient));
         result.setId(fields[0]);
 
-        MedicationDispense.MedicationDispenseStatus status = getDispenseStatus(fields[index + 1]);
-
-        if(status != MedicationDispense.MedicationDispenseStatus.NULL) {
-            result.setStatus(status);
-        }
+        result.setStatus(fields[index + 1]);
 
         Reference reference = new Reference();
         reference.setDisplay(fields[index + 2]);
@@ -228,10 +225,7 @@ public class MedicationParser {
 
         result.setId(fields[0]);
 
-        MedicationAdministration.MedicationAdministrationStatus status = getStatus(fields[index + 1]);
-        if(status != MedicationAdministration.MedicationAdministrationStatus.NULL) {
-            result.setStatus(status);
-        }
+        result.setStatus(fields[index + 1]);
 
         Reference reference = new Reference();
         reference.setDisplay(fields[index + 2]);
@@ -265,24 +259,51 @@ public class MedicationParser {
         return Optional.of(result);
     }
 
-    private static SimpleQuantity getDoseQuantity(String doseAmount) {
+    private static DosageDoseAndRateComponent getDoseQuantityRate(String doseAmount) {
 
-        SimpleQuantity simpleNumber = new SimpleQuantity();
+        DosageDoseAndRateComponent doseRate = new DosageDoseAndRateComponent();
+        Quantity d = new Quantity();
+        Quantity r = new Quantity();
+
+        d.setUnit("mg");
+        r.setUnit("day");
+        r.setValue(1);
 
         if(doseAmount.contains("MG")){
             String[] parts = doseAmount.split("MG");
             try {
                 Integer milligrams = Integer.parseInt(parts[0]);
-                simpleNumber.setValue(milligrams);
+                d.setValue(milligrams);
             } catch (NumberFormatException ex) {
-                simpleNumber.setCode(doseAmount);
+                d.setValue(0);
             }
 
         } else {
-            simpleNumber.setCode(doseAmount);
+            d.setValue(0);
         }
+        doseRate.setDose(d);
+        doseRate.setRate(r);
 
-        return simpleNumber;
+        return doseRate;
+    }
+
+    private static Quantity getDoseQuantity(String doseAmount) {
+        Quantity d = new Quantity();
+        d.setUnit("mg");
+
+        if(doseAmount.contains("MG")){
+            String[] parts = doseAmount.split("MG");
+            try {
+                Integer milligrams = Integer.parseInt(parts[0]);
+                d.setValue(milligrams);
+            } catch (NumberFormatException ex) {
+                d.setValue(0);
+            }
+
+        } else {
+            d.setValue(0);
+        }
+        return d;
     }
 
     private static List<Dosage> getDosages(String doseRawdata) {
@@ -303,7 +324,7 @@ public class MedicationParser {
         if(doseParts.length > 2) {
             //Seems hard-coded in data
             dosage.setText(doseParts[2]);
-            dosage.setDose(getDoseQuantity(doseParts[2]));
+            dosage.addDoseAndRate(getDoseQuantityRate(doseParts[2]));
         }
 
         dosages.add(dosage);
@@ -326,34 +347,6 @@ public class MedicationParser {
                 return Optional.empty();
         }
 
-    }
-
-    private static MedicationAdministration.MedicationAdministrationStatus getStatus(String data) {
-
-        switch (data.toUpperCase()) {
-            case ACTIVE:
-                return MedicationAdministration.MedicationAdministrationStatus.INPROGRESS;
-            case EXPIRED:
-                return MedicationAdministration.MedicationAdministrationStatus.COMPLETED;
-            case DISCONTINUED:
-                return MedicationAdministration.MedicationAdministrationStatus.STOPPED;
-            default:
-                return MedicationAdministration.MedicationAdministrationStatus.UNKNOWN;
-        }
-    }
-
-    private static MedicationDispense.MedicationDispenseStatus getDispenseStatus(String data) {
-
-        switch (data.toUpperCase()) {
-            case ACTIVE:
-                return MedicationDispense.MedicationDispenseStatus.INPROGRESS;
-            case EXPIRED:
-                return MedicationDispense.MedicationDispenseStatus.COMPLETED;
-            case DISCONTINUED:
-                return MedicationDispense.MedicationDispenseStatus.STOPPED;
-            default:
-                return MedicationDispense.MedicationDispenseStatus.NULL;
-        }
     }
 
     private static MedicationStatement.MedicationStatementStatus getStatementStatus(String data) {

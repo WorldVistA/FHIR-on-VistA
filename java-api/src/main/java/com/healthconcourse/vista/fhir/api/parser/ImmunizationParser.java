@@ -20,7 +20,9 @@ import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.Immunization;
+import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.Immunization;
+import org.hl7.fhir.r4.model.PositiveIntType;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -59,7 +61,7 @@ public class ImmunizationParser  implements VistaParser<Immunization> {
 
             Optional<Date> immunizationDate = InputValidator.parseAnyDate(fields[1]);
             if (immunizationDate.isPresent()) {
-                immunization.setDate(immunizationDate.get());
+                immunization.setOccurrence(new DateTimeType(immunizationDate.get()));
             }
 
             immunization.setVaccineCode(ResourceHelper.createCodeableConcept(HcConstants.VACCINE, fields[2], fields[3]));
@@ -70,10 +72,11 @@ public class ImmunizationParser  implements VistaParser<Immunization> {
             if(!fields[4].isEmpty() && !fields[4].equalsIgnoreCase(";")) {
                 String[] doseParts = fields[4].split(";");
                 int sequence = Integer.parseInt(doseParts[0]);
-                Immunization.ImmunizationVaccinationProtocolComponent component = new Immunization.ImmunizationVaccinationProtocolComponent();
-                component.setDoseSequence(sequence);
-                component.setDescription(doseParts[1]);
-                immunization.addVaccinationProtocol(component);
+                Immunization.ImmunizationProtocolAppliedComponent component = new Immunization.ImmunizationProtocolAppliedComponent();
+                component.setDoseNumber(new PositiveIntType(sequence));
+                //SMH: I don't see Description in the class anymore
+                //component.setDescription(doseParts[1]);
+                immunization.addProtocolApplied(component);
             }
 
             immunization.setMeta(ResourceHelper.getVistaMeta());

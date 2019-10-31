@@ -16,7 +16,7 @@ limitations under the License.
 */
 package com.healthconcourse.vista.fhir.api.vista;
 
-import org.hl7.fhir.dstu3.model.Enumerations;
+import org.hl7.fhir.r4.model.Enumerations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

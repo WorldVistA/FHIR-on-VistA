@@ -19,10 +19,10 @@ package com.healthconcourse.vista.fhir.api.parser;
 import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
-import org.hl7.fhir.dstu3.model.CodeableConcept;
-import org.hl7.fhir.dstu3.model.DateType;
-import org.hl7.fhir.dstu3.model.Goal;
-import org.hl7.fhir.dstu3.model.Reference;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.DateType;
+import org.hl7.fhir.r4.model.Goal;
+import org.hl7.fhir.r4.model.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +105,7 @@ public class GoalParser implements VistaParser<Goal> {
             DateType dateType = new DateType();
             dateType.setValue(target.get());
             gt.setDue(dateType);
-            result.setTarget(gt);
+            result.addTarget(gt);
         }
 
         // Who entered the goal
@@ -119,7 +119,7 @@ public class GoalParser implements VistaParser<Goal> {
         try {
             String[] status = fields[4].split(";"); // Goal Status (2 parts delimited by ";")
 
-            result.setStatus(getGoalStatus(status[1]));
+            result.setLifecycleStatus((getGoalStatus(status[1])));
         } catch (Exception ex) {
             LOG.error("Bad status info from VistA goal, exception ", ex);
         }
@@ -129,17 +129,17 @@ public class GoalParser implements VistaParser<Goal> {
         return Optional.of(result);
     }
 
-    private static Goal.GoalStatus getGoalStatus(String data) {
+    private static Goal.GoalLifecycleStatus getGoalStatus(String data) {
 
         switch (data.toUpperCase()) {
             case CURRENT:
-                return Goal.GoalStatus.INPROGRESS;
+                return Goal.GoalLifecycleStatus.ACTIVE;
             case MET:
-                return Goal.GoalStatus.ACHIEVED;
+                return Goal.GoalLifecycleStatus.COMPLETED;
             case DISCONTINUED:
-                return Goal.GoalStatus.CANCELLED;
+                return Goal.GoalLifecycleStatus.CANCELLED;
             default:
-                return Goal.GoalStatus.NULL;
+                return Goal.GoalLifecycleStatus.NULL;
         }
     }
 }

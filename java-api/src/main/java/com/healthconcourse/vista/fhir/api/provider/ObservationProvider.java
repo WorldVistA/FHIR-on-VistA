@@ -28,9 +28,9 @@ import com.healthconcourse.vista.fhir.api.service.ObservationService;
 import com.healthconcourse.vista.fhir.api.service.VistaObservationService;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
-import org.hl7.fhir.dstu3.model.Enumerations;
-import org.hl7.fhir.dstu3.model.Observation;
-import org.hl7.fhir.dstu3.model.Patient;
+import org.hl7.fhir.r4.model.Enumerations;
+import org.hl7.fhir.r4.model.Observation;
+import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +56,7 @@ public class ObservationProvider extends AbstractJaxRsResourceProvider<Observati
     @Autowired
     public ObservationProvider(VistaData data){
 
-        super(FhirContext.forDstu3(), ObservationProvider.class);
+        super(FhirContext.forR4(), ObservationProvider.class);
 
         service = new VistaObservationService(data);
     }

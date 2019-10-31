@@ -20,7 +20,7 @@ import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.healthconcourse.vista.fhir.api.service.PatientService;
 import com.healthconcourse.vista.fhir.api.service.VistaPatientService;
 import com.healthconcourse.vista.fhir.api.test.mocks.MockVistaData;
-import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 

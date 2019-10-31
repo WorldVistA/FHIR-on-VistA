@@ -23,7 +23,7 @@ import com.healthconcourse.vista.fhir.api.data.Provider;
 import com.healthconcourse.vista.fhir.api.parser.*;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
-import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

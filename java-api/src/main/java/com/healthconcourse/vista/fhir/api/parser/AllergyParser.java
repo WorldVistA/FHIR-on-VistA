@@ -20,7 +20,8 @@ import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.dstu3.model.codesystems.AllergyVerificationStatus;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-public class AllergyParser implements VistaParser {
+public class AllergyParser implements VistaParser<AllergyIntolerance> {
 
     private static final Logger LOG = LoggerFactory.getLogger(AllergyParser.class);
     @Override
@@ -63,7 +64,7 @@ public class AllergyParser implements VistaParser {
 
             Optional<Date> assertedDate = InputValidator.parseAnyDate(fields[2]);
             if (assertedDate.isPresent()) {
-                allergy.setAssertedDate(assertedDate.get());
+                allergy.setRecordedDate(assertedDate.get());
             }
 
             String[] ids = fields[5].split(":");
@@ -76,10 +77,7 @@ public class AllergyParser implements VistaParser {
 
             allergy.setCategory(convertCategory(fields[3]));
 
-            AllergyIntolerance.AllergyIntoleranceVerificationStatus status = getStatus(fields[4]);
-            if (status != AllergyIntolerance.AllergyIntoleranceVerificationStatus.NULL) {
-                allergy.setVerificationStatus(status);
-            }
+            allergy.setVerificationStatus(getStatus(fields[4]));
 
             allergy.setMeta(ResourceHelper.getVistaMeta());
 
@@ -110,15 +108,19 @@ public class AllergyParser implements VistaParser {
         return null;
     }
 
-    private AllergyIntolerance.AllergyIntoleranceVerificationStatus getStatus(String vistaStatus) {
+    private CodeableConcept getStatus(String vistaStatus) {
 
+        AllergyVerificationStatus status;
         switch (vistaStatus) {
             case "confirmed":
-                return AllergyIntolerance.AllergyIntoleranceVerificationStatus.CONFIRMED;
-
+                status = AllergyVerificationStatus.fromCode("confirmed");
+                break;
             default:
-                return AllergyIntolerance.AllergyIntoleranceVerificationStatus.NULL;
+                status = AllergyVerificationStatus.fromCode("NULL");;
         }
+
+        return ResourceHelper.createCodeableConcept(status.getSystem(), status.getDefinition(),
+                status.getDisplay());
     }
 
     private static List<Enumeration<AllergyIntolerance.AllergyIntoleranceCategory>> convertCategory(String vistaCategory) {

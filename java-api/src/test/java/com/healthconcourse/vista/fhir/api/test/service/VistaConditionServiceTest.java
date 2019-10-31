@@ -18,7 +18,7 @@ package com.healthconcourse.vista.fhir.api.test.service;
 
 import com.healthconcourse.vista.fhir.api.service.VistaConditionService;
 import com.healthconcourse.vista.fhir.api.test.mocks.MockVistaData;
-import org.hl7.fhir.dstu3.model.Patient;
+import org.hl7.fhir.r4.model.Patient;
 import org.junit.Assert;
 import org.junit.Test;
 

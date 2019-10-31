@@ -17,7 +17,7 @@ limitations under the License.
 */
 package com.healthconcourse.vista.fhir.api.service;
 
-import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.r4.model.*;
 
 import java.util.Date;
 import java.util.HashMap;

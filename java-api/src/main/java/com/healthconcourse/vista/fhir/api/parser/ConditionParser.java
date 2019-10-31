@@ -23,14 +23,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.CodeableConcept;
-import org.hl7.fhir.dstu3.model.Coding;
-import org.hl7.fhir.dstu3.model.Condition;
-import org.hl7.fhir.dstu3.model.Condition.ConditionClinicalStatus;
-import org.hl7.fhir.dstu3.model.Condition.ConditionVerificationStatus;
-import org.hl7.fhir.dstu3.model.DateTimeType;
-import org.hl7.fhir.dstu3.model.Reference;
-import org.hl7.fhir.dstu3.model.codesystems.ConditionCategory;
+import org.hl7.fhir.r4.model.codesystems.ConditionVerStatus;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.codesystems.ConditionCategory;
+import org.hl7.fhir.r4.model.codesystems.ConditionClinical;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,20 +118,27 @@ public class ConditionParser implements VistaParser<Condition> {
             // Clinical Status
             String status = parts[index + 4];
             Optional<Date> resolutionDate = InputValidator.parseAnyDate(parts[index + 5]);
+            ConditionClinical clinicalStatus;
             if (resolutionDate.isPresent())
             {
                 condition.setAbatement(new DateTimeType(resolutionDate.get()));
-                condition.setClinicalStatus(ConditionClinicalStatus.RESOLVED);
+                clinicalStatus = ConditionClinical.RESOLVED;
             }
             else
             {
-                if (status.equals("ACTIVE")) condition.setClinicalStatus(ConditionClinicalStatus.ACTIVE);
-                else                         condition.setClinicalStatus(ConditionClinicalStatus.INACTIVE);
+                if (status.equals("ACTIVE")) clinicalStatus = ConditionClinical.ACTIVE;
+                else                         clinicalStatus = ConditionClinical.INACTIVE;
             }
+            condition.setClinicalStatus(ResourceHelper.createCodeableConcept(
+                    clinicalStatus.getSystem(), clinicalStatus.toCode(), clinicalStatus.getDisplay()));
 
             // Verification Status
             // This is always the case from VistA. There is no "provisional" dx there.
-            condition.setVerificationStatus(ConditionVerificationStatus.CONFIRMED);
+            ConditionVerStatus verificationStatus = ConditionVerStatus.CONFIRMED;
+            condition.setVerificationStatus(
+                    ResourceHelper.createCodeableConcept(
+                    verificationStatus.getSystem(), verificationStatus.toCode(), verificationStatus.getDisplay())
+                    );
 
             // Category
             CodeableConcept categoryConcept = new CodeableConcept();

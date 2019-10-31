@@ -23,7 +23,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.ReadContext;
 import org.apache.commons.lang.StringUtils;
-import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,7 +214,7 @@ public class CarePlanParser {
                 status = CarePlan.CarePlanStatus.COMPLETED;
                 break;
             case DISCONTINUED:
-                status = CarePlan.CarePlanStatus.CANCELLED;
+                status = CarePlan.CarePlanStatus.REVOKED;
                 break;
             default:
                 status = CarePlan.CarePlanStatus.UNKNOWN;

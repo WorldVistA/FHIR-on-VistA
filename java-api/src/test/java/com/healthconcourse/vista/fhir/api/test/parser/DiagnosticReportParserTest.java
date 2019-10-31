@@ -17,7 +17,7 @@ limitations under the License.
 package com.healthconcourse.vista.fhir.api.test.parser;
 
 import com.healthconcourse.vista.fhir.api.parser.DiagnosticReportParser;
-import org.hl7.fhir.dstu3.model.DiagnosticReport;
+import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.junit.Assert;
 import org.junit.Test;
 import java.util.List;

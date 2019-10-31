@@ -20,7 +20,7 @@ import com.healthconcourse.vista.fhir.api.vista.WebVistaData;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.hl7.fhir.dstu3.model.Enumerations;
+import org.hl7.fhir.r4.model.Enumerations;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

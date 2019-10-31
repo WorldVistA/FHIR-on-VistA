@@ -17,7 +17,7 @@ limitations under the License.
 package com.healthconcourse.vista.fhir.api.test.parser;
 
 import com.healthconcourse.vista.fhir.api.parser.FlagParser;
-import org.hl7.fhir.dstu3.model.Flag;
+import org.hl7.fhir.r4.model.Flag;
 import org.junit.Assert;
 import org.junit.Test;
 
