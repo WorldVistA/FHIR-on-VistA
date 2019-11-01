@@ -8,6 +8,10 @@ ehthumbs.db
 *.iml
 *.iws
 
+# Eclipse
+.settings/
+bin/
+
 # Output directories
 out/
 build/
