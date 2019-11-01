@@ -1,4 +1,4 @@
-SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;2019-10-24  3:55 PM
+SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;2019-10-29  3:35 PM
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -314,26 +314,30 @@ ICNPAT(ICN) ; patient for ICN
  N PATNAME S PATNAME=$$GET1^DIQ(2,PATIEN,.01)
  QUIT ICN_U_PATIEN_U_PATNAME
  ;
-GETRXN(X,IO) ; get RxNorm code for drug
+GETRXN(X) ; [Public] Get RxNorm code for drug IEN
+ N ND S ND=$G(^PSDRUG(X,"ND"))
+ I ND="" Q ""
+ N PROD S PROD=$P(ND,U,3)
+ I PROD="" Q
+ I '$D(^PSNDF(50.68,PROD,0)) S $EC=",U-CORRUPT-DATA,"
  ;
- N NAME,F50P6IEN,VUID,NDFRT,RXNORM
- S NAME=$$GET1^DIQ(50,X_",",20,"E")
- I $G(DEBUG) W !,"name: ",NAME
- I NAME'="" D
- .S F50P6IEN=$O(^PSNDF(50.6,"B",NAME,""))
- .I $G(DEBUG) W !,"ien: ",F50P6IEN
- .S VUID=$$GET1^DIQ(50.6,F50P6IEN_",",99.99)
- .I $G(DEBUG) W !,"vuid: ",VUID
- .S NDFRT=$$graphmap^SYNGRAPH("ndfrt-map",VUID,"NDFRT")
- .I $G(DEBUG) W !,"ndfrt: ",NDFRT
- .N SCT S SCT=$$MAP^SYNDHPMP("rxn2ndf",NDFRT,"I")
- .I $G(DEBUG) W !,"sct: ",SCT
- .S RXNORM=$S(+SCT=-1:$P(SCT,U,2),1:$P(SCT,U,2))
- .I $G(DEBUG) W !,"rxnorm: ",RXNORM
- I NAME="" S RXNORM="^missing VistA data"
- I $G(DEBUG) W !,"rxnorm: ",RXNORM,!
- Q RXNORM
- ;I NAME="" S NAME=$$GET1^DIQ(50,X_",",26,"E")
+ ; Try to get using VA asserted map in 50.68 in the Coding multiple (which has a funky format)
+ N CODE S CODE=""
+ D
+ . N CODINGIEN F CODINGIEN=0:0 S CODINGIEN=$O(^PSNDF(50.68,PROD,11,CODINGIEN)) Q:'CODINGIEN  D
+ .. N CODING S CODING=$P($G(^PSNDF(50.68,PROD,11,CODINGIEN,0)),U)
+ .. I CODING'="RxNorm" QUIT
+ .. N CODEIEN S CODEIEN=$O(^PSNDF(50.68,PROD,11,CODINGIEN,1,0))
+ .. I 'CODEIEN Q
+ .. S CODE=$P($G(^PSNDF(50.68,PROD,11,CODINGIEN,1,CODEIEN,0)),U)
+ I CODE Q CODE
+ ;
+ ; If not, get VUID, and translate from ETS package
+ N VUID S VUID=$$GET1^DIQ(50.68,PROD,"99.99")
+ N OUT S OUT=$$VUI2RXN^ETSRXN(VUID)
+ I OUT<1 QUIT "" ; # of entries or -1 for error.
+ S CODE=$P(^TMP("ETSRXN",$J,1,0),U,2)
+ Q CODE
  ;
 ERRMSG(CODE,MESSAGE) ;
  ; fhir OperationOutcome

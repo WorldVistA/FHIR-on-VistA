@@ -43,6 +43,7 @@ public class HcConstants {
     public static final String URN_VISTA_PRACTITIONER = "urn:dxc:vista:practitioner";
     public static final String URN_VISTA_ORGANIZATION = "urn:dxc:vista:organization";
     public static final String URN_VISTA_VANDF = "urn:dxc:vista:vandf";
+    public static final String URN_VISTA_DRUG  = "urn:dxc:vista:drug";
     public static final String URN_VISTA_LOCATION = "urn:dxc:vista:location";
     public static final String URN_VISTA_CARETEAM_ROLE = "urn:dxc:vista:careteam:role";
 

@@ -1,6 +1,7 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
 (c) 2017-2019 Perspecta
+(c) 2019 OSEHRA
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -114,7 +115,7 @@ public class MedicationParser {
 
         result.setSubject(ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, mPatientId, "", ResourceHelper.ReferenceType.Patient));
 
-        result.setId(fields[0]);
+        result.setId(fields[index]);
 
         MedicationStatement.MedicationStatementStatus status = getStatementStatus(fields[index + 1]);
 
@@ -122,10 +123,16 @@ public class MedicationParser {
             result.setStatus(status);
         }
 
-        Optional<Date> start = InputValidator.parseAnyDate(fields[index + 3]);
-        if (start.isPresent()) {
+        // 3 dates: asserted ; start ; end
+        String[] rawDates = fields[index +3].split(";");
+        Optional<Date> assertedDate = InputValidator.parseAnyDate(rawDates[0]);
+        if (assertedDate.isPresent()) result.setDateAsserted(assertedDate.get());
+        Optional<Date> startDate    = InputValidator.parseAnyDate(rawDates[1]);
+        Optional<Date> endDate      = InputValidator.parseAnyDate(rawDates[2]);
+        if (startDate.isPresent() && endDate.isPresent()) {
             Period period = new Period();
-            period.setStart(start.get());
+            period.setStart(startDate.get());
+            period.setEnd(endDate.get());
             result.setEffective(period);
         }
 
@@ -133,9 +140,26 @@ public class MedicationParser {
 
         result.setDosage(getDosages(fields[index + 5]));
 
-        if(fields.length >= 10  && fields[index + 8].startsWith("RXN")) {
-            String code = fields[index + 8].substring(3);
-            result.setMedication(ResourceHelper.createCodeableConcept(HcConstants.RX_NORM, code, fields[index + 2]));
+        String system = "";
+        String code = "";
+        if(fields.length >= index + 8 + 1) {
+            String codeStringNumber = fields[index + 8];
+            if (codeStringNumber.startsWith("RXN")) {
+                system = HcConstants.RX_NORM;
+                code = fields[index + 8].substring(3);
+            }
+            if (codeStringNumber.startsWith("VUID")) {
+                system = HcConstants.URN_VISTA_VANDF;
+                code = fields[index + 8].substring(4);
+            }
+            if (codeStringNumber.startsWith("DRUG")) {
+                system = HcConstants.URN_VISTA_DRUG;
+                code = fields[index + 8].substring(4);
+            }
+            if (!system.isEmpty())
+            {
+              result.setMedication(ResourceHelper.createCodeableConcept(HcConstants.RX_NORM, code, fields[index + 2]));
+            }
         } else {
             Reference reference = new Reference();
             reference.setDisplay(fields[index + 2]);
