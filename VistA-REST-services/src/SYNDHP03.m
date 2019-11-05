@@ -1,4 +1,4 @@
-SYNDHP03 ; HC/rbd/art - HealthConcourse - get patient condition/problem data ;2019-10-28  3:08 PM
+SYNDHP03 ; HC/rbd/art - HealthConcourse - get patient condition/problem data ;2019-11-04  5:54 PM
  ;;1.0;DHP;;Jan 17, 2017
  ;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -74,6 +74,8 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  ;      and continue this for every diagnosis for a particular patient ICN
  ;    or patient conditions in JSON format
  ;
+ ; ZEXCEPT: DEBUG,HTTPARGS,HTTPERR
+ ;
  ; Filter validation
  ; Id (e.g. V-999-9000011-1805)
  N QID,QIDENC,QIDPROB
@@ -93,7 +95,7 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  . S DHPICN=$$GETICN^MPIF001(DFN) ; ICR 2701
  ;
  ; ICN
- I '$G(DHPICN),$D(HTTPARGS("patient")) S DHPICN=HTTPARGS("patient")
+ I $G(DHPICN)="",$D(HTTPARGS("patient")) S DHPICN=HTTPARGS("patient")
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" QUIT
  ;
@@ -129,38 +131,7 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  N QONSETREV S QONSETREV=0 ; Reverse condition
  I $D(HTTPARGS("onset-date")) D  I $G(HTTPERR) QUIT
  . S QONSET=HTTPARGS("onset-date")
- . ;
- . ; Validate
- . n prefix s prefix=""
- . n date s date=""
- . n hasPrefix s hasPrefix=$E(QONSET,1,2)?2A
- . i hasPrefix s prefix=$E(QONSET,1,2),date=$E(QONSET,3,99)
- . e  s date=QONSET
- . i hasPrefix,"^eq^ne^lt^gt^ge^le^sa^eb^ap^"'[(U_prefix_U) D ERRMSG^SYNDHPUTL(400,"Invalid Date Prefix") QUIT
- . ;
- . ; Convert to FM Date
- . n fmdate s fmdate=$$HL7TFM^XLFDT($tr(date,"-"))
- . i fmdate=-1 D ERRMSG^SYNDHPUTL(400,"Invalid Date") QUIT
- . ;
- . ; Inexact Date?
- . n inexactMonth,inexactDay
- . s (inexactMonth,inexactDay)=0
- . i $e(fmdate,4,5)="00" s inexactMonth=1
- . i $e(fmdate,6,7)="00" s inexactDay=1
- . ;
- . ; Now set from and to for base case
- . i 'inexactMonth,'inexactDay S FRDAT=fmdate,TODAT=fmdate+1-.000001       ; Add day (30/31 no matter as this is only for range checking)
- . i inexactDay,'inexactMonth  S FRDAT=fmdate,TODAT=fmdate+100-.000001     ; Add month
- . i inexactMonth              S FRDAT=fmdate,TODAT=fmdate+10000-.000001   ; Add year
- . ;
- . ; Adjust for prefixes
- . i prefix="eq"  ; no change
- . i prefix="ne" S QONSETREV=1 ; reverse condition
- . i prefix="lt"!(prefix="eb") S FRDAT=0,TODAT=fmdate-.000001 ; less than, & ends before
- . i prefix="gt"!(prefix="sa") S FRDAT=fmdate+1,TODAT=9999999 ; greater than, & starts after
- . i prefix="le" S FRDAT=0,TODAT=fmdate                       ; less than or equals
- . i prefix="ge" S FRDAT=fmdate,TODAT=9999999                 ; greater than
- . i prefix="ap" n diff s diff=fmdate*.001,FRDAT=FRDAT-diff,TODAT=TODAT+diff ; approximately (within 3 months)
+ . D SETFRTO^SYNDHPUTL(QONSET,.FRDAT,.TODAT,.QONSETREV)
  ;
  N C,P,S
  S C=",",P="|",S=";"
@@ -184,7 +155,7 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  I 'ENCONLY F  S PROBIEN=$O(^AUPNPROB("AC",PATIEN,PROBIEN)) Q:PROBIEN=""  D  Q:$D(QIDPROB)
  . N PROBLEM
  . D GET1PROB^SYNDHP11(.PROBLEM,PROBIEN,0) ;get one Patient Problem (Condition) record
- . I $D(PROBLEM("Problem","ERROR")) M CONDITION("Conditions",DIEN)=PROBLEM QUIT
+ . I $D(PROBLEM("Problem","ERROR")) M CONDITION("Conditions",PROBIEN)=PROBLEM QUIT
  . S ONSET=PROBLEM("Problem","dateOfOnsetFM")
  . S DIAGC=PROBLEM("Problem","diagnosis")
  . S DIAGN=PROBLEM("Problem","diagnosisText")
@@ -199,11 +170,8 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  . N CONTYPE S CONTYPE="problem" ; or (future enhancement) encounter
  . ;
  . ; Filters
- . I $D(QONSET) N INRANGE D  Q:'INRANGE
- .. W:$G(SYNDEBUG) QONSET," ",ONSET," ",FRDAT," ",TODAT
- .. S INRANGE=$$RANGECK^SYNDHPUTL(ONSET,FRDAT,TODAT)  ;quit if outside of requested date range
- .. I QONSETREV S INRANGE='INRANGE
- .. W:$G(SYNDEBUG) " ",$S(INRANGE:"OK",1:"NOT OK"),!
+ . I $G(SYNDEBUG),$D(QONSET) W QONSET," ",ONSET," ",FRDAT," ",TODAT
+ . I $D(QONSET),'$$RANGECK^SYNDHPUTL(ONSET,FRDAT,TODAT,QONSETREV) QUIT  ;quit if outside of requested date range
  . I $D(QCLINSTATUS),QCLINSTATUS'=STATUS QUIT
  . I $D(QCODE) N QUIT S QUIT=0 D  QUIT:QUIT
  .. N SCTMATCH S SCTMATCH=QCODE=SNOMEDC
@@ -278,6 +246,15 @@ STARTUP ; [Constants]. Modify to suit your system so tests would pass.
  S ICN="2421492932V802082"
  S CODEICD="B00.2"
  S CODESCT="22298006"
+ S YEAR1=2001
+ S YEAR2=2000
+ S YEAR3=2002
+ S YEAR4=2011
+ S YEARMO1="2012-05"
+ S YEARMO2="2012-06"
+ S YMD1="2012-01-12"
+ S YMD2="1982-01-12"
+ S ID1="V-999-9000011-1807"
  QUIT
 SHUTDOWN K ICN,CODEICD,CODESCT QUIT
 SETUP    K HTTPERR,FRDAT,TODAT,RETSTA,HTTPARGS QUIT
@@ -367,128 +344,104 @@ T119 ; @TEST Single problem by Code - ICD
  D CHKTF^%ut(RETSTA'[CODESCT)
  QUIT
  ;
-T120 ; @TEST problem by inexact date - year
- S HTTPARGS("onset-date")=2001
+T120 ; !TEST problem by inexact date - year
+ S HTTPARGS("onset-date")=YEAR1
+ N DATE
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
- S HTTPARGS("onset-date")=2000
- D PATCONI(.RETSTA,ICN)
- S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- D CHKEQ^%ut(RETSTA,"")
- S HTTPARGS("onset-date")=2002
+ N I,E F I=1:1:$L(RETSTA,"|") S E=$P(RETSTA,"|",I) I E'="" S DATE=$P(E,"^",3) d tf^%ut(DATE[HTTPARGS("onset-date"))
+ ;
+ S HTTPARGS("onset-date")=YEAR2
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
  D CHKEQ^%ut(RETSTA,"")
- S HTTPARGS("onset-date")=2011
+ ;
+ S HTTPARGS("onset-date")=YEAR3
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
+ D CHKEQ^%ut(RETSTA,"")
+ ;
+ S HTTPARGS("onset-date")=YEAR4
+ D PATCONI(.RETSTA,ICN)
+ S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
+ N I,E F I=1:1:$L(RETSTA,"|") S E=$P(RETSTA,"|",I) I E'="" S DATE=$P(E,"^",3) d tf^%ut(DATE[HTTPARGS("onset-date"))
  QUIT
  ;
 T121 ; @TEST problem by inexact date - year/month
- S HTTPARGS("onset-date")="2012-05"
+ S HTTPARGS("onset-date")=YEARMO1
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
- S HTTPARGS("onset-date")="2012-06"
+ N I,E F I=1:1:$L(RETSTA,"|") S E=$P(RETSTA,"|",I) I E'="" S DATE=$P(E,"^",3) d tf^%ut(DATE[$TR(HTTPARGS("onset-date"),"-"))
+ S HTTPARGS("onset-date")=YEARMO2
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
  D CHKEQ^%ut(RETSTA,"")
  QUIT
  ;
 T122 ; @TEST problem by exact date
- S HTTPARGS("onset-date")="2012-01-12"
+ S HTTPARGS("onset-date")=YMD1
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
- S HTTPARGS("onset-date")="1982-01-12"
+ N I,E F I=1:1:$L(RETSTA,"|") S E=$P(RETSTA,"|",I) I E'="" S DATE=$P(E,"^",3) d tf^%ut(DATE[$TR(HTTPARGS("onset-date"),"-"))
+ S HTTPARGS("onset-date")=YMD2
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
  D CHKEQ^%ut(RETSTA,"")
  QUIT
  ;
 T123 ; @TEST problem by eqdate
- S HTTPARGS("onset-date")="eq2012-01-12"
+ S HTTPARGS("onset-date")="eq"_YMD1
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
+ N I,E F I=1:1:$L(RETSTA,"|") S E=$P(RETSTA,"|",I) I E'="" S DATE=$P(E,"^",3) d tf^%ut(DATE[$tr(YMD1,"-"))
  QUIT
  ;
 T124 ; @TEST problem by nedate
- S HTTPARGS("onset-date")="ne2012-01-12"
+ S HTTPARGS("onset-date")="ne"_YMD1
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
+ N I,E F I=1:1:$L(RETSTA,"|") S E=$P(RETSTA,"|",I) I E'="" S DATE=$P(E,"^",3) d tf^%ut(DATE'[$tr(YMD1,"-"))
  QUIT
  ;
 T125 ; @TEST problem by ltdate
- S HTTPARGS("onset-date")="lt2012-01-12"
+ S HTTPARGS("onset-date")="lt"_YMD1
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
+ N I,E F I=1:1:$L(RETSTA,"|") S E=$P(RETSTA,"|",I) I E'="" S DATE=$P(E,"^",3) d tf^%ut(($e(DATE,1,8))<$tr(YMD1,"-"))
  QUIT
  ;
 T126 ; @TEST problem by gtdate
- S HTTPARGS("onset-date")="gt2012-01-12"
+ S HTTPARGS("onset-date")="gt"_YMD1
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
+ N I,E F I=1:1:$L(RETSTA,"|") S E=$P(RETSTA,"|",I) I E'="" S DATE=$P(E,"^",3) d tf^%ut(($e(DATE,1,8))>$tr(YMD1,"-"))
  QUIT
  ;
 T127 ; @TEST problem by ledate
- S HTTPARGS("onset-date")="le2012-01-12"
+ S HTTPARGS("onset-date")="le"_YMD1
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
+ N I,E F I=1:1:$L(RETSTA,"|") S E=$P(RETSTA,"|",I) I E'="" S DATE=$P(E,"^",3) d tf^%ut(($e(DATE,1,8))'>$tr(YMD1,"-"))
  QUIT
  ;
 T128 ; @TEST problem by gedate
- S HTTPARGS("onset-date")="ge2012-01-12"
+ S HTTPARGS("onset-date")="ge"_YMD1
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
- QUIT
- ;
-T129 ; @TEST problem by sadate
- S HTTPARGS("onset-date")="sa2012-01-12"
- D PATCONI(.RETSTA,ICN)
- S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
- QUIT
- ;
-T130 ; @TEST problem by ebdate
- S HTTPARGS("onset-date")="eb2012-01-12"
- D PATCONI(.RETSTA,ICN)
- S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
- D CHKTF^%ut($L(RETSTA,"|"))
+ N I,E F I=1:1:$L(RETSTA,"|") S E=$P(RETSTA,"|",I) I E'="" S DATE=$P(E,"^",3) d tf^%ut(($e(DATE,1,8))'<$tr(YMD1,"-"))
  QUIT
  ;
 T131 ; @TEST problem by apdate
  S HTTPARGS("onset-date")="ap2012-01"
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
  D CHKTF^%ut($L(RETSTA,"|"))
  QUIT
  ;
 T132 ; @TEST problem by _id
- S HTTPARGS("_id")="V-999-9000011-1807"
+ S HTTPARGS("_id")=ID1
  D PATCONI(.RETSTA,ICN)
  S RETSTA=$E(RETSTA,$F(RETSTA,U),$L(RETSTA))
- N I F I=1:1:$L(RETSTA,"|") W $P(RETSTA,"|",I),!
  D CHKTF^%ut($L(RETSTA,"|"))
  QUIT
  ;

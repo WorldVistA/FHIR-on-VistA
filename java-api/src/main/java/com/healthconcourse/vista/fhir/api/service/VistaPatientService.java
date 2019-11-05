@@ -87,8 +87,6 @@ public class VistaPatientService implements PatientService {
 
         String httpBody = service.getConditions(ICN);
 
-        LOG.debug(httpBody);
-
         ConditionParser parser = new ConditionParser();
 
         return parser.parseList(httpBody);
@@ -98,7 +96,7 @@ public class VistaPatientService implements PatientService {
     public List<Encounter> getEncountersForPatient(String code) {
 
         List<Encounter> results = new ArrayList<>();
-        HashMap<String, List<Provider>> providerData = new HashMap();
+        HashMap<String, List<Provider>> providerData = new HashMap<String, List<Provider>>();
 
         CompletableFuture<List<Encounter>> encounterFetcher = CompletableFuture.supplyAsync(() -> service.getEncountersByPatient(code))
                 .thenApply(httpBody -> {
@@ -273,6 +271,16 @@ public class VistaPatientService implements PatientService {
     public List<MedicationStatement> getMedicationStatement(String patientIcn) {
 
         String httpBody = service.getMedicationStatement(patientIcn);
+
+        MedicationParser parser = new MedicationParser();
+
+        return parser.parseMedicationStatement(httpBody);
+    }
+
+    @Override
+    public List<MedicationStatement> getMedicationStatement(HashMap<String, String> options) {
+
+        String httpBody = service.getMedicationStatement(options);
 
         MedicationParser parser = new MedicationParser();
 

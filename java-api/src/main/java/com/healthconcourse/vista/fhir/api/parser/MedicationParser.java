@@ -36,7 +36,11 @@ public class MedicationParser {
     private static final Logger LOG = LoggerFactory.getLogger(MedicationParser.class);
     private static final String ACTIVE = "ACTIVE";
     private static final String EXPIRED = "EXPIRED";
-    private static final String DISCONTINUED = "DISCONTINUED BY PROVIDER";
+    private static final String DISCONTINUED1 = "DISCONTINUED BY PROVIDER";
+    private static final String DISCONTINUED2 = "DISCONTINUED";
+    private static final String DELETED = "DELETED";
+    private static final String HOLD = "HOLD";
+    private static final String UNRELEASED = "UNRELEASED";
 
     private String mPatientId;
 
@@ -380,8 +384,15 @@ public class MedicationParser {
                 return MedicationStatement.MedicationStatementStatus.ACTIVE;
             case EXPIRED:
                 return MedicationStatement.MedicationStatementStatus.COMPLETED;
-            case DISCONTINUED:
+            case DISCONTINUED1:
+            case DISCONTINUED2:
                 return MedicationStatement.MedicationStatementStatus.STOPPED;
+            case DELETED:
+                return MedicationStatement.MedicationStatementStatus.ENTEREDINERROR;
+            case HOLD:
+                return MedicationStatement.MedicationStatementStatus.ONHOLD;
+            case UNRELEASED:
+                return MedicationStatement.MedicationStatementStatus.NOTTAKEN;
             default:
                 return MedicationStatement.MedicationStatementStatus.NULL;
         }

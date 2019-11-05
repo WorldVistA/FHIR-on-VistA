@@ -65,6 +65,7 @@ public class HcFhirServlet extends RestfulServer {
         providers.add(new ObservationProvider(service));
         providers.add(new LocationProvider(service));
         providers.add(new CareTeamProvider(service));
+        providers.add(new MedicationProvider(service));
         setResourceProviders(providers);
 
         setDefaultResponseEncoding(EncodingEnum.JSON);

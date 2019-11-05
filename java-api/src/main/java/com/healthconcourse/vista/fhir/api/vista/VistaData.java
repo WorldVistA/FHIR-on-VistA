@@ -47,6 +47,7 @@ public interface VistaData {
     String getEncountersByPatient(String code);
 
     String getMedicationStatement(String code);
+    String getMedicationStatement(HashMap<String,String> options);
 
     String getMedicationAdministration(String code);
 

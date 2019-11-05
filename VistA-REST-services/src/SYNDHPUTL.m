@@ -1,8 +1,9 @@
-SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;2019-10-29  3:35 PM
+SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;2019-11-04  5:49 PM
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
+ ; (c) OSEHRA 2019
  ; (c) Perspecta 2017-2019
  ; ZWRITE implementation (c) Sam Habiel 2019
  ; Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +23,7 @@ SYNDHPUTL ; HC/art - HealthConcourse - various utilities ;2019-10-29  3:35 PM
 TOJASON(ARRAY,JSONSTR) ;convert input array to JSON string
  ;input:  ARRAY - input array
  ;output: JSONSTR - JSON string
+ ;ZEXCEPT: DEBUG
  ;
  N ERR,TMP
  D ENCODE^XLFJSON("ARRAY","TMP","ERR")
@@ -47,6 +49,7 @@ meta(fields,fileNbr) ;return field metadata
  ;input: fileNbr - file number
  ;output: fields - return array
  ;        fields(fieldNbr)=fieldName^fieldNameCC^fieldType^fieldValueSet^pointsTo
+ ;ZEXCEPT: DEBUG
  ;
  n node0,fieldName,fieldNameCC,fieldType,fieldValueSet,pointsTo
  n fieldNbr s fieldNbr=0
@@ -125,15 +128,59 @@ EOF() ;Test for EOF
  ;
  QUIT $$STATUS^%ZISH
  ;
-RANGECK(DATE,FROMDATE,TODATE) ;Check date range
+RANGECK(DATE,FROMDATE,TODATE,REV) ;Check date range
  ;Inputs: DATE - date to be compared
  ;        FROMDATE - begining of range
  ;        TODATE - end of range
+ ;        REV    - Should we exclude if found?
  ;Returns: 0 - date is outside of requested date range
  ;         1 - date is within requested date range, null dates are not checked
  ;
- IF (DATE'="")&((DATE\1)<FROMDATE)!((DATE\1)>TODATE) QUIT 0  ;date is outside of requested date range
- QUIT 1
+ S REV=$G(REV,0)
+ N RESULT
+ IF (DATE'="")&((DATE\1)<FROMDATE)!((DATE\1)>TODATE) S RESULT=0  ;date is outside of requested date range
+ E  S RESULT=1
+ I REV Q 'RESULT
+ Q RESULT
+ ;
+SETFRTO(FHIRDATE,FRDATE,TODATE,REVDATE) ; [Public] Set FROMDATE/TODATE for call above
+ ; Input: FHIRDATE  - Fhir Date Expression (plain or with eq/ne/lt/gt/ge/le/ap)
+ ; Output: .FROMDATE - From Date
+ ;         .TODATE   - To Date
+ ;         .REVDATE  - Should filter be reversed?
+ ;          Sets HTTPERR if Date is invalid
+ ;
+ n prefix s prefix=""
+ n date s date=""
+ n hasPrefix s hasPrefix=$E(FHIRDATE,1,2)?2A
+ i hasPrefix s prefix=$E(FHIRDATE,1,2),date=$E(FHIRDATE,3,99)
+ e  s date=FHIRDATE
+ i hasPrefix,"^eq^ne^lt^gt^ge^le^ap^"'[(U_prefix_U) D ERRMSG(400,"Invalid Date Prefix") QUIT
+ ;
+ ; Convert to FM Date
+ n fmdate s fmdate=$$HL7TFM^XLFDT($tr(date,"-"))
+ i fmdate=-1 D ERRMSG^SYNDHPUTL(400,"Invalid Date") QUIT
+ ;
+ ; Inexact Date?
+ n inexactMonth,inexactDay
+ s (inexactMonth,inexactDay)=0
+ i $e(fmdate,4,5)="00" s inexactMonth=1
+ i $e(fmdate,6,7)="00" s inexactDay=1
+ ;
+ ; Now set from and to for base case
+ i 'inexactMonth,'inexactDay S FRDATE=fmdate,TODATE=fmdate+1-.000001       ; Add day (30/31 no matter as this is only for range checking)
+ i inexactDay,'inexactMonth  S FRDATE=fmdate,TODATE=fmdate+100-.000001     ; Add month
+ i inexactMonth              S FRDATE=fmdate,TODATE=fmdate+10000-.000001   ; Add year
+ ;
+ ; Adjust for prefixes
+ i prefix="eq"  ; no change
+ i prefix="ne" S REVDATE=1 ; reverse condition
+ i prefix="lt" S FRDATE=0,TODATE=fmdate-.000001 ; less than, & ends before
+ i prefix="gt" S FRDATE=fmdate+1,TODATE=9999999 ; greater than, & starts after
+ i prefix="le" S FRDATE=0,TODATE=fmdate                       ; less than or equals
+ i prefix="ge" S FRDATE=fmdate,TODATE=9999999                 ; greater than
+ i prefix="ap" n diff s diff=fmdate*.001,FRDATE=FRDATE-diff,TODATE=TODATE+diff ; approximately (within 3 months)
+ QUIT
  ;
 GETDFN(ZZPNAME) ;Get patient's DFN
  ;Inputs - ZZPNAME - Patient name
@@ -341,6 +388,7 @@ GETRXN(X) ; [Public] Get RxNorm code for drug IEN
  ;
 ERRMSG(CODE,MESSAGE) ;
  ; fhir OperationOutcome
+ ; ZEXCEPT: HTTPERR
  K ^TMP("HTTPERR",$J)
  S HTTPERR=CODE
  S ^TMP("HTTPERR",$J,1,"resourceType")="OperationOutcome"

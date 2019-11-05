@@ -22,7 +22,14 @@ import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Enumerations.AdministrativeGender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StopWatch;
+
 import java.lang.UnsupportedOperationException;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
+import com.jayway.jsonpath.ReadContext;
+
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -134,6 +141,13 @@ public class WebVistaData implements VistaData {
     }
 
     @Override
+    public String getMedicationStatement(HashMap<String,String> options) {
+
+        return queryVista("DHPPATMEDSICN", options);
+
+    }
+
+    @Override
     public String getMedicationAdministration(String icn) {
 
         return queryVista("DHPPATMEDAICN", createMapForSingleParameter(icn));
@@ -239,7 +253,15 @@ public class WebVistaData implements VistaData {
                     .url(createUrl(path, parameters))
                     .build();
             LOG.info("Calling URL: " + request.url());
+            StopWatch watch = new StopWatch();
+            if (LOG.isDebugEnabled()) {
+                watch.start();
+            }
             okhttp3.Response response = mClient.newCall(request).execute();
+            if (LOG.isDebugEnabled()) {
+                watch.stop();
+                LOG.debug("VistA URL time: " + watch.getTotalTimeMillis() + "ms");
+            }
 
             return processResponse(response);
 
@@ -402,6 +424,18 @@ public class WebVistaData implements VistaData {
         } catch (IOException e) {
             LOG.error("Unable to fetch body", e);
             return body;
+        }
+
+        if (status == 400) {
+          try {
+              ReadContext ctx = JsonPath.parse(body);
+              String errorMessage = ctx.read("$.issue[0].diagnostics");
+              throw new ResourceNotFoundException(errorMessage);
+          }
+          catch (PathNotFoundException pex)
+          {
+              LOG.warn("Invalid FHIR JSON from VistA Server");
+          }
         }
 
         if (status != 200) {

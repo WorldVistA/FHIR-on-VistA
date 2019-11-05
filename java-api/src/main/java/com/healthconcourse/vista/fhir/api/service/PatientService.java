@@ -34,6 +34,7 @@ public interface PatientService {
     List<Observation> getObservationsByIcn(String id);
     List<Observation> getObservationsByIcnAndCode(String id, String code);
     List<MedicationStatement> getMedicationStatement(String patientIcn);
+    List<MedicationStatement> getMedicationStatement(HashMap<String, String> options);
     List<MedicationDispense> getMedicationDispense(String patientIcn);
     List<MedicationAdministration> getMMedicationAdministration(String patientIcn);
     List<Procedure> getProcedures(String patientIcn);
