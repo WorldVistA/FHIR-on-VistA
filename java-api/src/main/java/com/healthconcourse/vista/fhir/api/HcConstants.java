@@ -69,7 +69,7 @@ public class HcConstants {
 
     static final String SERVER_DESC = "HealthConcourse FHIR API using VistA as a data source";
     static final String SERVER_NAME = "HealthConcourse VistA FHIR API";
-    static final String SERVER_VERSION = "1.2";
+    static final String SERVER_VERSION = "2.0";
 
     static final String CONFIG_VISTA_URL = "VistaBaseUrl";
 
