@@ -46,7 +46,7 @@ public class VistaPatientServiceTest {
         Assert.assertEquals("FirstName is PATIENT FEMALE", "PATIENT FEMALE", names.get(0).getGiven().get(0).getValue());
 
         Assert.assertEquals("ID is ICN", "5000001534V744140", result.getIdentifier().get(0).getValue());
-        Assert.assertEquals("SSN is 555-555-1938", "555-555-1938", result.getIdentifier().get(1).getValue());
+        Assert.assertEquals("MRN is 5000001534V744140", "5000001534V744140", result.getIdentifier().get(1).getValue());
         Assert.assertEquals("Gender is FEMALE", Enumerations.AdministrativeGender.FEMALE, result.getGender());
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd-M-yyyy");

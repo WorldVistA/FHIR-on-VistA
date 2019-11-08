@@ -1,6 +1,7 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
 (c) 2017-2019 Perspecta
+(c) 2019 OSEHRA
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -48,7 +49,7 @@ public class PatientParserTest {
         Assert.assertEquals("FirstName is PATIENT FEMALE", "PATIENT FEMALE", names.get(0).getGiven().get(0).getValue());
 
         Assert.assertEquals("ID is ICN", "5000001534V744140", result.getIdentifier().get(0).getValue());
-        Assert.assertEquals("SSN is 555-555-1938", "555-555-1938", result.getIdentifier().get(1).getValue());
+        Assert.assertEquals("MRN is 5000001534V744140", "5000001534V744140", result.getIdentifier().get(1).getValue());
         Assert.assertEquals("Gender is FEMALE", AdministrativeGender.FEMALE, result.getGender());
 
         Date expectedDate = new Date();
@@ -133,5 +134,19 @@ public class PatientParserTest {
         List<Patient> result = parser.parseList(input);
 
         Assert.assertEquals("Correct number of patients", 0, result.size());
+    }
+
+    @Test
+    public void TestAllPatientsWithAllNewFields() {
+        String input = "7849159139V519746^ABBOTT701,NORMAN373^1-111-783-0004^MALE^19260323^25503 Willow Crossing,,^BEVERLY^MASSACHUSETTS^01915^V-999-2-227^Transfemale/Transwoman/Male-to-Female^SAM@EXAMPLE.COM^SPANISH,ES,urn:ietf:bcp:47^WHITE,2106-3,urn:oid:2.16.840.1.113883.6.238^HISPANIC OR LATINO,2135-2,urn:oid:2.16.840.1.113883.6.238|";
+
+        PatientParser parser = new PatientParser();
+
+        List<Patient> result = parser.parseList(input);
+
+        Assert.assertEquals("Correct number of patients", 1, result.size());
+        Assert.assertEquals("Gender is Female not Male", result.get(0).getGender().toCode(), "female");
+        Assert.assertEquals("Preferred Language is Spanish", result.get(0).getCommunicationFirstRep().getLanguage().getCoding().get(0).getDisplay(), "SPANISH");
+
     }
 }

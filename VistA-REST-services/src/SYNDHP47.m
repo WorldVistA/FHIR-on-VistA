@@ -1,4 +1,4 @@
-SYNDHP47 ; HC/fjf/art - HealthConcourse - retrieve patient demographics ;2019-10-23  4:57 PM
+SYNDHP47 ; HC/fjf/art - HealthConcourse - retrieve patient demographics ;2019-11-08  8:48 AM
  ;;1.0;DHP;;Jan 17, 2017
  ;;
  ;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -73,8 +73,10 @@ PATDEMI(RETSTA,DHPICN,RETJSON) ; get demographics for patient by ICN
  ;             0 or null = Return patient demographics string (default)
  ; Output:
  ;   RETSTA  - a delimited string that has the following
- ;             ICN^Name^Phone Number^Gender^Date of Birth^Address1,Address2,Address3,^City^State^ZIP^resID
- ;          or patient demographics in JSON format
+ ;             ICN^Name^Phone Number^Gender^Date of Birth^Address1,Address2,Address3^City^State^ZIP^resID
+ ;             ^self identified gender^email^language name,lang iso 639-1 code,lang system (hardcoded)
+ ;             ^race text,race hl7 code,race hl7 system (hardcoded)
+ ;             ^ethnicity text, ethnicity code, ethnicity hl7 system (hardcoded)
  ;
  ; validate ICN
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
@@ -95,7 +97,7 @@ PATDEMI(RETSTA,DHPICN,RETJSON) ; get demographics for patient by ICN
  ;
  QUIT
  ;
-GETPATS(PATARRAY,DFN) ; get demographics for patient
+GETPATS(PATARRAY,DFN) ; [Private] Get demographics for single patient
  N VA,VADM,VAPA,VAERR
  ; Next two calls: ICR 10061
  D DEM^VADPT
@@ -106,19 +108,55 @@ GETPATS(PATARRAY,DFN) ; get demographics for patient
  S RESID=$$RESID^SYNDHP69("V",SITE,2,DFN)
  S NAME=VADM(1)
  S SEX=$P(VADM(5),U,2)
+ N SID S SID=$$GET1^DIQ(2,DFN,.024) ; Self Identified Gender
  S DOB=$$FMTHL7^XLFDT($P(VADM(3),U)) ; ICR #10103
  S PHONE=VAPA(8)
  S ADRS1=VAPA(1)
  S ADRS2=VAPA(2)
  S ADRS3=VAPA(3)
  S CITY=VAPA(4)
- S STATE=VAPA(5)
+ S STATE=$P(VAPA(5),U,2)
  S ZIP=VAPA(6)
+ ;
+ N EMAIL S EMAIL=$$GET1^DIQ(2,DFN,.133)
+ ;
+ ; Language
+ N LANG,LANGIEN,LANGCODE,LANGSYS
+ S (LANG,LANGCODE,LANGSYS)=""
+ S LANG=$P($G(VADM(13,1)),U,2)
+ I LANG'="" D
+ . S LANGIEN=$$FIND1^DIC(.85,,"X",LANG)
+ . S LANGCODE=$$GET1^DIQ(.85,LANGIEN,.02)
+ . S LANGSYS="urn:ietf:bcp:47"
+ ;
+ ; TODO: There can be multiple races, but we won't handle that now
+ ; Race
+ N RACETEXT,RACECODE,RACESYS
+ S (RACETEXT,RACECODE,RACESYS)=""
+ I $D(VADM(12,1)) D
+ . S RACETEXT=$P(VADM(12,1),U,2)
+ . S RACECODE=$$GET1^DIQ(10,$P(VADM(12,1),U),3)
+ . S RACESYS="urn:oid:2.16.840.1.113883.6.238"
+ ;
+ ; TODO: There can be multiple ethnicities, but we won't handle that now
+ ; Ethnicity
+ N ETHTEXT,ETHCODE,ETHSYS
+ S (ETHTEXT,ETHCODE,ETHSYS)=""
+ I $D(VADM(11,1)) D
+ . S ETHTEXT=$P(VADM(11,1),U,2)
+ . S ETHCODE=$$GET1^DIQ(10.2,$P(VADM(11,1),U),3)
+ . S ETHSYS="urn:oid:2.16.840.1.113883.6.238"
  ;
  S ICN=$$GETICN^MPIF001(DFN) ; ICR 2701
  I +ICN=-1 S ICN=""
+ ;
  N C S C=","
- S PATSTR=ICN_U_NAME_U_PHONE_U_SEX_U_DOB_U_ADRS1_C_ADRS2_C_ADRS3_C_U_CITY_U_STATE_U_ZIP_U_RESID
+ N PATSTR
+ S PATSTR=ICN_U_NAME_U_PHONE_U_SEX_U_DOB_U
+ S PATSTR=PATSTR_ADRS1_C_ADRS2_C_ADRS3_U_CITY_U_STATE_U_ZIP_U
+ S PATSTR=PATSTR_RESID_U_SID_U_EMAIL_U_LANG_C_LANGCODE_C_LANGSYS_U
+ S PATSTR=PATSTR_RACETEXT_C_RACECODE_C_RACESYS_U
+ S PATSTR=PATSTR_ETHTEXT_C_ETHCODE_C_ETHSYS
  QUIT PATSTR
  ;
 PATDEMAL(RETSTA,DHPICN,RETJSON) ; [PUBLIC URL] /DHPPATDEMALL? get demographics for all patients
@@ -126,20 +164,22 @@ PATDEMAL(RETSTA,DHPICN,RETJSON) ; [PUBLIC URL] /DHPPATDEMALL? get demographics f
  ; Return patient demographics for all patients
  ;
  ; Input:
- ;   DHPICN - "ALL"
  ;   RETJSON - J = Return JSON (JSON is not currently supported for this call)
  ;             F = Return FHIR
  ;             0 or null = Return patient demographics string (default)
  ; Output:
- ;   RETSTA  - a delimited string that has the following data elements for each patient
- ;             ICN^Name^Phone Number^Gender^Date of Birth^Address1,Address2,Address3,^City^State^ZIP^resID|...
- ;             data for each patient is separated by "|"
- ;          or patient demographics in JSON format
+ ;   RETSTA  - a delimited string that has the following
+ ;             ICN^Name^Phone Number^Gender^Date of Birth^Address1,Address2,Address3^City^State^ZIP^resID
+ ;             ^self identified gender^email^language name,lang iso 639-1 code,lang system (hardcoded)
+ ;             ^race text,race hl7 code,race hl7 system (hardcoded)
+ ;             ^ethnicity text, ethnicity code, ethnicity hl7 system (hardcoded)
  ;
  I ($G(RETJSON)="J"!($G(RETJSON)="F")) S RETSTA="-1^JSON for all patients is currently not supported" QUIT
  ;
+ ; ZEXCEPT: HTTPARGS,SYNDEBUG
+ ;
  ; New Variables for EN1^DIP
- N L,DIC,FLDS,BY,DR,TO
+ N L,DIC,FLDS,BY,DR,FR,TO,DHD
  N HDH,DIASKHD,DIPCRIT,PG,DHIT
  N DIOEND,DIOBEG
  N DCOPIES
@@ -250,13 +290,15 @@ PRINT ; [Fall through]
  S RETSTA=$NA(^TMP("SYNPATALL",$J))
  ;
  ; Currently not used
- I $G(RETJSON)="J"!($G(RETJSON)="F") D
- . S RETSTA=""
- . D TOJASON^SYNDHPUTL(.PATARRAY,.RETSTA)
+ ;I $G(RETJSON)="J"!($G(RETJSON)="F") D
+ ;. S RETSTA=""
+ ;. D TOJASON^SYNDHPUTL(.PATARRAY,.RETSTA)
  QUIT
  ;
 COLLECT ; [Internal; call back from EN1^DIP
  ; Skip previous "pages"
+ ; ZEXCEPT:DN,D0 from EN1^DIP
+ ; ZEXCEPT:SYNSKIPTO,SYNCT,SYNMAX newed above 
  I SYNSKIPTO>0 S SYNSKIPTO=SYNSKIPTO-1 QUIT
  ;
  ; Count entry
@@ -285,14 +327,14 @@ PATDEMRNG(RETSTA,DHPPATS,RETJSON) ; get demographics for range of patients
  ;          or patient demographics in JSON format
  ;
  ;
- N C,M,S,SOR,EOR,N,NOPATS,FPATIEN,PTNTS,DHPICN,PATSTR,I,RESID
+ N C,M,S,SOR,EOR,N,NOPATS,PATIEN,PTNTS,DHPICN,PATSTR,I,RESID
  S C=",",M="R"
  S S="_"
  N SITE S SITE=$P($$SITE^VASITE,U,3)
  ;
- S CT=0
+ N CT S CT=0
  K ^TMP("DHPPATRNG",$J) S ^TMP("DHPPATRNG",$J)=""
- K ^SYNDHPTMP("DHPCOUNT")
+ K ^TMP("DHPCOUNT")
  N PATARRAY
  ;
  I DHPPATS'?1.N1"R"1.N S RETSTA="-1^Invalid range format" QUIT
@@ -308,7 +350,7 @@ PATDEMRNG(RETSTA,DHPPATS,RETJSON) ; get demographics for range of patients
  .S PATSTR=$$GETPATS(.PATARRAY,PATIEN)
  .S ^TMP("DHPPATRNG",$J)=^TMP("DHPPATRNG",$J)_PATSTR_"|"
  .S CT=CT+1
- .S ^SYNDHPTMP("DHPCOUNT",$J,CT)=PATSTR
+ .S ^TMP("DHPCOUNT",$J,CT)=PATSTR
  S RETSTA=^TMP("DHPPATRNG",$J)
  ;
  ;I $G(RETJSON)="F" D xxx  ;create array for FHIR
@@ -354,7 +396,6 @@ T4 ;
  W $$ZW^SYNDHPUTL("RETSTA"),!!
  QUIT
  ;
-
 T5 ; @TEST Get all Patients
  N ICN S ICN="ALL"
  N JSON S JSON=""

@@ -53,6 +53,12 @@ public class HcConstants {
 
     public static final String SSN_CODING = "SB";
     public static final String SSN_CODING_SYSTEM = "http://hl7.org/fhir/identifier-type";
+    public static final String MRN_CODING = "MR";
+    public static final String MRN_CODING_SYSTEM = "http://terminology.hl7.org/CodeSystem/v2-0203";
+    public static final String MRN_CODING_SYSTEM_DESC="Medical Record Number";
+    public static final String UNK_CODING = "UNK";
+    public static final String UNK_CODING_SYSTEM = "http://terminology.hl7.org/CodeSystem/v3-NullFlavor";
+    public static final String UNK_CODING_SYSTEM_DESC= "Unknown";
     public static final String PARTICIPANT_CODING_SYSTEM = "http://hl7.org/fhir/v3/ParticipationType";
     public static final String OBSERVATION_CODING_SYSTEM = "http://hl7.org/fhir/ValueSet/observation-category";
     public static final String APPOINTMENT_TYPE_CODING_SYSTEM = "http://hl7.org/fhir/v2/0276";
