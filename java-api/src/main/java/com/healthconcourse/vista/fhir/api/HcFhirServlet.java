@@ -1,6 +1,7 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
 (c) 2017-2019 Perspecta
+(c) 2019 OSEHRA
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,8 +28,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.narrative.DefaultThymeleafNarrativeGenerator;
-import ca.uhn.fhir.narrative.INarrativeGenerator;
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.rest.server.HardcodedServerAddressStrategy;
 import ca.uhn.fhir.rest.server.IResourceProvider;
@@ -77,17 +76,24 @@ public class HcFhirServlet extends RestfulServer {
         IServerAddressStrategy addressStrategy = new HardcodedServerAddressStrategy(serverUrl);
         setServerAddressStrategy(addressStrategy);
 
-		/*
-		 * Use a narrative generator. This is a completely optional step,
-		 * but can be useful as it causes HAPI to generate narratives for
-		 * resources which don't otherwise have one.
-		 */
+    /*
+     * Use a narrative generator. This is a completely optional step,
+     * but can be useful as it causes HAPI to generate narratives for
+     * resources which don't otherwise have one.
+     *
+     * NB: Due to performance issues (https://groups.google.com/d/msg/hapi-fhir/h5mayAnGeJY/n5W6Zff0AAAJ)
+     * This is now commented out until such a time that they are fixed.
+     */
+
+
+     /*
         INarrativeGenerator narrativeGen = new DefaultThymeleafNarrativeGenerator();
         getFhirContext().setNarrativeGenerator(narrativeGen);
+     */
 
-		/*
-		 * Enable CORS
-		 */
+    /*
+     * Enable CORS
+     */
         CorsConfiguration config = new CorsConfiguration();
         CorsInterceptor corsInterceptor = new CorsInterceptor(config);
         config.addAllowedHeader("Accept");
@@ -98,17 +104,17 @@ public class HcFhirServlet extends RestfulServer {
         config.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
         registerInterceptor(corsInterceptor);
 
-		/*
-		 * This server interceptor causes the server to return nicely
-		 * formatter and coloured responses instead of plain JSON/XML if
-		 * the request is coming from a browser window. It is optional,
-		 * but can be nice for testing.
-		 */
+    /*
+     * This server interceptor causes the server to return nicely
+     * formatter and coloured responses instead of plain JSON/XML if
+     * the request is coming from a browser window. It is optional,
+     * but can be nice for testing.
+     */
         registerInterceptor(new ResponseHighlighterInterceptor());
 
-		/*
-		 * Tells the server to return pretty-printed responses by default
-		 */
+    /*
+     * Tells the server to return pretty-printed responses by default
+     */
         setDefaultPrettyPrint(true);
     }
 }
