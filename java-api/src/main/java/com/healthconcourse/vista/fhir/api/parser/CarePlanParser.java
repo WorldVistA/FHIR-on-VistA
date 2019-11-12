@@ -45,6 +45,10 @@ public class CarePlanParser {
             return results;
         }
 
+        if (httpData.trim().equalsIgnoreCase("{}")) {
+            return results;
+        }
+
         ReadContext ctx = JsonPath.parse(httpData);
 
         try {
