@@ -41,7 +41,8 @@ targetCompatibility = 1.8
 compileJava.options.encoding = 'UTF-8'
 
 // Current Project's version
-version = "1.0.0"
+//version = "1.0.0"
+version = "2.0.0" // due to FHIR-R4 Support
 
 // Project's description
 description = 'FHIR VistA Services' + version
