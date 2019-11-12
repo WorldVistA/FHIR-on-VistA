@@ -1,6 +1,7 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
 (c) 2017-2019 Perspecta
+(c) 2019 OSEHRA
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -116,7 +117,11 @@ public class AllergyParser implements VistaParser<AllergyIntolerance> {
                 status = AllergyVerificationStatus.fromCode("confirmed");
                 break;
             default:
-                status = AllergyVerificationStatus.fromCode("NULL");;
+                //OSE/SMH - Return confirmed if we have nothing else.
+                //This is the usual behavior of VistA Pharmacy/CPRS
+                //NULL crashes the FHIR parser
+                //status = AllergyVerificationStatus.fromCode("NULL");;
+                status = AllergyVerificationStatus.fromCode("confirmed");
         }
 
         return ResourceHelper.createCodeableConcept(status.getSystem(), status.getDefinition(),
