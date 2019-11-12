@@ -38,10 +38,18 @@ Test the application by visiting [http://localhost:8080/api/metadata](http://loc
 
 ## Docker ##
 
-To run the application in a Docker container, first build the project as above, but do not execute the `java` command. Then issue these commands:
+To build the docker container, run this:
 
 ~~~~
-docker build -t vista-fhir-api .
-
-docker run --name fhir-api  --restart=always -p 8080:8080  -d vista-fhir-api
+docker build -t osehra/fhir-on-vista .
 ~~~~
+
+To run the application against a VistA Server, run this:
+
+~~~~
+docker run -d -p 2222:22 -p 8001:8001 -p 9430:9430 --name vehu osehra/vehu
+docker run --name fhir-api --link vehu:vista -p 8080:8080 osehra/fhir-on-vista
+~~~~
+
+If the specific VistA instance doesn't have the KIDS builds already installed
+that do the work, you will need to install them.
