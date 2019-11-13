@@ -55,6 +55,8 @@ public class WebVistaData implements VistaData {
 
     public WebVistaData(String baseUrl) {
 
+        LOG.info("VistA URL is: " + baseUrl);
+
         this.mVistaBaseUrl = baseUrl;
 
         this.mClient = new OkHttpClient.Builder()
