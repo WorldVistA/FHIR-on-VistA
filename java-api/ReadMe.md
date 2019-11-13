@@ -23,7 +23,7 @@ MacOS or Linux
 ~~~~
 ./gradlew clean build
 
-java -jar build/libs/healthconcourse-vista-fhir-api-1.0.0.jar
+java -jar build/libs/healthconcourse-vista-fhir-api-2.0.0.jar
 ~~~~
 
 Windows
@@ -31,7 +31,7 @@ Windows
 ~~~~
 gradlew.bat clean build
 
-java -jar build/libs/healthconcourse-vista-fhir-api-1.0.0.jar
+java -jar build/libs/healthconcourse-vista-fhir-api-2.0.0.jar
 ~~~~
 
 Test the application by visiting [http://localhost:8080/api/metadata](http://localhost:8080/api/metadata)
@@ -44,11 +44,19 @@ To build the docker container, run this:
 docker build -t osehra/fhir-on-vista .
 ~~~~
 
-To run the application against a VistA Server, run this:
+To run the application against the OSEHRA Demo Server, run this:
 
 ~~~~
-docker run -d -p 2222:22 -p 8001:8001 -p 9430:9430 --name vehu osehra/vehu
-docker run --name fhir-api --link vehu:vista -p 8080:8080 osehra/fhir-on-vista
+docker run -d -p 2222:22 -p 8001:8001 -p 9430:9430 -p 9080:9080 --name vehu osehra/vehu
+docker run --rm --name fhir-api --link vehu:vista -p 8080:8080 osehra/fhir-on-vista
+~~~~
+
+By default, it talks to a server located at "http://vista:9080/". If you want
+it to talk to another server, you can override the properties using environment
+variables. E.g.
+
+~~~~
+docker run --rm --name fhir-api -e VISTAURL='http://host.docker.internal:9080/' -p 8080:8080 -p 8000:8000 osehra/fhir-on-vista
 ~~~~
 
 If the specific VistA instance doesn't have the KIDS builds already installed
