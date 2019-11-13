@@ -60,7 +60,7 @@ public class WebVistaData implements VistaData {
         this.mVistaBaseUrl = baseUrl;
 
         this.mClient = new OkHttpClient.Builder()
-                .readTimeout(45, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
                 .build();
     }
 
