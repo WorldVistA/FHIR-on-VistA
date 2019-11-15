@@ -107,8 +107,8 @@ public class DiagnosticReportParser implements VistaParser<DiagnosticReport> {
             result.setCode(ResourceHelper.createCodeableConcept(HcConstants.CPT, fields[6], display));
         }
 
-        if(fields.length > 7) {
-            result.addConclusionCode(ResourceHelper.createCodeableConcept(HcConstants.SNOMED_URN, fields[8], fields[7]));
+        if(fields.length > 8) {
+         result.addConclusionCode(ResourceHelper.createCodeableConcept(HcConstants.SNOMED_URN, fields[8], fields[7]));
         }
 
         // conclusion
