@@ -1,5 +1,5 @@
 SYNDHP67 ; AFHIL/fjf/art - HealthConcourse - retrieve patient TIU notes ;07/26/2019
- ;;1.0;DHP;;Jan 17, 2017
+ ;;1.0;DHP;;Jan 17, 2017;Build 51
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -33,7 +33,10 @@ PATTIUI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient TIU Notes for ICN
  I $G(DHPICN)="" S RETSTA="-1^What patient?" QUIT
  I '$$UICNVAL^SYNDHPUTL(DHPICN) S RETSTA="-1^Patient identifier not recognised" QUIT
  ;
- S RETSTA=DHPICN
+ S RETSTA=$NA(^TMP($T(+0),$J))
+ K @RETSTA
+ N RETCNT S RETCNT=1
+ S @RETSTA@(RETCNT)=DHPICN
  N PATIEN S PATIEN=$O(^DPT("AFICN",DHPICN,""))
  I PATIEN="" S RETSTA="-1^Internal data structure error" QUIT
  ;
@@ -68,12 +71,13 @@ PATTIUI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient TIU Notes for ICN
  . N TIU
  . D GET1TIU^SYNDHP24(.TIU,TIUIEN,0) ;get one TIU record
  . I $D(TIU("Tiu","ERROR")) M TIUARRAY("TiuNotes",TIUIEN)=TIU QUIT
- . I $E(RETSTA,$L(RETSTA))=U S RETSTA=$E(RETSTA,1,$L(RETSTA)-1)
+ . ;I $E(RETSTA,$L(RETSTA))=U S RETSTA=$E(RETSTA,1,$L(RETSTA)-1) ; //SMH?
  . ;S NTX=@NTS@(TIUIEN)
  . S NTIEN=TIU("Tiu","tiuIen")
  . S NTDTMFM=TIU("Tiu","entryDateTimeFM")
  . QUIT:'$$RANGECK^SYNDHPUTL(NTDTMFM,FRDAT,TODAT)  ;quit if outside of requested date range
- . S RETSTA=RETSTA_T
+ . S RETCNT=RETCNT+1
+ . S @RETSTA@(RETCNT)=T
  . S VID=TIU("Tiu","resourceId")
  . S NTSTA=TIU("Tiu","statusFHIR")
  . S NTDTM=TIU("Tiu","entryDateTimeHL7")
@@ -82,7 +86,8 @@ PATTIUI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient TIU Notes for ICN
  . ; note confidentiality
  . S NCONF="N"
  . ;W !,NT,"  -  ",NTSTA,!
- . S RETSTA=RETSTA_VID_P_NTDTM_P_NTSTA_P_NCONF_P_NTAUTH_P
+ . S RETCNT=RETCNT+1
+ . S @RETSTA@(RETCNT)=VID_P_NTDTM_P_NTSTA_P_NCONF_P_NTAUTH_P
  . ; now get note text for non-json return
  . N ZXCV,NTLTX
  . D TGET^TIUSRVR1(.ZXCV,NTIEN)
@@ -91,8 +96,12 @@ PATTIUI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient TIU Notes for ICN
  . S NTL=0
  . F  S NTL=$O(@NTLS@(NTL)) QUIT:NTL=""  D
  . . S NTLTX=@NTLS@(NTL)
- . . S RETSTA=RETSTA_NTLTX_U
- . S RETSTA=RETSTA_P_$S(NOTELIST(TIUIEN)="D":DSLOINC,1:NTLOINC)_P
+ . . S NTLTX=$TR(NTLTX,T," ") ; Remove Tildes from text as we use it as delimiter
+ . . S NTLTX=$TR(NTLTX,U," ") ; Remove Tildes from text as we use it as delimiter
+ . . S RETCNT=RETCNT+1
+ . . S @RETSTA@(RETCNT)=NTLTX_U
+ . S RETCNT=RETCNT+1
+ . S @RETSTA@(RETCNT)=P_$S(NOTELIST(TIUIEN)="D":DSLOINC,1:NTLOINC)_P
  . I NOTELIST(TIUIEN)="D" D
  . . S TIU("Tiu","loincCode")=$P(DSLOINC,S,1)
  . . S TIU("Tiu","loincDesc")=$P(DSLOINC,S,2)
@@ -118,8 +127,8 @@ PATTIUI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient TIU Notes for ICN
  ;
  ; ----------- Unit Test -----------
 T1 ;
- N ZXC
  D PATTIUI(.ZXC,"5000000001V324625")
+ D ZWRITE^SYNDHPUTL(ZXC)
  Q
 T2 ;
  N ZXS
