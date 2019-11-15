@@ -23,6 +23,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -317,6 +318,7 @@ public class PatientProvider extends AbstractJaxRsResourceProvider<Patient> {
 
     @Search
     public Bundle getAllPatients(
+            @OptionalParam(name = "_id")                 final StringParam _id,
             @OptionalParam(name = Patient.SP_IDENTIFIER) final StringParam identifier,
             @OptionalParam(name = Patient.SP_NAME)       final StringParam name,
             @OptionalParam(name = Patient.SP_GENDER)     final StringParam gender,
@@ -333,15 +335,9 @@ public class PatientProvider extends AbstractJaxRsResourceProvider<Patient> {
         Bundle bundle = createBundle(String.format("%s/%s", request.getFhirServerBase(), request.getRequestPath()));
 
         HashMap<String, String> options = new HashMap<String, String>();
-        if (identifier != null) options.put(Patient.SP_IDENTIFIER, identifier.getValue());
-        if (name       != null) options.put(Patient.SP_NAME,       name.getValue());
-        if (gender     != null) options.put(Patient.SP_GENDER,     gender.getValue());
-        if (family     != null) options.put(Patient.SP_FAMILY,     family.getValue());
-        if (given      != null) options.put(Patient.SP_GIVEN,      given.getValue());
-        if (dob        != null) options.put(Patient.SP_BIRTHDATE,  dob.getValueAsString());
-        if (count      != null) options.put(Constants.PARAM_COUNT, count.getValue().toPlainString());
-        // page is not a FHIR standard thing; but our own. FHIR doesn't have it.
-        if (page       != null) options.put("_page",               page.getValue().toPlainString());
+         for (Map.Entry<String, String[]> entry: request.getParameters().entrySet()) {
+             options.put(entry.getKey(), entry.getValue()[0]);
+         }
 
         List<Patient> results = service.getAllPatients(options);
 
@@ -357,6 +353,10 @@ public class PatientProvider extends AbstractJaxRsResourceProvider<Patient> {
 
         bundle.setTotal(results.size());
 
+        // if a single patient was requested, no reason to try to return next/
+        // prev page links
+        if (_id != null || identifier != null) return bundle;
+
         Bundle.BundleLinkComponent nextlink = new Bundle.BundleLinkComponent();
         Bundle.BundleLinkComponent prevlink = new Bundle.BundleLinkComponent();
         List<Bundle.BundleLinkComponent> links = new ArrayList<>();
@@ -364,7 +364,6 @@ public class PatientProvider extends AbstractJaxRsResourceProvider<Patient> {
         String urlWithParameters = baseUrl + "?";
 
         FhirContext c = getFhirContext();
-        if (identifier != null) urlWithParameters += Patient.SP_IDENTIFIER + "=" + identifier.getValueAsQueryToken(c) + "&";
         if (name       != null) urlWithParameters += Patient.SP_NAME +       "=" + name.getValueAsQueryToken(c)       + "&";
         if (gender     != null) urlWithParameters += Patient.SP_GENDER +     "=" + gender.getValueAsQueryToken(c)     + "&";
         if (family     != null) urlWithParameters += Patient.SP_FAMILY +     "=" + family.getValueAsQueryToken(c)     + "&";
