@@ -1,5 +1,5 @@
 SYNDHP73 ;AFHIL DHP/fjf/art - HealthConcourse - DHP REST handlers ;2019-10-23  3:54 PM
- ;;1.0;DHP;;Jan 17, 2017
+ ;;1.0;DHP;;Jan 17, 2017;Build 51
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;  -------------------------------
@@ -17,7 +17,6 @@ PATVAL ; Verify patient on basis of name, SSN, DoB, Gender and Mother's Maiden n
  D PATVAL^SYNDHP43(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER,DHPMMDNM)
  ; RETSTA is string returned by
  ;S RETSTA="NOTHING SUCCEEDS LIKE A BUDGIE"
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  ;
  Q
  ;
@@ -38,7 +37,6 @@ PATDEM ; get patient demographics for one patient
  ;
  D PARSEDEM
  D PATDEM^SYNDHP47(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
 PARSEDEM ;
@@ -59,7 +57,6 @@ PATDEMI ; get patient demographics for one patient
  D PARSEICN
  F I="JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATDEMI^SYNDHP47(.RETSTA,DHPICN,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ----------------------------------------------------
@@ -73,7 +70,6 @@ PATDEMAL ; get patient demographics for all patients
  D PARSEICN
  F I="JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATDEMAL^SYNDHP47(.RETSTA,DHPICN,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ----------------------------------------------------
@@ -86,7 +82,6 @@ PATICNS ; get patient ICN for some or all patients
  ;
  F I="CNT","JSON","RND" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D ICNS^SYNDHPIC(.RETSTA,DHPCNT,DHPJSON,DHPRND)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;  ----------------------------------------------------
  ;  All patient demographics by ICN=range bridge routine
@@ -99,7 +94,6 @@ PATDEMRG ; get patient demographics for a range of patients
  D PARSEICN
  F I="JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATDEMRNG^SYNDHP47(.RETSTA,DHPICN,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ----------------------------------------------------
@@ -112,7 +106,6 @@ PATCON ; get patient condition SCT codes for one patient by traits
  ;
  D PARSECON
  D PATCONDS^SYNDHP03(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
 PARSECON ;
@@ -146,7 +139,6 @@ PATENCI ; get patient encounters for one patient by ICN
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATENCI^SYNDHP40(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------
@@ -159,7 +151,6 @@ PATCONAL ; get patients for a condition
  ;
  D PARSECONAL
  D PATCONAL^SYNDHP03(.RETSTA,DHPSCT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
 PARSECONAL ; generalise
@@ -178,7 +169,6 @@ PATMEDS ; get patient medication statement for one patient by ICN
  D PARSEICN
  F I="FRDAT","TODAT" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATMEDS^SYNDHP48(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  -------------------------------------------------------
@@ -192,7 +182,6 @@ PATMEDA ; get patient medication administration for one patient by ICN
  D PARSEICN
  F I="FRDAT","TODAT" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATMEDA^SYNDHP48(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  -------------------------------------------------
@@ -206,7 +195,6 @@ PATMEDD ; get patient medication dispense for one patient by ICN
  D PARSEICN
  F I="FRDAT","TODAT" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATMEDD^SYNDHP48(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------
@@ -219,7 +207,6 @@ PATVIT ; get patient vitals for one patient by traits
  ;
  D PARSEVIT
  D PATVIT^SYNDHP01(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;
@@ -241,7 +228,6 @@ PATVITI ; get patient vitals for one patient by ICN
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATVITI^SYNDHP01(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  -----------------------------------------------
@@ -255,7 +241,6 @@ PATHLF ; get patient health factors for one patient
  D PARSETRAITS
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATHLF^SYNDHP09(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  --------------------------------------------
@@ -269,7 +254,6 @@ PATHLFI ; get patient health factors for one patient
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATHLFI^SYNDHP09(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  -------------------------------------------
@@ -283,7 +267,6 @@ PATPRC ; get patient procedures for one patient
  D PARSETRAITS
  F I="FRDAT","TODAT" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATPRC^SYNDHP04(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER,DHPFRDAT,DHPTODAT)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ----------------------------------------
@@ -297,7 +280,6 @@ PATPRCI ; get patient procedures for one patient
  D PARSEICN
  F I="FRDAT","TODAT" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATPRCI^SYNDHP04(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------
@@ -311,7 +293,6 @@ PATALLI ; get patient allergies for one patient by ICN
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATALLI^SYNDHP57(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  -----------------------------------------------
@@ -325,7 +306,6 @@ PATDXREP ; get patient diagnostic report for one patient by ICN
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATDXRI^SYNDHP05(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  -------------------------------------
@@ -339,7 +319,6 @@ PATLAB ; get patient labs for one patient
  D PARSETRAITS
  F I="FRDAT","TODAT" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATLAB^SYNDHP53(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER,DHPFRDAT,DHPTODAT)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ----------------------------------
@@ -353,7 +332,6 @@ PATLABI ; get patient labs for one patient
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATLABI^SYNDHP53(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  -------------------------------------------
@@ -367,7 +345,6 @@ PATPRVI ; get patient encounter providers for one patient
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATPRVI^SYNDHP54(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;  ------------------------------------------
  ;  Patient Appointments by ICN bridge routine
@@ -380,7 +357,6 @@ PATAPTI ; get patient appointments for one patient
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATAPTI^SYNDHP41(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  -----------------------------------
@@ -394,7 +370,6 @@ PATFLGI ; get patient flags for one patient
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATFLGI^SYNDHP08(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------------
@@ -408,7 +383,6 @@ PATIMMI ; get patient immunizations for one patient
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATIMMI^SYNDHP02(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------------
@@ -422,7 +396,6 @@ PATGOLI ; get patient goals for one patient
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATGOLI^SYNDHP07(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;
@@ -437,7 +410,6 @@ PATOBS ; get patient observations for one patient
  D PARSETRAITS
  F I="FRDAT","TODAT" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATOBS^SYNDHP56(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER,DHPFRDAT,DHPTODAT)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------------
@@ -451,7 +423,6 @@ PATOBSI ; get patient observations for one patient
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATOBSI^SYNDHP56(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------------
@@ -464,7 +435,6 @@ CARETEAM ; get one care team
  ;
  F I="TEAM","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D GETTEAM^SYNDHP58(.RETSTA,DHPTEAM,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------------
@@ -477,7 +447,6 @@ CARETEAMS ; get all care teams
  ;
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D GETTEAMS^SYNDHP58(.RETSTA,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------------
@@ -491,7 +460,6 @@ PATCPALL ; get all care plans
  D PARSETRAITS
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATCPALL^SYNDHP59(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------------
@@ -504,7 +472,6 @@ PATCPALLI ; get all care plans for a patient
  ;
  F I="ICN","FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATCPALLI^SYNDHP59(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  --------------------------------------------------------
@@ -518,7 +485,6 @@ PATCP ; get one care plan for a patient
  D PARSETRAITS
  F I="VRESID","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATCP^SYNDHP59(.RETSTA,DHPNAME,DHPSSN,DHPDOB,DHPGENDER,DHPVRESID,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  --------------------------------------------------------
@@ -531,7 +497,6 @@ PATCPI ; get one care plan for a patient
  ;
  F I="ICN","VRESID","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATCPI^SYNDHP59(.RETSTA,DHPICN,DHPVRESID,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ----------------------------------------------
@@ -544,7 +509,6 @@ HLOCINST ; get institution information for hospital location name
  ;
  D PARSEHLC
  D HOSINSTI^SYNDHP06(.RETSTA,DHPHLOC,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
 PARSEHLC ; Hospital Location Name PARSER
@@ -563,7 +527,6 @@ PATTIUI ; get patient notes for one patient by ICN
  D PARSEICN
  F I="FRDAT","TODAT","JSON" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D PATTIUI^SYNDHP67(.RETSTA,DHPICN,DHPFRDAT,DHPTODAT,DHPJSON)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  --------------------------------------------------
@@ -576,7 +539,6 @@ GETRESID ; get record specified by resource ID
  ;
  F I="RESID" S @("DHP"_I)=$$GETPARAM^RGNETWWW(I)
  D GETREC^SYNDHP99(.RETSTA,DHPRESID)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------------
@@ -589,7 +551,6 @@ MAPSVC ; get mapped code for a given source and code
  ;
  D PARSEMAP
  D MAPSVC^SYNDHP83(.RETSTA,DHPMAP,DHPCODE,DHPDIR,DHPIOE)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  ---------------------------------------------
@@ -602,7 +563,6 @@ SYSFAC ; get system facility  suffix parameter
  ;
  S DHPFAC="DHP"_$$GETPARAM^RGNETWWW(1)
  D GETFACID^SYNDHP69(.RETSTA,DHPFAC)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
 LOGRST ; expunge VPRHTTP("log"
@@ -610,7 +570,6 @@ LOGRST ; expunge VPRHTTP("log"
  ;   DHPVPRLOGRST
  ;
  D LOGRST^SYNDHP69(.RETSTA)
- D ADD^RGNETWWW(RETSTA_$C(13,10))
  Q
  ;
  ;  -------------------------------------
