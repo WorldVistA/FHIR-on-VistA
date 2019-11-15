@@ -1,5 +1,5 @@
 SYNDHP03 ; HC/rbd/art - HealthConcourse - get patient condition/problem data ;2019-11-04  5:54 PM
- ;;1.0;DHP;;Jan 17, 2017
+ ;;1.0;DHP;;Jan 17, 2017;Build 51
  ;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
  ; (c) 2017-2019 Perspecta
@@ -104,6 +104,7 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  N QCATEGORY
  I $D(HTTPARGS("category")) D  I $G(HTTPERR) QUIT
  . S QCATEGORY=HTTPARGS("category")
+ . I QCATEGORY["|" S QCATEGORY=$P(QCATEGORY,"|",2)
  . I QCATEGORY'["problem",QCATEGORY'["encounter" D ERRMSG^SYNDHPUTL(400,"Invalid Category") QUIT
  ;
  ; Clinical Status
@@ -111,6 +112,7 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  N QCLINSTATUS
  I $D(HTTPARGS("clinical-status")) D  I $G(HTTPERR) QUIT
  . S QCLINSTATUS=HTTPARGS("clinical-status")
+ . I QCLINSTATUS["|" S QCLINSTATUS=$P(QCLINSTATUS,"|",2)
  . I "^active^recurrence^inactive^remission^resolved^"'[(U_QCLINSTATUS_U) D ERRMSG^SYNDHPUTL(400,"Invalid Clinical Status") QUIT
  . ; VistA does not have recurrence and remission, so we will switch these to active and resolved.
  . I QCLINSTATUS="recurrence" S QCLINSTATUS="active"
@@ -171,6 +173,7 @@ PATCONI(RETSTA,DHPICN,FRDAT,TODAT,RETJSON) ; Patient conditions for ICN
  . ;
  . ; Filters
  . I $G(SYNDEBUG),$D(QONSET) W QONSET," ",ONSET," ",FRDAT," ",TODAT
+ . I $D(QONSET),'ONSET QUIT  ; Onset filter but no onset date
  . I $D(QONSET),'$$RANGECK^SYNDHPUTL(ONSET,FRDAT,TODAT,QONSETREV) QUIT  ;quit if outside of requested date range
  . I $D(QCLINSTATUS),QCLINSTATUS'=STATUS QUIT
  . I $D(QCODE) N QUIT S QUIT=0 D  QUIT:QUIT
