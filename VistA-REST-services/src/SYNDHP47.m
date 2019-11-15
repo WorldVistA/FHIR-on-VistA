@@ -1,5 +1,5 @@
-SYNDHP47 ; HC/fjf/art - HealthConcourse - retrieve patient demographics ;2019-11-08  8:48 AM
- ;;1.0;DHP;;Jan 17, 2017
+SYNDHP47 ; HC/fjf/art - HealthConcourse - retrieve patient demographics ;2019-11-15  1:53 PM
+ ;;1.0;DHP;;Jan 17, 2017;Build 51
  ;;
  ;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -209,13 +209,16 @@ PATDEMAL(RETSTA,DHPICN,RETJSON) ; [PUBLIC URL] /DHPPATDEMALL? get demographics f
  N FN S FN=1
  ;
  ; If we have an identifier, don't sort on anything else. Figure this out and send it off.
- I $data(HTTPARGS("identifier")) do  do PRINT quit
+ I $data(HTTPARGS("identifier"))!($data(HTTPARGS("_id"))) do  do PRINT quit
+ . n id1
+ . i $data(HTTPARGS("identifier")) s id1=HTTPARGS("identifier")
+ . i $data(HTTPARGS("_id"))        s id1=HTTPARGS("_id")
  . n hasType,type,id
- . s hasType=HTTPARGS("identifier")["|"
- . i 'hasType s type="icn",id=HTTPARGS("identifier")
+ . s hasType=id1["|"
+ . i 'hasType s type="icn",id=id1
  . i hasType do
- .. n typeNote s typeNote=$p(HTTPARGS("identifier"),"|")
- .. s id=$p(HTTPARGS("identifier"),"|",2)
+ .. n typeNote s typeNote=$p(id1,"|")
+ .. s id=$p(id1,"|",2)
  .. i typeNote["icn"    s type="icn"
  .. e  i typeNote["dfn" s type="dfn"
  .. e  i typeNote["ssn" s type="ssn"
@@ -232,14 +235,19 @@ PATDEMAL(RETSTA,DHPICN,RETJSON) ; [PUBLIC URL] /DHPPATDEMALL? get demographics f
  S BY=".01"
  S FR(FN)="",TO(FN)=""
  ;
+ n z ; last character
+ n Y I $D(^DD("OS",^DD("OS"),"HIGHESTCHAR")) X ^("HIGHESTCHAR")
+ s z=$get(Y,"z")
+ ;
  ; Name or Last Name
  ; Reuse first level sort
  i $data(HTTPARGS("name"))!($data(HTTPARGS("family"))) do
  . n name
  . i $data(HTTPARGS("name"))   s name=HTTPARGS("name")
  . i $data(HTTPARGS("family")) s name=HTTPARGS("family")
+ . s name=$$UP^XLFSTR(name)
  . S FR(1)=name
- . S TO(1)=name_$get(^DD("OS",^DD("OS"),"HIGHESTCHAR"),"z")
+ . S TO(1)=name_z
  ;
  ; DOB
  I $data(HTTPARGS("birthdate")) do
@@ -268,8 +276,9 @@ PATDEMAL(RETSTA,DHPICN,RETJSON) ; [PUBLIC URL] /DHPPATDEMALL? get demographics f
  if $data(HTTPARGS("given")) do
  . S FN=FN+1
  . S BY=BY_",'@1.01:2"
- . S FR(FN)=HTTPARGS("given")
- . S TO(FN)=HTTPARGS("given")_$get(^DD("OS",^DD("OS"),"HIGHESTCHAR"),"z")
+ . n given s given=$$UP^XLFSTR(HTTPARGS("given"))
+ . S FR(FN)=given
+ . S TO(FN)=given_z
  ;
 PRINT ; [Fall through]
  ; Paging support SYNMAX and SYNSKIPTO
