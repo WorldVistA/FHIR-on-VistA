@@ -1,5 +1,5 @@
 SYNDHP48 ; HC/PWC/art - HealthConcourse - retrieve patient medication data ;2019-11-05  10:18 AM
- ;;1.0;DHP;;Jan 17, 2017
+ ;;1.0;DHP;;Jan 17, 2017;Build 43
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
  ;
@@ -151,6 +151,7 @@ STMUD ; [Private] /MedicationStatement Unit Dose
  .N EDTHL7 S EDTHL7=$$FMTHL7^XLFDT(EDTFM)      ; end date
  .N DRUG S DRUG=$$GET1^DIQ(55.07,1_C_IENS,.01,"E")  ; medication
  .N DRUGI S DRUGI=$$GET1^DIQ(55.07,1_C_IENS,.01,"I")
+ .I DRUGI="" QUIT  ; Bad data
  .N RXN,VUID S RXN=$$GETRXN^SYNDHPUTL(DRUGI)
  .I RXN S RXN="RXN"_RXN
  .E  S VUID=$$GETVUID(DRUGI) I VUID S RXN="VUID"_VUID
@@ -194,6 +195,7 @@ STMOP ; [Private] /MedicationStatement Outpatient
  . N EDATE S EDATE=$$FMTHL7^XLFDT(EDATEFM)           ;end date hl7
  . N DRUG S DRUG=$G(MEDX(52,RX_",",6,"E"))           ;medication
  . N DRUGI S DRUGI=$G(MEDX(52,RX_",",6,"I"))
+ . I DRUGI="" QUIT  ; Bad data
  . N RXN,VUID S RXN=$$GETRXN^SYNDHPUTL(DRUGI)
  . I RXN S RXN="RXN"_RXN
  . E  S VUID=$$GETVUID(DRUGI) I VUID S RXN="VUID"_VUID
