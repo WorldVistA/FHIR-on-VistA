@@ -1,4 +1,4 @@
-SYNDHPMP ; AFHIL/FJF - HealthConcourse - terminology mapping ;2019-10-17  11:18 AM
+SYNDHPMP ; AFHIL/FJF - HealthConcourse - terminology mapping ;2019-11-19  8:55 AM
  ;;0.3;VISTA SYNTHETIC DATA LOADER;;Jul 01, 2019;Build 1
  ;;
  ;;Original routine authored by Andrew Thompson & Ferdinand Frankson of Perspecta 2017-2019
@@ -153,9 +153,9 @@ T3V ;
  D DECODE^XLFJSON("MAPMV","MAPMVO")
  ;
  W !,URLSV,!!
- ZW MAPSVO
+ ZWRITE MAPSVO
  w !!,URLMV,!!
- ZW MAPMVO
+ ZWRITE MAPMVO
  ;
  Q
  ;
@@ -181,9 +181,9 @@ T4V ;
  D DECODE^XLFJSON("MAPMV","MAPMVO")
  ;
  W !,URLSV,!!
- ZW MAPSVO
+ ZWRITE MAPSVO
  w !!,URLMV,!!
- ZW MAPMVO
+ ZWRITE MAPMVO
  ;
  Q
 T5 ; new server (vista2) tests
@@ -230,4 +230,3 @@ RMS(JSONA) ; convert numeric string to a number
  .S VALUE=+VALUE
  .S @N=VALUE
  Q
-
