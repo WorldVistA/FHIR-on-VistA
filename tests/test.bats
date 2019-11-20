@@ -10,6 +10,13 @@
   [ "$result" -eq 100 ]
 }
 
+@test "/api/Patient patients on next page different from previous" {
+  family1=$(curl -s localhost:8080/api/Patient | jq -r '.entry[0].resource.name[0].family')
+  next=$(curl -s localhost:8080/api/Patient | jq -r '.link[] | select(.relation == "next").url')
+  family2=$(curl -s $next | jq -r '.entry[0].resource.name[0].family')
+  [ "$family1" != "$family2" ]
+}
+
 @test "/api/Patient paging prev page works" {
   prev=$(curl -s localhost:8080/api/Patient?_page=3 | jq -r '.link[] | select(.relation == "previous").url')
   result=$(curl -s $prev | jq '.entry | length')
@@ -39,7 +46,32 @@
   [ "$result" == "Patient" ]
 }
 
-#@test "addition using dc" {
-#  result="$(echo 2 2+p | dc)"
-#  [ "$result" -eq 4 ]
-#}
+@test "/api/Patient?gender=female works {
+  gender=$(curl -s localhost:8080/api/Patient?gender=female | jq -r '.entry[].resource.gender' | uniq)
+  [ "$gender" == "female" ]
+}
+
+@test "/api/Patient?birthdate=1933 will return >=3 patients, but not 100" {
+  n=$(curl -s localhost:8080/api/Patient?birthdate=1933 | jq -r '.entry | length')
+  [ "$n" -ge 3 ]
+  [ "$n" -lt 100 ]
+}
+
+@test "/api/Patient?birthdate=1933-07 will return >=1 patients" {
+  n=$(curl -s localhost:8080/api/Patient?birthdate=1933-07 | jq -r '.entry | length')
+  [ "$n" -ge 1 ]
+}
+
+@test "/api/Patient?birthdate=1933-07-04 will return >=1 patients" {
+  n=$(curl -s localhost:8080/api/Patient?birthdate=1933-07-04 | jq -r '.entry | length')
+  [ "$n" -ge 1 ]
+}
+
+#    http://localhost:8080/api/Patient?name=AB - Get patients whose lastname,firstname begins with AB
+#    http://localhost:8080/api/Patient?family=AB - Same as name
+#    http://localhost:8080/api/Patient?given=AB - Get patients whose firstname begins with AB
+#    http://localhost:8080/api/Patient?birthdate=2009&family=D&given=K&gender=male&_count=10&_page=2 - Can combine mulitple conditions and paging
+#    http://localhost:8080/api/Patient?identifier=urn:dxc:vista:ICN%7C2740702627V766080 - Get single patient with ICN of 2740702627V766080
+#    http://localhost:8080/api/Patient?identifier=urn:dxc:vista:dfn%7C1 - Get single patient with DFN of 1
+#    http://localhost:8080/api/Patient?identifier=http://hl7.org/fhir/sid/us-ssn%7C999969252 -  Get single patient with SSN of 999969252
+
