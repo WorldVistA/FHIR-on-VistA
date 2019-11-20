@@ -23,12 +23,12 @@
   [ "$result" -eq 100 ]
 }
 
-@test "/api/Patient _count will limit count" {
+@test "/api/Patient?_count=20 will limit count" {
   result=$(curl -s localhost:8080/api/Patient?_count=20 | jq '.entry | length')
   [ "$result" -eq 20 ]
 }
 
-@test "/api/Patient _count next will retain _count" {
+@test "/api/Patient?_count=20 next will retain _count" {
   next=$(curl -s localhost:8080/api/Patient?_count=20 | jq -r '.link[] | select(.relation == "next").url')
   result=$(curl -s $next | jq '.entry | length')
   [ "$result" -eq 20 ]
@@ -67,11 +67,40 @@
   [ "$n" -ge 1 ]
 }
 
-#    http://localhost:8080/api/Patient?name=AB - Get patients whose lastname,firstname begins with AB
-#    http://localhost:8080/api/Patient?family=AB - Same as name
-#    http://localhost:8080/api/Patient?given=AB - Get patients whose firstname begins with AB
-#    http://localhost:8080/api/Patient?birthdate=2009&family=D&given=K&gender=male&_count=10&_page=2 - Can combine mulitple conditions and paging
-#    http://localhost:8080/api/Patient?identifier=urn:dxc:vista:ICN%7C2740702627V766080 - Get single patient with ICN of 2740702627V766080
-#    http://localhost:8080/api/Patient?identifier=urn:dxc:vista:dfn%7C1 - Get single patient with DFN of 1
-#    http://localhost:8080/api/Patient?identifier=http://hl7.org/fhir/sid/us-ssn%7C999969252 -  Get single patient with SSN of 999969252
+@test "/api/Patient?name=ehmp will return >=15 patients" {
+  n=$(curl -s localhost:8080/api/Patient?name=ehmp | jq -r '.entry | length')
+  [ "$n" -ge 15 ]
+  [ "$n" -lt 100 ]
+}
 
+@test "/api/Patient?family=ehmp same as ?name" {
+  n=$(curl -s localhost:8080/api/Patient?name=ehmp | jq -r '.entry | length')
+  [ "$n" -ge 15 ]
+  [ "$n" -lt 100 ]
+}
+
+@test "/api/Patient?given=s will return some results" {
+  n=$(curl -s localhost:8080/api/Patient?given=s | jq -r '.entry | length')
+  [ "$n" -gt 0 ]
+  [ "$n" -lt 100 ]
+}
+
+@test "/api/Patient?family=ehmp&birthdate=1960&_count=5&page=2 works" {
+  n=$(curl -s 'localhost:8080/api/Patient?family=ehmp&birthdate=1960&_count=5&_page=2' | jq -r '.entry | length')
+  [ "$n" -eq 5 ]
+}
+
+@test "/api/Patient?identifier=urn:dxc:vista:ICN|5000000367V135883 works {
+  n=$(curl -s 'localhost:8080/api/Patient?identifier=urn:dxc:vista:ICN%7C5000000367V135883' | jq -r '.entry | length')
+  [ "$n" -eq 1 ]
+}
+
+@test "/api/Patient?identifier=urn:dxc:vista:dfn|1 works {
+  n=$(curl -s 'localhost:8080/api/Patient?identifier=urn:dxc:vista:dfn%7C1' | jq -r '.entry | length')
+  [ "$n" -eq 1 ]
+}
+
+@test "/api/Patient?identifier=http://hl7.org/fhir/sid/us-ssn|666110006 works {
+  n=$(curl -s 'localhost:8080/api/Patient?identifier=http://hl7.org/fhir/sid/us-ssn%7C666110006' | jq -r '.entry | length')
+  [ "$n" -eq 1 ]
+}
