@@ -21,7 +21,7 @@ you have started the 2 containers, visit `localhost:8080/api/Patient` to get a l
 patients.
 
 ## VistA REST API
-The REST services use the RGNET web server to return data as either delimited text or JSON.
+The REST services use the M web server to return data as either delimited text or JSON.
 
 [VistA REST API Implementation](VistA-REST-services/docs/ReadMe.md)
 
