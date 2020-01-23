@@ -1,18 +1,19 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.service;
 
@@ -25,6 +26,7 @@ import com.healthconcourse.vista.fhir.api.vista.VistaData;
 import org.hl7.fhir.dstu3.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -53,16 +55,6 @@ public class VistaPatientService implements PatientService {
     }
 
     @Override
-    public List<Patient> findPatient(String name, Date dob, String ssn, Enumerations.AdministrativeGender gender) {
-
-        String httpBody = service.getPatientData(name, ssn, dob, gender);
-
-        PatientParser parser = new PatientParser();
-
-        return parser.parseListFromSinglePatient(httpBody);
-    }
-
-    @Override
     public List<Patient> getAllPatients() {
         String httpBody = service.getAllPatients();
 
@@ -87,7 +79,7 @@ public class VistaPatientService implements PatientService {
     public List<Encounter> getEncountersForPatient(String code) {
 
         List<Encounter> results = new ArrayList<>();
-        HashMap<String, List<Provider>> providerData = new HashMap();
+        Map<String, List<Provider>> providerData = new HashMap<>();
 
         CompletableFuture<List<Encounter>> encounterFetcher = CompletableFuture.supplyAsync(() -> service.getEncountersByPatient(code))
                 .thenApply(httpBody -> {
@@ -132,43 +124,75 @@ public class VistaPatientService implements PatientService {
 
         CompletableFuture.allOf(encounterFetcher, practitionerFetcher).join();
 
-        for (Encounter encounter : results) {
-            List<Provider> providers = providerData.get(parseEncounterId(encounter.getId()));
-            if (providers != null) {
-                for (Provider item : providers) {
-                    encounter.addParticipant(getParticipant(item));
-                }
-            }
-        }
+        updateParticipants(results, providerData);
 
         return results;
     }
 
-    private Encounter.EncounterParticipantComponent getParticipant(Provider provider) {
+    /**
+     * Check the participants already assigned to the encounter against the participants returned from VistA
+     *  - Update the found records with primary/secondary
+     *  - Add the new ones
+     * @param encounters The list of encounters
+     * @param providerData The list of practitioners (Providers here)
+     */
+    private static void updateParticipants (List<Encounter> encounters, Map<String, List<Provider>> providerData) {
+        for (Encounter encounter : encounters) {
+            String encounterId = encounter.getId();
+            List<Provider> providers = providerData.get(encounterId);
+            if (providers != null) {
+                for (Provider item : providers) {
+                    Optional<Encounter.EncounterParticipantComponent> foundParticipant = findParticipant(encounter, item.getVistaId());
+                    if (foundParticipant.isPresent()) {
+                        if (item.isPrimary()) {
+                            foundParticipant.get().setType(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.PARTICIPANT_CODING_SYSTEM, "PPRF", "primary performer"));
+                        } else {
+                            foundParticipant.get().setType(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.PARTICIPANT_CODING_SYSTEM, "SPRF", "secondary performer"));
+                        }
+                    } else {
+                        encounter.addParticipant(createParticipant(item));
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Find an existing participant on an Encounter
+     *
+     * @param encounter List of encounters
+     * @param id The ID of the provider to check
+     * @return An existing record if found
+     */
+    private static Optional<Encounter.EncounterParticipantComponent> findParticipant (Encounter encounter, String id) {
+        for (Encounter.EncounterParticipantComponent component : encounter.getParticipant()) {
+            if (!StringUtils.isEmpty(component.getId())) {
+                if (component.getId().equalsIgnoreCase(id)) {
+                    return Optional.of(component);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Create a new participant for an encounter
+     *
+     * @param provider The raw practitioner data
+     * @return A new participant
+     */
+    private static Encounter.EncounterParticipantComponent createParticipant(Provider provider) {
 
         Encounter.EncounterParticipantComponent participant = new Encounter.EncounterParticipantComponent();
-        participant.setIndividual(ResourceHelper.createReference(HcConstants.URN_VISTA_PROVIDER, provider.getVistaId(), provider.getName(), ResourceHelper.ReferenceType.PractitionerRole));
+        participant.setIndividual(ResourceHelper.createReference(HcConstants.URN_VISTA_PROVIDER, provider.getVistaId(), provider.getName(), ResourceHelper.ReferenceType.Practitioner));
 
-        if (provider.getRole().equalsIgnoreCase("Physician")) {
+        if (provider.isPrimary()) {
             participant.setType(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.PARTICIPANT_CODING_SYSTEM, "PPRF", "primary performer"));
-        } else if (provider.getRole().equalsIgnoreCase("NURSE")) {
-            participant.setType(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.PARTICIPANT_CODING_SYSTEM, "SPRF", "secondary performer"));
         } else {
-            LOG.debug(provider.getRole());
-            participant.setType(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.PARTICIPANT_CODING_SYSTEM, "PART", "Participation"));
+            participant.setType(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.PARTICIPANT_CODING_SYSTEM, "SPRF", "secondary performer"));
         }
 
         return participant;
-    }
-
-    private String parseEncounterId(String encounterId) {
-
-        String[] parts = encounterId.split("_");
-        if (parts.length == 3) {
-            return parts[2];
-        }
-
-        return encounterId;
     }
 
     @Override
@@ -249,16 +273,6 @@ public class VistaPatientService implements PatientService {
     }
 
     @Override
-    public List<Observation> getObservationsByIcnAndCode(String id, String code) {
-
-        String httpBody = service.getObservationsByIcnAndCode(id, code);
-
-        ObservationParser parser = new ObservationParser();
-
-        return parser.parseVitalsList(httpBody);
-    }
-
-    @Override
     public List<MedicationStatement> getMedicationStatement(String patientIcn) {
 
         String httpBody = service.getMedicationStatement(patientIcn);
@@ -271,7 +285,7 @@ public class VistaPatientService implements PatientService {
     @Override
     public List<MedicationDispense> getMedicationDispense(String patientIcn) {
 
-        String httpBody = service.getMedicationAdministration(patientIcn);
+        String httpBody = service.getMedicationDispense(patientIcn);
 
         MedicationParser parser = new MedicationParser();
 
@@ -383,6 +397,12 @@ public class VistaPatientService implements PatientService {
         return parser.parseList(httpBody);
     }
 
+    /**
+     * The $everything handler
+     *
+     * @param patientIcn The ID of the patient
+     * @return All the resources
+     */
     @Override
     public List<DomainResource> getEverything(String patientIcn) {
 

@@ -1,18 +1,19 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.provider;
 
@@ -23,10 +24,7 @@ import ca.uhn.fhir.rest.annotation.*;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.api.Constants;
 import ca.uhn.fhir.rest.param.DateParam;
-import ca.uhn.fhir.rest.param.DateRangeParam;
-import ca.uhn.fhir.rest.param.StringParam;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.service.PatientService;
 import com.healthconcourse.vista.fhir.api.service.VistaPatientService;
 import com.healthconcourse.vista.fhir.api.vista.VistaData;
@@ -152,15 +150,11 @@ public class PatientProvider extends AbstractJaxRsResourceProvider<Patient> {
     }
 
     @Search(compartmentName = "Observation")
-    public List<Observation> findObservations(@IdParam IdType theIdn, @OptionalParam(name = Observation.SP_CODE) final StringParam code) {
+    public List<Observation> findObservations(@IdParam IdType theIdn) {
 
         List<Observation> results;
 
-        if(code == null) {
-            results = service.getObservationsByIcn(theIdn.getIdPart());
-        } else {
-            results = service.getObservationsByIcnAndCode(theIdn.getIdPart(), code.getValue());
-        }
+        results = service.getObservationsByIcn(theIdn.getIdPart());
 
         if(results.isEmpty()) {
             String message = "No observations found for ICN: " + theIdn.getIdPart();

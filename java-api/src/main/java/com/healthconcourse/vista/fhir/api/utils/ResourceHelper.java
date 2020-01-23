@@ -1,18 +1,19 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.utils;
 
@@ -20,6 +21,7 @@ import com.healthconcourse.vista.fhir.api.HcConstants;
 import org.hl7.fhir.dstu3.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -33,9 +35,13 @@ public class ResourceHelper {
 
     public enum ReferenceType {
         Patient,
-        PractitionerRole,
         Practitioner,
         Location,
+        Condition,
+        Organization,
+        Procedure,
+        Encounter,
+        Medication,
         None
     }
 
@@ -80,9 +86,6 @@ public class ResourceHelper {
             case Patient:
                 reference.setReference(String.format("/Patient/%s", id));
                 break;
-            case PractitionerRole:
-                reference.setReference(String.format("/PractitionerRole/%s", id));
-                break;
             case Practitioner:
                 reference.setReference(String.format("/Practitioner/%s", id));
                 break;
@@ -92,6 +95,21 @@ public class ResourceHelper {
                 } catch (Exception ex) {
                     LOG.error("Unable to encode url", ex);
                 }
+                break;
+            case Condition:
+                reference.setReference(String.format("/Condition/%s", id));
+                break;
+            case Organization:
+                reference.setReference(String.format("/Organization/%s", id));
+                break;
+            case Procedure:
+                reference.setReference(String.format("/Procedure/%s", id));
+                break;
+            case Encounter:
+                reference.setReference(String.format("/Encounter/%s", id));
+                break;
+            case Medication:
+                reference.setReference(String.format("/Medication/%s", id));
                 break;
             case None:
                 break;
@@ -141,11 +159,15 @@ public class ResourceHelper {
      */
     public static CodeableConcept createCodeableConcept(String system, String codeId, String display) {
         CodeableConcept concept = new CodeableConcept();
-        Coding code = new Coding();
-        code.setSystem(system);
-        code.setCode(codeId);
-        code.setDisplay(display);
-        concept.addCoding(code);
+        if (StringUtils.isEmpty(system)) {
+            concept.setText(display);
+        } else {
+            Coding code = new Coding();
+            code.setSystem(system);
+            code.setCode(codeId);
+            code.setDisplay(display);
+            concept.addCoding(code);
+        }
         return concept;
     }
 
@@ -175,6 +197,7 @@ public class ResourceHelper {
         Coding code = new Coding();
         code.setSystem(HcConstants.URN_VISTA_SOURCE);
         code.setDisplay("VistA");
+        code.setCode("HC-002");
         result.addTag(code);
         return result;
     }

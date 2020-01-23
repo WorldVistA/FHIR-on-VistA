@@ -1,6 +1,6 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
+(c) 2017-2020 Perspecta
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ buildscript {
 }
 
 plugins {
-    id "org.springframework.boot" version "2.1.4.RELEASE"
+    id "org.springframework.boot" version "2.1.8.RELEASE"
 }
 
 apply plugin: 'java'
@@ -41,7 +41,7 @@ targetCompatibility = 1.8
 compileJava.options.encoding = 'UTF-8'
 
 // Current Project's version
-version = "1.0.0"
+version = "1.1.0"
 
 // Project's description
 description = 'FHIR VistA Services' + version
@@ -51,22 +51,25 @@ repositories {
 
 }
 
-def springVersion = '4.3.6.RELEASE'
-def springBootVersion = '2.1.4.RELEASE'
-def hapiVersion = '3.7.0'
+def springBootVersion = '2.1.8.RELEASE'
+def hapiVersion = '3.8.0'
 
 dependencies {
 
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
+    // implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: springBootVersion
     implementation group: 'ca.uhn.hapi.fhir', name: 'hapi-fhir-structures-dstu3', version: hapiVersion
     implementation group: 'ca.uhn.hapi.fhir', name: 'hapi-fhir-jaxrsserver-base', version: hapiVersion
-    implementation group: 'org.springframework', name: 'spring-web', version: springVersion
-    implementation group: 'org.thymeleaf', name: 'thymeleaf', version:'3.0.2.RELEASE'
     implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version:'2.0.1'
-    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.8.1'
-    implementation group: 'com.jayway.jsonpath', name: 'json-path', version: '2.4.0'
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.14.4'
+    implementation group: 'com.nfeld.jsonpathlite', name: 'json-path-lite', version: '1.1.0'
+    implementation group: 'org.json', name: 'json', version: '20180813'
+
+    // The following two dependencies should not need to be here, they should be a transitive dependency of Hapi but they don't load
+    implementation group: 'org.thymeleaf', name: 'thymeleaf', version:'3.0.2.RELEASE'
+    implementation group: 'com.github.ben-manes.caffeine', name: 'caffeine', version: '2.7.0'
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
-    testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '3.8.1'
+    testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '3.14.4'
     testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion
 }

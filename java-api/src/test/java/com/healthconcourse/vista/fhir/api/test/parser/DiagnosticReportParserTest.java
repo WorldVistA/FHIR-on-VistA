@@ -1,43 +1,60 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.test.parser;
 
 import com.healthconcourse.vista.fhir.api.parser.DiagnosticReportParser;
+import org.hl7.fhir.dstu3.model.DateTimeType;
 import org.hl7.fhir.dstu3.model.DiagnosticReport;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 public class DiagnosticReportParserTest {
 
     @Test
-    public void TestSuccesfulDiagnosticReportParse() {
-        String input = "5000001534V744140^IMG|unknown|20141229|PROGRAMMER,FIVE|442_74_596|CLINICAL HISTORY: Dyspnea and orthopnea. FINDINGS: LUNGS: diffuse opacities noted in bases bilaterally; most consistent withpulmonary edema. BONES: no fracture dislocation or abnormal lesions noted.MEDIASTINUM: normal width and contour. IMPRESSION: Exam most consistent with diffuse pulmonary edema.^IMG|unknown|20141229|PROGRAMMER,FIVE|442_74_597|EXAM: Transthoracic Echocardiogram CLINICAL HISTORY: Dyspnea and orthopnea. FINDINGS: VALVES: No stenosis or regurgitation noted. CHAMBERS: Both atria demonstrate normal size and movement.  The  right ventricle demonstrates normal size and function.  The Left ventricle is hypertrophic.  LVEF is estimated at 60%.   IMPRESSION: LVH with preserved LVEF of 60%.";
+    public void TestSuccessfulDiagnosticReportParse() throws ParseException {
+        String input = "{ \"DxReportRad\": [ { \"RadExam\": { \"EnteringUser\": \"PROGRAMMER,FIVE\", \"ExamDateFHIR\": \"2014-12-29T11:58:00-05:00\", \"ExamDateFM\": 3141229.1158, \"ExamDateHL7\": \"201412291158-0500\", \"caseNbr\": 60, \"category\": \"\", \"patientId\": 100881, \"primaryDiagnosis\": \"ABNORMALITY, ATTN. NEEDED\", \"primaryDiagnosisSCT\": \"\", \"primaryInterpretingResident\": \"\", \"primaryInterpretingStaff\": \"RADIOLOGIST,ONE\", \"procedure\": \"ECHOCARDIOGRAM REAL-TIME COMPLETE\", \"procedureCPT\": \"\", \"procedureId\": 493, \"procedureSCT\": \"\", \"requestingPhysician\": \"PROVIDER,THIRTY\", \"resourceId\": \"V-500-70-100881-70.02-6858770.8841-70.03-1\", \"resourceType\": \"DiagnosticReport\", \"status\": \"final\", \"visitDateFHIR\": \"\", \"visitDateFM\": \"\", \"visitDateHL7\": \"\" }, \"RadReport\": { \"conclusion\": \"EXAM: Transthoracic Echocardiogram CLINICAL HISTORY: Dyspnea and orthopnea. FINDINGS: VALVES: No stenosis or regurgitation noted. CHAMBERS: Both atria demonstrate normal size and movement.  The  right ventricle demonstrates normal size and function.  The Left ventricle is hypertrophic.  LVEF is estimated at 60%.   IMPRESSION: LVH with preserved LVEF of 60%.\", \"dateTimeFHIR\": \"2014-12-29T11:58:00-05:00\", \"dateTimeFM\": 3141229.1158, \"dateTimeHL7\": \"201412291158-0500\", \"dayCase\": \"060315-60\", \"impression\": \"IMPRESSION: LVH with preserved LVEF of 60%.\", \"resourceId\": \"V-500-74-597\", \"status\": \"VERIFIED\", \"statusId\": \"V\", \"verifyingPhysicianId\": 119, \"verifyingPhysicianName\": \"PROGRAMMER,FIVE\" } }, { \"RadExam\": { \"EnteringUser\": \"PROGRAMMER,FIVE\", \"ExamDateFHIR\": \"2014-12-29T11:46:00-05:00\", \"ExamDateFM\": 3141229.1146, \"ExamDateHL7\": \"201412291146-0500\", \"caseNbr\": 59, \"category\": \"\", \"patientId\": 100881, \"primaryDiagnosis\": \"ABNORMALITY, ATTN. NEEDED\", \"primaryDiagnosisSCT\": \"\", \"primaryInterpretingResident\": \"\", \"primaryInterpretingStaff\": \"RADIOLOGIST,ONE\", \"procedure\": \"CHEST 2 VIEWS PA&LAT\", \"procedureCPT\": \"\", \"procedureId\": 58, \"procedureSCT\": \"\", \"requestingPhysician\": \"PROVIDER,THIRTY\", \"resourceId\": \"V-500-70-100881-70.02-6858770.8853-70.03-1\", \"resourceType\": \"DiagnosticReport\", \"status\": \"final\", \"visitDateFHIR\": \"\", \"visitDateFM\": \"\", \"visitDateHL7\": \"\" }, \"RadReport\": { \"conclusion\": \"CLINICAL HISTORY: Dyspnea and orthopnea. FINDINGS: LUNGS: diffuse opacities noted in bases bilaterally; most consistent withpulmonary edema. BONES: no fracture dislocation or abnormal lesions noted.MEDIASTINUM: normal width and contour. IMPRESSION: Exam most consistent with diffuse pulmonary edema.\", \"dateTimeFHIR\": \"2014-12-29T11:46:00-05:00\", \"dateTimeFM\": 3141229.1146, \"dateTimeHL7\": \"201412291146-0500\", \"dayCase\": \"060315-59\", \"impression\": \"IMPRESSION: Exam most consistent with diffuse pulmonary edema.\", \"resourceId\": \"V-500-74-596\", \"status\": \"VERIFIED\", \"statusId\": \"V\", \"verifyingPhysicianId\": 119, \"verifyingPhysicianName\": \"PROGRAMMER,FIVE\" } } ], \"DxReportVisit\": [ { \"V POV\": { \"agentOrangeExposure\": \"\", \"agentOrangeExposureCd\": \"\", \"auditTrail\": \"19-A 989;\", \"clinicalTerm\": \"Diabetes Mellitus without mention of Complication, type II or unspecified type, not stated as Uncontrolled\", \"clinicalTermId\": 331779, \"combatVeteran\": \"\", \"combatVeteranCd\": \"\", \"comments\": \"\", \"dataSource\": \"TEXT INTEGRATION UTILITIES\", \"dataSourceId\": 19, \"dateOfInjury\": \"\", \"dateOfInjuryFHIR\": \"\", \"dateOfInjuryFM\": \"\", \"dateOfInjuryHL7\": \"\", \"editedFlag\": \"\", \"editedFlagCd\": \"\", \"encounterProvider\": \"\", \"encounterProviderId\": \"\", \"encounterProviderNPI\": \"\", \"eventDateAndTime\": \"\", \"eventDateAndTimeFHIR\": \"\", \"eventDateAndTimeFM\": \"\", \"eventDateAndTimeHL7\": \"\", \"headAndOrNeckCancer\": \"\", \"headAndOrNeckCancerCd\": \"\", \"icdNarrative\": \"DMII WO CMP NT ST UNCNTR\", \"ionizingRadiationExposure\": \"\", \"ionizingRadiationExposureCd\": \"\", \"mappedSource\": \"\", \"militarySexualTrauma\": \"\", \"militarySexualTraumaCd\": \"\", \"modifier\": \"\", \"modifierCd\": \"\", \"orderingProvider\": \"\", \"orderingProviderId\": \"\", \"orderingProviderNPI\": \"\", \"orderingResulting\": \"\", \"orderingResultingCd\": \"\", \"package\": \"ORDER ENTRY\\/RESULTS REPORTING\", \"packageId\": 170, \"patientICN\": \"5000001534V744140\", \"patientName\": \"HYPERTENSION,PATIENT FEMALE\", \"patientNameId\": 100881, \"pov\": \"250.00\", \"povDesc\": \"DMII WO CMP NT ST UNCNTR\", \"povId\": 8718, \"povSCT\": 313436004, \"primarySecondary\": \"SECONDARY\", \"primarySecondaryCd\": \"S\", \"problemListEntry\": \"\", \"problemListEntryId\": \"\", \"proj112Shad\": \"\", \"proj112ShadCd\": \"\", \"providerNarrative\": \"DM - Diabetes mellitus (SNOMED CT 73211009)\", \"providerNarrativeCategory\": \"\", \"providerNarrativeCategoryId\": \"\", \"providerNarrativeId\": 794, \"resourceId\": \"V-500-9000010.07-918\", \"resourceType\": \"DiagnosticReport\", \"serviceConnected\": \"\", \"serviceConnectedCd\": \"\", \"swAsiaConditions\": \"\", \"swAsiaConditionsCd\": \"\", \"verified\": \"\", \"verifiedCd\": \"\", \"visit\": \"JUN 30,2014@13:00\", \"visitFHIR\": \"2014-06-30T13:00:00-05:00\", \"visitFM\": 3140630.13, \"visitHL7\": \"201406301300-0500\", \"visitId\": 11541, \"vpovIen\": 918 } }, { \"V POV\": { \"agentOrangeExposure\": \"\", \"agentOrangeExposureCd\": \"\", \"auditTrail\": \"19-A 989;\", \"clinicalTerm\": \"Essential Hypertension\", \"clinicalTermId\": 186630, \"combatVeteran\": \"\", \"combatVeteranCd\": \"\", \"comments\": \"\", \"dataSource\": \"TEXT INTEGRATION UTILITIES\", \"dataSourceId\": 19, \"dateOfInjury\": \"\", \"dateOfInjuryFHIR\": \"\", \"dateOfInjuryFM\": \"\", \"dateOfInjuryHL7\": \"\", \"editedFlag\": \"\", \"editedFlagCd\": \"\", \"encounterProvider\": \"\", \"encounterProviderId\": \"\", \"encounterProviderNPI\": \"\", \"eventDateAndTime\": \"\", \"eventDateAndTimeFHIR\": \"\", \"eventDateAndTimeFM\": \"\", \"eventDateAndTimeHL7\": \"\", \"headAndOrNeckCancer\": \"\", \"headAndOrNeckCancerCd\": \"\", \"icdNarrative\": \"HYPERTENSION NOS\", \"ionizingRadiationExposure\": \"\", \"ionizingRadiationExposureCd\": \"\", \"mappedSource\": \"\", \"militarySexualTrauma\": \"\", \"militarySexualTraumaCd\": \"\", \"modifier\": \"\", \"modifierCd\": \"\", \"orderingProvider\": \"\", \"orderingProviderId\": \"\", \"orderingProviderNPI\": \"\", \"orderingResulting\": \"\", \"orderingResultingCd\": \"\", \"package\": \"ORDER ENTRY\\/RESULTS REPORTING\", \"packageId\": 170, \"patientICN\": \"5000001534V744140\", \"patientName\": \"HYPERTENSION,PATIENT FEMALE\", \"patientNameId\": 100881, \"pov\": 401.9, \"povDesc\": \"HYPERTENSION NOS\", \"povId\": 2477, \"povSCT\": 59621000, \"primarySecondary\": \"PRIMARY\", \"primarySecondaryCd\": \"P\", \"problemListEntry\": \"\", \"problemListEntryId\": \"\", \"proj112Shad\": \"\", \"proj112ShadCd\": \"\", \"providerNarrative\": \"Hypertension (SNOMED CT 38341003)\", \"providerNarrativeCategory\": \"\", \"providerNarrativeCategoryId\": \"\", \"providerNarrativeId\": 795, \"resourceId\": \"V-500-9000010.07-919\", \"resourceType\": \"DiagnosticReport\", \"serviceConnected\": \"\", \"serviceConnectedCd\": \"\", \"swAsiaConditions\": \"\", \"swAsiaConditionsCd\": \"\", \"verified\": \"\", \"verifiedCd\": \"\", \"visit\": \"JUN 30,2014@13:00\", \"visitFHIR\": \"2014-06-30T13:00:00-05:00\", \"visitFM\": 3140630.13, \"visitHL7\": \"201406301300-0500\", \"visitId\": 11541, \"vpovIen\": 919 } }, { \"V POV\": { \"agentOrangeExposure\": \"\", \"agentOrangeExposureCd\": \"\", \"auditTrail\": \"19-A 989;\", \"clinicalTerm\": \"Other and unspecified hyperlipidemia\", \"clinicalTermId\": 87281, \"combatVeteran\": \"\", \"combatVeteranCd\": \"\", \"comments\": \"\", \"dataSource\": \"TEXT INTEGRATION UTILITIES\", \"dataSourceId\": 19, \"dateOfInjury\": \"\", \"dateOfInjuryFHIR\": \"\", \"dateOfInjuryFM\": \"\", \"dateOfInjuryHL7\": \"\", \"editedFlag\": \"\", \"editedFlagCd\": \"\", \"encounterProvider\": \"\", \"encounterProviderId\": \"\", \"encounterProviderNPI\": \"\", \"eventDateAndTime\": \"\", \"eventDateAndTimeFHIR\": \"\", \"eventDateAndTimeFM\": \"\", \"eventDateAndTimeHL7\": \"\", \"headAndOrNeckCancer\": \"\", \"headAndOrNeckCancerCd\": \"\", \"icdNarrative\": \"HYPERLIPIDEMIA NEC\\/NOS\", \"ionizingRadiationExposure\": \"\", \"ionizingRadiationExposureCd\": \"\", \"mappedSource\": \"\", \"militarySexualTrauma\": \"\", \"militarySexualTraumaCd\": \"\", \"modifier\": \"\", \"modifierCd\": \"\", \"orderingProvider\": \"\", \"orderingProviderId\": \"\", \"orderingProviderNPI\": \"\", \"orderingResulting\": \"\", \"orderingResultingCd\": \"\", \"package\": \"ORDER ENTRY\\/RESULTS REPORTING\", \"packageId\": 170, \"patientICN\": \"5000001534V744140\", \"patientName\": \"HYPERTENSION,PATIENT FEMALE\", \"patientNameId\": 100881, \"pov\": 272.4, \"povDesc\": \"HYPERLIPIDEMIA NEC\\/NOS\", \"povId\": 954, \"povSCT\": \"\", \"primarySecondary\": \"SECONDARY\", \"primarySecondaryCd\": \"S\", \"problemListEntry\": \"\", \"problemListEntryId\": \"\", \"proj112Shad\": \"\", \"proj112ShadCd\": \"\", \"providerNarrative\": \"Hyperlipidemia (SNOMED CT 55822004)\", \"providerNarrativeCategory\": \"\", \"providerNarrativeCategoryId\": \"\", \"providerNarrativeId\": 796, \"resourceId\": \"V-500-9000010.07-920\", \"resourceType\": \"DiagnosticReport\", \"serviceConnected\": \"\", \"serviceConnectedCd\": \"\", \"swAsiaConditions\": \"\", \"swAsiaConditionsCd\": \"\", \"verified\": \"\", \"verifiedCd\": \"\", \"visit\": \"JUN 30,2014@13:00\", \"visitFHIR\": \"2014-06-30T13:00:00-05:00\", \"visitFM\": 3140630.13, \"visitHL7\": \"201406301300-0500\", \"visitId\": 11541, \"vpovIen\": 920 } }, { \"V POV\": { \"agentOrangeExposure\": \"\", \"agentOrangeExposureCd\": \"\", \"auditTrail\": \"19-A 988;\", \"clinicalTerm\": \"Diabetes Mellitus without mention of Complication, type II or unspecified type, not stated as Uncontrolled\", \"clinicalTermId\": 331779, \"combatVeteran\": \"\", \"combatVeteranCd\": \"\", \"comments\": \"\", \"dataSource\": \"TEXT INTEGRATION UTILITIES\", \"dataSourceId\": 19, \"dateOfInjury\": \"\", \"dateOfInjuryFHIR\": \"\", \"dateOfInjuryFM\": \"\", \"dateOfInjuryHL7\": \"\", \"editedFlag\": \"\", \"editedFlagCd\": \"\", \"encounterProvider\": \"\", \"encounterProviderId\": \"\", \"encounterProviderNPI\": \"\", \"eventDateAndTime\": \"\", \"eventDateAndTimeFHIR\": \"\", \"eventDateAndTimeFM\": \"\", \"eventDateAndTimeHL7\": \"\", \"headAndOrNeckCancer\": \"\", \"headAndOrNeckCancerCd\": \"\", \"icdNarrative\": \"DMII WO CMP NT ST UNCNTR\", \"ionizingRadiationExposure\": \"\", \"ionizingRadiationExposureCd\": \"\", \"mappedSource\": \"\", \"militarySexualTrauma\": \"\", \"militarySexualTraumaCd\": \"\", \"modifier\": \"\", \"modifierCd\": \"\", \"orderingProvider\": \"\", \"orderingProviderId\": \"\", \"orderingProviderNPI\": \"\", \"orderingResulting\": \"\", \"orderingResultingCd\": \"\", \"package\": \"ORDER ENTRY\\/RESULTS REPORTING\", \"packageId\": 170, \"patientICN\": \"5000001534V744140\", \"patientName\": \"HYPERTENSION,PATIENT FEMALE\", \"patientNameId\": 100881, \"pov\": \"250.00\", \"povDesc\": \"DMII WO CMP NT ST UNCNTR\", \"povId\": 8718, \"povSCT\": 313436004, \"primarySecondary\": \"PRIMARY\", \"primarySecondaryCd\": \"P\", \"problemListEntry\": \"\", \"problemListEntryId\": \"\", \"proj112Shad\": \"\", \"proj112ShadCd\": \"\", \"providerNarrative\": \"Diabetes mellitus (SCT 73211009)\", \"providerNarrativeCategory\": \"Problem List Items\", \"providerNarrativeCategoryId\": 372, \"providerNarrativeId\": 800, \"resourceId\": \"V-500-9000010.07-921\", \"resourceType\": \"DiagnosticReport\", \"serviceConnected\": \"\", \"serviceConnectedCd\": \"\", \"swAsiaConditions\": \"\", \"swAsiaConditionsCd\": \"\", \"verified\": \"\", \"verifiedCd\": \"\", \"visit\": \"NOV 25,2014@13:00\", \"visitFHIR\": \"2014-11-25T13:00:00-05:00\", \"visitFM\": 3141125.13, \"visitHL7\": \"201411251300-0500\", \"visitId\": 11542, \"vpovIen\": 921 } }, { \"V POV\": { \"agentOrangeExposure\": \"\", \"agentOrangeExposureCd\": \"\", \"auditTrail\": \"19-A 989;\", \"clinicalTerm\": \"Unspecified Diastolic Heart failure\", \"clinicalTermId\": 328595, \"combatVeteran\": \"\", \"combatVeteranCd\": \"\", \"comments\": \"\", \"dataSource\": \"TEXT INTEGRATION UTILITIES\", \"dataSourceId\": 19, \"dateOfInjury\": \"\", \"dateOfInjuryFHIR\": \"\", \"dateOfInjuryFM\": \"\", \"dateOfInjuryHL7\": \"\", \"editedFlag\": \"\", \"editedFlagCd\": \"\", \"encounterProvider\": \"PROVIDER,THIRTY\", \"encounterProviderId\": 1057, \"encounterProviderNPI\": \"\", \"eventDateAndTime\": \"\", \"eventDateAndTimeFHIR\": \"\", \"eventDateAndTimeFM\": \"\", \"eventDateAndTimeHL7\": \"\", \"headAndOrNeckCancer\": \"\", \"headAndOrNeckCancerCd\": \"\", \"icdNarrative\": \"UNSPEC DIASTOL HEART FAILURE\", \"ionizingRadiationExposure\": \"\", \"ionizingRadiationExposureCd\": \"\", \"mappedSource\": \"\", \"militarySexualTrauma\": \"\", \"militarySexualTraumaCd\": \"\", \"modifier\": \"\", \"modifierCd\": \"\", \"orderingProvider\": \"\", \"orderingProviderId\": \"\", \"orderingProviderNPI\": \"\", \"orderingResulting\": \"\", \"orderingResultingCd\": \"\", \"package\": \"ORDER ENTRY\\/RESULTS REPORTING\", \"packageId\": 170, \"patientICN\": \"5000001534V744140\", \"patientName\": \"HYPERTENSION,PATIENT FEMALE\", \"patientNameId\": 100881, \"pov\": \"428.30\", \"povDesc\": \"UNSPEC DIASTOL HEART FAILURE\", \"povId\": 13640, \"povSCT\": 418304008, \"primarySecondary\": \"PRIMARY\", \"primarySecondaryCd\": \"P\", \"problemListEntry\": \"428.30\", \"problemListEntryId\": 943, \"proj112Shad\": \"\", \"proj112ShadCd\": \"\", \"providerNarrative\": \"Diastolic heart failure (SNOMED CT 418304008)\", \"providerNarrativeCategory\": \"\", \"providerNarrativeCategoryId\": \"\", \"providerNarrativeId\": 809, \"resourceId\": \"V-500-9000010.07-923\", \"resourceType\": \"DiagnosticReport\", \"serviceConnected\": \"\", \"serviceConnectedCd\": \"\", \"swAsiaConditions\": \"\", \"swAsiaConditionsCd\": \"\", \"verified\": \"\", \"verifiedCd\": \"\", \"visit\": \"DEC 29,2014@11:27\", \"visitFHIR\": \"2014-12-29T11:27:00-05:00\", \"visitFM\": 3141229.1127, \"visitHL7\": \"201412291127-0500\", \"visitId\": 11546, \"vpovIen\": 923 } } ] }";
 
         DiagnosticReportParser parser = new DiagnosticReportParser();
 
         List<DiagnosticReport> result = parser.parseList(input);
 
         Assert.assertEquals("Correct number of items", 2, result.size());
+        Assert.assertEquals("Correct ID", "V-500-74-596", result.get(1).getId());
+        Assert.assertEquals("Correct Status", DiagnosticReport.DiagnosticReportStatus.FINAL, result.get(1).getStatus());
+        Assert.assertEquals("Correct Patient", "5000001534V744140", result.get(1).getSubject().getIdentifier().getValue());
+        Assert.assertEquals("Correct Performer", "PROGRAMMER,FIVE", result.get(1).getPerformer().get(0).getActor().getDisplay());
+        String exepectedConclusion = "CLINICAL HISTORY: Dyspnea and orthopnea. FINDINGS: LUNGS: diffuse opacities noted in bases bilaterally; most consistent withpulmonary edema. BONES: no fracture dislocation or abnormal lesions noted.MEDIASTINUM: normal width and contour. IMPRESSION: Exam most consistent with diffuse pulmonary edema.";
+        Assert.assertEquals("Correct Conclusion", exepectedConclusion, result.get(1).getConclusion());
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
+        Date expectedDate = sdf.parse("2014-12-29T11:58:00-05:00");
+        String expectedEffective = new DateTimeType(expectedDate).toString();
+        Assert.assertEquals("Correct effective start date and time", expectedEffective, result.get(0).getEffective().toString());
     }
 
     @Test
-    public void TestInvalidDiagnosticReportParse() {
-        String input = "5000001534V744140^IMG|unknown|";
+    public void TestDiagnosticReportParseNotFound() {
+        String input = "-1^Patientidentifiernotrecognised";
 
         DiagnosticReportParser parser = new DiagnosticReportParser();
 
@@ -57,27 +74,14 @@ public class DiagnosticReportParserTest {
         Assert.assertEquals("Correct number of items", 0, result.size());
     }
 
-
     @Test
-    public void TestGarbageDataDiagnosticReportParse() {
-        String input = "dsewrq %%9/^sdfg";
+    public void TestEmptyDataDiagnosticReportParse() {
+        String input = "{}";
 
         DiagnosticReportParser parser = new DiagnosticReportParser();
 
         List<DiagnosticReport> result = parser.parseList(input);
 
         Assert.assertEquals("Correct number of items", 0, result.size());
-    }
-
-
-    @Test
-    public void TestSuccesfulUpdatedDiagnosticReportParse() {
-        String input = "10101V964144^IMG|VERIFIED|199902171140-0500|WARDCLERK,FIFTYTHREE|V_500_74_501||||NORMAL||DKJF;LSKDFE^IMG|VERIFIED|200909011216-0500|LABTECH,FORTYEIGHT|V_500_74_530||||NORMAL||^MHDX|VERIFIED|200403081125-0500|LABTECH,SPECIAL|V_500_627.8_169|428.22|441481004|";
-
-        DiagnosticReportParser parser = new DiagnosticReportParser();
-
-        List<DiagnosticReport> result = parser.parseList(input);
-
-        Assert.assertEquals("Correct number of items", 3, result.size());
     }
 }

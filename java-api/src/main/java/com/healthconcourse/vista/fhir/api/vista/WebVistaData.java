@@ -1,18 +1,19 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.vista;
 
@@ -21,7 +22,6 @@ import org.hl7.fhir.dstu3.model.Condition;
 import org.hl7.fhir.dstu3.model.Enumerations.AdministrativeGender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -56,15 +56,8 @@ public class WebVistaData implements VistaData {
 
     @Override
     public String getPatientData(String icn) {
-        return queryVista("DHPPATDEMICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATDEMICN", createMapForSingleParameter(icn, true));
     }
-
-    @Override
-    public String getPatientData(String name, String ssn, Date dob, AdministrativeGender gender) {
-
-        return queryVista("DHPPATDEM", createMapForSearchParams(name, ssn, dob, gender));
-    }
-
 
     @Override
     public String getConditions(String name, String ssn, Date dob, AdministrativeGender gender) {
@@ -75,7 +68,7 @@ public class WebVistaData implements VistaData {
     @Override
     public String getConditions(String icn) {
 
-        return queryVista("DHPPATCONICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATCONICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
@@ -98,13 +91,8 @@ public class WebVistaData implements VistaData {
     @Override
     public String getVitalsObservationsByIcn(String icn) {
 
-        return queryVista("DHPPATVITICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATVITICN", createMapForSingleParameter(icn, true));
 
-    }
-
-    @Override
-    public String getObservationsByIcnAndCode(String icn, String code) {
-        throw new NotImplementedException();
     }
 
     @Override
@@ -114,91 +102,98 @@ public class WebVistaData implements VistaData {
     }
 
     @Override
-    public String getEncountersByPatient(String code) {
+    public String getEncountersByPatient(String icn) {
 
         //Start never got coded on the Vista side
 
-        return queryVista("DHPPATENCICN", createMapForSingleParameter(code));
+        return queryVista("DHPPATENCICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getMedicationStatement(String icn) {
 
-        return queryVista("DHPPATMEDSICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATMEDSICN", createMapForSingleParameter(icn, true));
+
+    }
+
+    @Override
+    public String getMedicationDispense(String icn) {
+
+        return queryVista("DHPPATMEDAICN", createMapForSingleParameter(icn, true));
 
     }
 
     @Override
     public String getMedicationAdministration(String icn) {
 
-        return queryVista("DHPPATMEDAICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATMEDAICN", createMapForSingleParameter(icn, true));
 
     }
 
     @Override
     public String getProceduresByIcn(String icn) {
 
-        return queryVista("DHPPATPRCICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATPRCICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getLabObservationsByIcn(String icn) {
 
-        return queryVista("DHPPATLABICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATLABICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getHealthFactorObservationsByIcn(String icn) {
 
-        return queryVista("DHPPATHLFICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATHLFICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getMentalHealthObservationsByIcn(String icn) {
 
-        return queryVista("DHPPATOBSICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATOBSICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getProvidersByIcn(String icn) {
 
-        return queryVista("DHPPATPRVICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATPRVICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getLocationByName(String name) {
 
-        return queryVista("DHPHLOCINSTHLOCNAM", createMapForSingleParameter(name, "HLOC"));
+        return queryVista("DHPHLOCINSTHLOCNAM", createMapForSingleParameter(name, "HLOC", true));
     }
 
     @Override
     public String getFlagByIcn(String icn) {
-        return queryVista("DHPPATFLGICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATFLGICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getAppointmentsByIcn(String icn) {
-        return queryVista("DHPPATAPTICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATAPTICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getAllergiesByIcn(String icn) {
-        return queryVista("DHPPATALLICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATALLICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getImmunizationsByIcn(String icn) {
-        return queryVista("DHPPATIMMICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATIMMICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getGoal(String icn) {
-        return queryVista("DHPPATGOLICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATGOLICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
     public String getDiagnosticReport(String icn) {
-        return queryVista("DHPPATDXRICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATDXRICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
@@ -215,7 +210,7 @@ public class WebVistaData implements VistaData {
     @Override
     public String getTiuNotes(String icn) {
 
-        return queryVista("DHPPATTIUICN", createMapForSingleParameter(icn));
+        return queryVista("DHPPATTIUICN", createMapForSingleParameter(icn, true));
     }
 
     @Override
@@ -226,6 +221,11 @@ public class WebVistaData implements VistaData {
     @Override
     public String getCareTeamByHame(String name) {
         return queryVista("DHPCARETEAM", createMapForSingleParameter(name, "TEAM", true));
+    }
+
+    @Override
+    public String getPractitionerById(String id) {
+        return queryVista("DHPGETRESID", createMapForSingleParameter(id, "RESID", false));
     }
 
     private String queryVista(String path, Map<String, String> parameters) {

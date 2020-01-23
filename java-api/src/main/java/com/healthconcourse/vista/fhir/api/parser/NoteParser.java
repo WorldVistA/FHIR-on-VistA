@@ -1,94 +1,106 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.parser;
 
 import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
-import org.apache.commons.lang3.StringUtils;
+import com.nfeld.jsonpathlite.JsonPath;
+import com.nfeld.jsonpathlite.JsonResult;
 import org.hl7.fhir.dstu3.model.Composition;
 import org.hl7.fhir.dstu3.model.Narrative;
 import org.hl7.fhir.utilities.xhtml.NodeType;
 import org.hl7.fhir.utilities.xhtml.XhtmlNode;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 
 public class NoteParser implements VistaParser<Composition> {
 
-    private static final String[] confidentialityValues = new String[] {"N", "U", "L", "M", "R", "V"};
+    private static final Logger LOG = LoggerFactory.getLogger(NoteParser.class);
 
     @Override
     public List<Composition> parseList(String httpData) {
         List<Composition> result = new ArrayList<>();
 
-        if(StringUtils.isEmpty(httpData)) {
+        if (StringUtils.isEmpty(httpData)) {
             return result;
         }
 
-        String[] records = httpData.trim().split("~");
-
-        String icn = records[0];
-
-        for(int i = 1; i < records.length; i++) {
-            Composition note = new Composition();
-            note.setMeta(ResourceHelper.getVistaMeta());
-            note.setSubject(ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, icn, "", ResourceHelper.ReferenceType.Patient));
-
-            String[] fields = records[i].split("\\|");
-
-            note.setId(fields[0]);
-
-            Optional<Date> noteDate = InputValidator.parseAnyDate(fields[1]);
-            if (noteDate.isPresent()) {
-                note.setDate(noteDate.get());
-            }
-
-            if(!StringUtils.isEmpty(fields[2])) {
-                note.setStatus(getStatus(fields[2]));
-            }
-
-            if(!StringUtils.isEmpty(fields[3]) && fields[3].length() == 1 && Arrays.asList(confidentialityValues).contains(fields[3])) {
-                note.setConfidentiality(this.getConfidentiality(fields[3]));
-            }
-
-            if(!StringUtils.isEmpty(fields[4])) {
-                note.setAuthor(ResourceHelper.createSingleReferenceAsList(HcConstants.URN_VISTA_PRACTITIONER, fields[4],"", ResourceHelper.ReferenceType.Practitioner));
-            }
-
-            String[] content = fields[5].split("\\^");
-
-            note.setTitle(this.getTitle(content[0]));
-            note.setText(this.setContent(content));
-
-            if (fields.length > 6) {
-                String[] loincParts = fields[6].split("_");
-
-                if (loincParts.length == 2) {
-                    note.setType(ResourceHelper.createCodeableConcept(HcConstants.LOINC, loincParts[0], loincParts[1]));
-                }
-            }
-
-            result.add(note);
+        JsonResult parsedJson = JsonPath.parseOrNull(httpData);
+        if (parsedJson == null) {
+            LOG.warn("Unable to parse Tiu Note JSON");
+            return result;
         }
+        JSONArray allNotes = parsedJson.read("$.TiuNotes");
+        if (allNotes != null) {
+            for (int i = 0; i < allNotes.length(); i++) {
+                Composition note = new Composition();
+                note.setMeta(ResourceHelper.getVistaMeta());
+                JSONObject json = allNotes.getJSONObject(i).getJSONObject("Tiu");
 
+                //Hard-coded according to VistA team
+                note.setConfidentiality(this.getConfidentiality("N"));
+
+                String id = json.getString("resourceId");
+                note.setId(id);
+
+                String icn = json.getString("patientICN");
+                note.setSubject(ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, icn, "", ResourceHelper.ReferenceType.Patient));
+
+                String entry = json.getString( "entryDateTimeFHIR");
+                if (!StringUtils.isEmpty(entry)) {
+                    Optional<Date> entryDate = InputValidator.parseAnyDate(entry);
+                    if (entryDate.isPresent()) {
+                        note.setDate(entryDate.get());
+                    }
+                }
+                String status = json.getString("statusFHIR");
+                if (!StringUtils.isEmpty(status)) {
+                    note.setStatus(getStatus(status));
+                }
+                String author = json.getString("authorDictator");
+                String authorId = json.getString("authorDictatorResId");
+                if (!StringUtils.isEmpty(author)) {
+                    note.setAuthor(ResourceHelper.createSingleReferenceAsList(HcConstants.URN_VISTA_PRACTITIONER, authorId, author, ResourceHelper.ReferenceType.Practitioner));
+                }
+                String title = json.getString("documentType");
+                if (!StringUtils.isEmpty(title)) {
+                    note.setTitle(title);
+                }
+                String content = json.getString( "reportText");
+                note.setText(this.setContent(content));
+
+                String loincCode = json.getString("loincCode");
+                String loincDesc = json.getString("loincDesc");
+                note.setType(ResourceHelper.createCodeableConcept(HcConstants.LOINC, loincCode, loincDesc));
+
+                result.add(note);
+            }
+        }
         return result;
     }
 
-    private Narrative setContent(String[] rawContent) {
+    private Narrative setContent(String rawContent) {
         Narrative text = new Narrative();
         text.setStatus(Narrative.NarrativeStatus.GENERATED);
         text.setDiv(this.getXhtml(rawContent));
@@ -96,30 +108,15 @@ public class NoteParser implements VistaParser<Composition> {
         return text;
     }
 
-    private XhtmlNode getXhtml(String[] rawContent) {
+    private XhtmlNode getXhtml(String rawContent) {
         XhtmlNode node = new XhtmlNode(NodeType.Element, "pre");
         XhtmlNode child = new XhtmlNode(NodeType.Text);
-        StringBuilder content = new StringBuilder();
-
-        for (String line: rawContent) {
-            content.append(line.trim());
-            content.append(System.lineSeparator());
-        }
-        child.setContent(content.toString());
+        child.setContent(rawContent);
         node.getChildNodes().add(child);
         return node;
     }
 
-    private String getTitle(String raw) {
-        if (raw.trim().startsWith("LOCAL TITLE:")) {
-            return raw.trim().substring(13);
-        } else {
-            return "";
-        }
-    }
-
     private Composition.DocumentConfidentiality getConfidentiality(String input) {
-
         switch (input.toUpperCase()) {
             case "N":
                 return Composition.DocumentConfidentiality.N;
@@ -136,10 +133,9 @@ public class NoteParser implements VistaParser<Composition> {
             default:
                 return Composition.DocumentConfidentiality.NULL;
         }
-
     }
-    private Composition.CompositionStatus getStatus(String input) {
 
+    private Composition.CompositionStatus getStatus(String input) {
         switch (input.toLowerCase()) {
             case "final":
                 return Composition.CompositionStatus.FINAL;
@@ -152,6 +148,5 @@ public class NoteParser implements VistaParser<Composition> {
             default:
                 return Composition.CompositionStatus.NULL;
         }
-
     }
 }

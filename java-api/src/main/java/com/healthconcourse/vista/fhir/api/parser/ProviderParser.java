@@ -1,73 +1,86 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.parser;
 
 import com.healthconcourse.vista.fhir.api.data.Provider;
-import org.apache.commons.lang3.StringUtils;
+import com.nfeld.jsonpathlite.JsonPath;
+import com.nfeld.jsonpathlite.JsonResult;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 public class ProviderParser {
+    private static final Logger LOG = LoggerFactory.getLogger(ProviderParser.class);
 
     public List<Provider> parseList(String httpData) {
-        List<Provider> result = new ArrayList<>();
+        HashMap<String, Provider> result = new HashMap<>();
 
-        if(StringUtils.isEmpty(httpData)) {
-            return result;
+        if (StringUtils.isEmpty(httpData)) {
+            return new ArrayList<Provider>();
         }
 
-        String[] records = httpData.trim().split("\\^");
-
-        if(records.length < 2) {
-            return result;
+        JsonResult practitionerJSON = JsonPath.parseOrNull(httpData);
+        if (practitionerJSON == null) {
+            LOG.warn("Unable to parse ConditionJSON");
+            return new ArrayList<Provider>();
         }
 
-        for(int i = 1; i < records.length; i++) {
+        JSONArray allPractitioners = practitionerJSON.read("$.EncProv..Vprov");
+        if (allPractitioners != null) {
+            for (int i = 0; i < allPractitioners.length(); i++) {
+                JSONObject json = allPractitioners.getJSONObject(i);
+                Provider provider = new Provider();
+                String resourceId = json.getString("providerResId");
 
-            String[] fields = records[i].split("\\|");
+                if (!result.containsKey(resourceId)) {
+                    provider.setVistaId(resourceId);
 
-            Provider provider = findProvider(result, fields[0]);
-            if(provider.getVistaId().isEmpty()) {
-                provider.setVistaId(fields[0]);
-                provider.setName(fields[2]);
-                provider.setRole(fields[3]);
-                if("PRIMARY".equalsIgnoreCase(fields[4])){
-                    provider.setPrimary(true);
+                    String name = json.getString("provider");
+                    provider.setName(name);
+
+                    String primary = json.getString("primarySecondary");
+                    if (primary.equalsIgnoreCase("PRIMARY")) {
+                        provider.setPrimary(true);
+                    } else {
+                        provider.setPrimary(false);
+                    }
+
+                    String role = json.getString("provRole");
+                    provider.setRole(role);
+
+                    String encounterId = json.getString("visitResId");
+                    if (!StringUtils.isEmpty(encounterId)) {
+                        provider.setEncounter(encounterId);
+                    }
+
+                    result.put(resourceId, provider);
                 }
-
-            }
-            provider.setEncounter(fields[1]);
-            provider.getEncounters().add(fields[1]);
-
-            result.add(provider);
-        }
-
-        return result;
-
-    }
-
-    private Provider findProvider(List<Provider> data, String id) {
-        for(Provider item: data) {
-            if(item.getVistaId().equalsIgnoreCase(id)) {
-                return item;
             }
         }
-
-        return new Provider();
+        Collection<Provider> values = result.values();
+        ArrayList<Provider> providerList = new ArrayList<>(values);
+        return providerList;
     }
 }

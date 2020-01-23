@@ -1,30 +1,33 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.parser;
 
 import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
-import org.hl7.fhir.dstu3.model.CodeableConcept;
-import org.hl7.fhir.dstu3.model.DateType;
-import org.hl7.fhir.dstu3.model.Goal;
-import org.hl7.fhir.dstu3.model.Reference;
+import com.nfeld.jsonpathlite.JsonPath;
+import com.nfeld.jsonpathlite.JsonResult;
+import org.hl7.fhir.dstu3.model.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -38,95 +41,91 @@ public class GoalParser implements VistaParser<Goal> {
     private static final String MET = "MET";
     private static final String DISCONTINUED = "DISCONTINUED";
 
-    private String mPatientId;
-
     @Override
     public List<Goal> parseList(String httpData) {
-
-        List<Goal> results = new ArrayList<>();
-
-        String[] records = httpData.trim().split("\\^");
-        boolean isFirst = true;
-
-        for(String record : records) {
-            Optional<Goal> med = parseGoalRecord(record, isFirst);
-            med.ifPresent(results::add);
-            isFirst = false;
+        List<Goal> result = new ArrayList<>();
+        if (StringUtils.isEmpty(httpData)) {
+            LOG.info("No goal data found for patient");
+            return result;
         }
 
-        return results;
+        JsonResult allJson = JsonPath.parseOrNull(httpData);
+        if (allJson == null) {
+            LOG.warn("Unable to parse Goal JSON");
+            return result;
+        }
+
+        JSONArray carePlans = allJson.read("$.NCPS..NurseCarePlan");
+        if (carePlans != null) {
+            for (int i = 0; i < carePlans.length(); i++) {
+                JSONObject json = carePlans.getJSONObject(i);
+
+                List<Reference> addresses = new ArrayList<>();
+                JSONObject problemList = json.optJSONObject("problemLists");
+                if (problemList != null) {
+                    JSONArray problems = problemList.getJSONArray("problemList");
+                    for (int k = 0; k < problems.length(); k++) {
+                        JSONObject problem = problems.getJSONObject(k);
+                        String problemName = problem.getString("problem");
+                        String problemId = problem.getString("resourceId");
+                        addresses.add(ResourceHelper.createReference(HcConstants.URN_VISTA_CONDITION, problemId, problemName, ResourceHelper.ReferenceType.Condition));
+                    }
+                }
+                JSONObject goalContainer = json.optJSONObject("targetDates");
+                if (goalContainer != null) {
+                    JSONArray goals = goalContainer.getJSONArray("targetDate");
+                    for (int j = 0; j < goals.length(); j++) {
+                        JSONObject goalJson = goals.getJSONObject(j);
+                        Goal goal = getNewGoal(json);
+                        goal.setAddresses(addresses);
+
+                        String resourceId = goalJson.getString("resourceId");
+                        goal.setId(resourceId);
+
+                        String statusText = goalJson.getString("goalMetDcd");
+                        goal.setStatus(getGoalStatus(statusText));
+
+                        String description = goalJson.getString("goalExpectedOutcome");
+                        CodeableConcept concept = new CodeableConcept();
+                        concept.setText(description);
+                        goal.setDescription(concept);
+
+                        Optional<Date> startDate = InputValidator.parseAnyDate(goalJson.getString("dateTimeEnteredFHIR"));
+                        if (startDate.isPresent()) {
+                            DateType start = new DateType(startDate.get());
+                            goal.setStart(start);
+                        }
+
+                        String targetDateRaw = goalJson.optString("targetDateFHIR");
+                        Optional<Date> targetDate = InputValidator.parseAnyDate(targetDateRaw);
+                        if (targetDate.isPresent()) {
+                            Goal.GoalTargetComponent gt = new Goal.GoalTargetComponent();
+                            DateType dateType = new DateType();
+                            dateType.setValue(targetDate.get());
+                            gt.setDue(dateType);
+                            goal.setTarget(gt);
+                        }
+
+                        String expressedName = goalJson.getString("userWhoEntered");
+                        String expressedId = goalJson.getString("userWhoEnteredResId");
+                        goal.setExpressedBy(ResourceHelper.createReference(HcConstants.URN_VISTA_PROVIDER, expressedId, expressedName, ResourceHelper.ReferenceType.Practitioner));
+                        result.add(goal);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
-    private Optional<Goal> parseGoalRecord(String record, boolean isFirst) {
+    private static Goal getNewGoal(JSONObject json) {
+        Goal goal = new Goal();
+        goal.setMeta(ResourceHelper.getVistaMeta());
 
-        Goal result = new Goal();
-
-        String[] fields = record.split("\\|");
-
-        if (isFirst) {
-            mPatientId = fields[0];
-            return Optional.empty();
-        } else if (fields.length < 5) {
-            return Optional.empty();
-        }
-
-        // Patient ID
-        result.setSubject(ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, mPatientId, "", ResourceHelper.ReferenceType.Patient));
-
-        // Goal ID (FYI: This includes Goal Date at end of ID, which is parsed below)
-        result.setId(fields[0]);
-
-        // Start date (embedded and end of Goal ID)
-
-        String[] rawDate = fields[0].split("_"); // Start date is the LAST component after split
-        int size = rawDate.length;
-
-        // Start date is the LAST component after split (thus size -1)
-        Optional<Date> start = InputValidator.parseAnyDate(rawDate[size - 1]);
-        if (start.isPresent()) {
-            DateType dateType = new DateType();
-            dateType.setValue(start.get());
-            result.setStart(dateType);
-        }
-
-        // Description
-        try {
-            result.setDescription((new CodeableConcept()).setText(fields[1]));
-        }
-        catch (Exception ex) {
-            LOG.error("Invalid goal description, exception " + ex.getMessage());
-        }
-
-        // Target date
-        Optional<Date> target = InputValidator.parseAnyDate(fields[2]);
-
-        if (target.isPresent()) {
-            Goal.GoalTargetComponent gt = new Goal.GoalTargetComponent();
-            DateType dateType = new DateType();
-            dateType.setValue(target.get());
-            gt.setDue(dateType);
-            result.setTarget(gt);
-        }
-
-        // Who entered the goal
-        try {
-            result.setExpressedBy(new Reference().setDisplay(fields[3]));
-        } catch (Exception e) {
-            LOG.error("Bad Expressed by value from VistA goal, exception ", e);
-        }
-
-        // Goal Status
-        try {
-            String[] status = fields[4].split(";"); // Goal Status (2 parts delimited by ";")
-
-            result.setStatus(getGoalStatus(status[1]));
-        } catch (Exception ex) {
-            LOG.error("Bad status info from VistA goal, exception ", ex);
-        }
-
-        result.setMeta(ResourceHelper.getVistaMeta());
-
-        return Optional.of(result);
+        String patientName = json.getString("patient");
+        String icn = json.getString("patientICN");
+        Reference patient = ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, icn, patientName, ResourceHelper.ReferenceType.Patient);
+        goal.setSubject(patient);
+        return goal;
     }
 
     private static Goal.GoalStatus getGoalStatus(String data) {

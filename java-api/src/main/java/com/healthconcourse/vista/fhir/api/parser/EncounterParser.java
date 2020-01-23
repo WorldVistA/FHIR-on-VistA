@@ -1,30 +1,33 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.parser;
 
 import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
-import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.dstu3.model.Encounter;
-import org.hl7.fhir.dstu3.model.Period;
-import org.hl7.fhir.dstu3.model.Reference;
+import com.nfeld.jsonpathlite.JsonPath;
+import com.nfeld.jsonpathlite.JsonResult;
+import org.hl7.fhir.dstu3.model.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,7 +37,6 @@ import java.util.Optional;
 public class EncounterParser implements VistaParser<Encounter> {
 
     private static final Logger LOG = LoggerFactory.getLogger(EncounterParser.class);
-    private String mPatientId;
 
     @Override
     public List<Encounter> parseList(String httpData) {
@@ -44,151 +46,147 @@ public class EncounterParser implements VistaParser<Encounter> {
         if (StringUtils.isEmpty(httpData)) {
             return results;
         }
-
-        String[] records = httpData.trim().split("\\|");
-        boolean isFirst = true;
-        for(String record : records) {
-
-            Encounter encounter = parseEncounter(record, isFirst);
-            if(encounter != null) {
-                results.add(parseEncounter(record, isFirst));
-            }
-            isFirst = false;
+        JsonResult allJson = JsonPath.parseOrNull(httpData);
+        if (allJson  == null) {
+            LOG.error("Unable to parse Encounter JSON");
+            return results;
         }
 
+        JSONArray allRecords = allJson.read("$Encounters");
+        if (allRecords != null) {
+            for (int i = 0; i < allRecords.length(); i++) {
+                JSONObject json = allRecords.getJSONObject(i).getJSONObject("Visit");
+                try {
+                    Encounter encounter = new Encounter();
+                    encounter.setMeta(ResourceHelper.getVistaMeta());
+
+                    String resourceId = json.getString("resourceId");
+                    encounter.setId(resourceId);
+                    LOG.debug(resourceId);
+                    String patientName = json.getString("patientName");
+                    String icn = json.getString("patientICN");
+                    Reference patient = ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, icn, patientName, ResourceHelper.ReferenceType.Patient);
+                    encounter.setSubject(patient);
+
+                    encounter.setStatus(Encounter.EncounterStatus.FINISHED);
+
+                    Optional<Date> visitDate = InputValidator.parseAnyDate(json.getString("visitAdmitDateTimeFHIR"));
+                    if (visitDate.isPresent()) {
+                        Period period = new Period();
+                        period.setStart(visitDate.get());
+                        encounter.setPeriod(period);
+                    }
+
+                    String serviceCategory = json.getString("serviceCategory");
+                    if (!StringUtils.isEmpty(serviceCategory)) {
+                        encounter.setClass_(this.getEncounterClass(serviceCategory));
+                    }
+
+                    JSONObject diagnosisJSON = json.optJSONObject("diagnosis").optJSONObject("Problem");
+                    if (diagnosisJSON != null) {
+                        String display = diagnosisJSON.getString("snomedCTconceptCodeText");
+                        if (!StringUtils.isEmpty(display)) {
+                            Long sctId = diagnosisJSON.optLong("snomedCTconceptCode", HcConstants.MISSING_ID);
+                            String snomedId = sctId.longValue() != HcConstants.MISSING_ID ? sctId.toString() : "";
+                            List<CodeableConcept> code = ResourceHelper.createSingleCodeableConceptAsList(HcConstants.SNOMED_URN, snomedId, display);
+                            encounter.setReason(code);
+                        }
+
+                        Encounter.DiagnosisComponent diagnosis = new Encounter.DiagnosisComponent();
+                        String conditionId = diagnosisJSON.getString("resourceId");
+                        String conditionName = diagnosisJSON.getString("problem");
+                        Reference condition = ResourceHelper.createReference(HcConstants.URN_VISTA_CONDITION, conditionId, conditionName, ResourceHelper.ReferenceType.Condition);
+                        diagnosis.setCondition(condition);
+
+                        List<Encounter.DiagnosisComponent> diagnoses = new ArrayList<>();
+                        diagnoses.add(diagnosis);
+                        encounter.setDiagnosis(diagnoses);
+
+                        String site = diagnosisJSON.getString("facility");
+                        if (!StringUtils.isEmpty(site)) {
+                            Long siteId = diagnosisJSON.optLong("facilityId", HcConstants.MISSING_ID);
+                            String id = siteId.longValue() != HcConstants.MISSING_ID ? siteId.toString() : "";
+                            Reference ref = ResourceHelper.createReference(HcConstants.URN_VISTA_LOCATION, id, site, ResourceHelper.ReferenceType.Location);
+                            List<Encounter.EncounterLocationComponent> locations = new ArrayList<>();
+                            Encounter.EncounterLocationComponent encounterLocation = new Encounter.EncounterLocationComponent();
+                            encounterLocation.setLocation(ref);
+                            locations.add(encounterLocation);
+                            encounter.setLocation(locations);
+                        }
+
+                        String requester = diagnosisJSON.getString("responsibleProvider");
+                        if (!StringUtils.isEmpty(requester)) {
+                            String requesterId = diagnosisJSON.getString("responsibleProviderResId");
+                            Reference ref = ResourceHelper.createReference(HcConstants.URN_VISTA_PROVIDER, requesterId, requester, ResourceHelper.ReferenceType.Practitioner);
+                            List<Encounter.EncounterParticipantComponent> participantList = new ArrayList<>();
+                            Encounter.EncounterParticipantComponent participant = new Encounter.EncounterParticipantComponent();
+                            participant.setId(requesterId);
+                            participant.setIndividual(ref);
+                            participantList.add(participant);
+                            encounter.setParticipant(participantList);
+                        }
+                    }
+                    JSONObject locationJSON = json.optJSONObject("location");
+                    if (locationJSON != null) {
+                        JSONObject providerJSON = locationJSON.getJSONObject("Site");
+                        if (providerJSON != null) {
+                            String agency = providerJSON.getString("officialVaName");
+                            String agencyId = providerJSON.getString("resourceId");
+                            encounter.setServiceProvider(ResourceHelper.createReference(HcConstants.URN_VISTA_ORGANIZATION, agencyId, agency));
+                        }
+                    }
+                    results.add(encounter);
+                } catch (Exception ex) {
+                    LOG.warn("Error parsing encounter JSON", ex);
+                    LOG.warn(json.toString());
+                }
+            }
+        }
         return results;
     }
 
-    private Encounter parseEncounter(final String record, boolean isFirst) {
-
-        Encounter encounter = new Encounter();
-
-        String[] fields = record.split("\\^");
-
-        if (fields.length < 2) {
-            return null;
+    private Coding getEncounterClass(String serviceType) {
+        Coding result = new Coding();
+        result.setSystem(HcConstants.HL7_ACT_ENCOUNTER_CODE);
+        switch (serviceType.toUpperCase()) {
+            case "AMBULATORY":
+                result.setCode("AMB");
+                result.setDisplay("ambulatory");
+                break;
+            case "HOSPITALIZATION":
+            case "IN HOSPITAL":
+            case "DAILY HOSPITALIZATION DATA":
+            case "OBSERVATION":
+                result.setCode("IMP");
+                result.setDisplay("inpatient encounter");
+                break;
+            case "TELECOMMUNICATIONS":
+                result.setCode("VR");
+                result.setDisplay("virtual");
+                break;
+            case "EVENT (HISTORICAL)":
+                result.setCode("HISTORIC");
+                result.setDisplay("record recorded as historical");
+                break;
+            case "CHART REVIEW":
+                result.setCode("CLINNOTEREV");
+                result.setDisplay("clinical note review taskl");
+                break;
+            case "DAY SURGERY":
+                result.setCode("SS");
+                result.setDisplay("short stay");
+                break;
+            case "NURSING HOME":
+                result.setCode("HH");
+                result.setDisplay("home health");
+                break;
+            case "ANCILLARY PACKAGE DAILY DATA":
+            default:
+                LOG.info(String.format("Service Type %s does not match HL7 definitions", serviceType));
+                result.setCode("CODE_INVAL");
+                result.setDisplay("code is not valid");
+                break;
         }
-
-        int index = 0;
-
-        if (isFirst) {
-            mPatientId = fields[0];
-            index = 1;
-        }
-
-        encounter.setSubject(ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, mPatientId, "", ResourceHelper.ReferenceType.Patient));
-
-        encounter.setId(fields[index]);
-
-        encounter.setStatus(Encounter.EncounterStatus.FINISHED);
-
-        Optional<Date> encounterDate = InputValidator.parseAnyDate(fields[index + 2]);
-        if (encounterDate.isPresent()) {
-            Period period = new Period();
-            period.setStart(encounterDate.get());
-            encounter.setPeriod(period);
-        }
-
-        setReason(fields[index + 3], encounter);
-
-        setDiagnosis(fields[index + 4], encounter);
-
-        setHospitalization(encounter, fields[index + 5]);
-
-        setHospitalizationDischarge(encounter, fields[index + 6]);
-
-        setAddress(encounter, fields[index + 7]);
-
-        // some cases we don't have a complete record
-        if (fields.length > (index + 8)) {
-            setProvider(encounter, fields[index + 8]);
-        }
-
-        encounter.setMeta(ResourceHelper.getVistaMeta());
-
-        return encounter;
-    }
-
-    private static void setReason(final String rawData, Encounter encounter) {
-
-        if(!rawData.isEmpty()) {
-            encounter.setReason(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.URN_VISTA_ENCOUNTER_REASON, "UNKNOWN", rawData));
-        }
-    }
-
-    private static void setDiagnosis(final String rawData, Encounter encounter) {
-        if(!rawData.isEmpty()) {
-            String[] diagnosisParts = rawData.split(";");
-            if(diagnosisParts.length == 2) {
-
-                List<Encounter.DiagnosisComponent> diagnoses = new ArrayList<>();
-
-                Reference code = ResourceHelper.createReference(HcConstants.ICD_9, diagnosisParts[0], diagnosisParts[1]);
-
-                Encounter.DiagnosisComponent diagnosis = new Encounter.DiagnosisComponent(code);
-
-
-                diagnoses.add(diagnosis);
-
-                encounter.setDiagnosis(diagnoses);
-            }
-        }
-    }
-    private static void setProvider(Encounter encounter, final String rawData) {
-        if(!rawData.isEmpty()) {
-            Reference provider = ResourceHelper.createReference(HcConstants.URN_VISTA_SERVICE_PROVIDER, rawData, rawData);
-            encounter.setServiceProvider(provider);
-        }
-    }
-
-    private static void setAddress(Encounter encounter, final String rawData) {
-        if(!rawData.isEmpty()) {
-
-            String[] addressItems = rawData.split(";");
-
-            Encounter.EncounterLocationComponent locationComponent = encounter.addLocation();
-
-            String[] nameSplit = addressItems[0].split(",");
-
-            StringBuilder addr = new StringBuilder();
-            try {
-                addr.append(nameSplit[0]);
-                addr.append(String.format(", %s, %s, ", nameSplit[1], addressItems[1]));
-                addr.append(addressItems[2]);
-                addr.append(String.format(", %s", addressItems[3]));
-            } catch (Exception ex) {
-                LOG.error("Error with address (" + rawData + "), continuing.");
-            }
-
-            try {
-                locationComponent.setLocation(ResourceHelper.createReference("", nameSplit[0], addr.toString()));
-            } catch (Exception ex) {
-                LOG.error("Error with address, nameSplit not split (" + rawData + "), continuing.");
-            }
-            locationComponent.setStatus(Encounter.EncounterLocationStatus.ACTIVE);
-        }
-    }
-
-    private static void setHospitalizationDischarge(Encounter encounter, final String rawData) {
-        if(!rawData.isEmpty()) {
-            Encounter.EncounterHospitalizationComponent hospital = encounter.getHospitalization();
-
-            if(hospital == null) {
-                hospital = new Encounter.EncounterHospitalizationComponent();
-                encounter.setHospitalization(hospital);
-            }
-
-            hospital.setDischargeDisposition(ResourceHelper.createCodeableConcept(HcConstants.URN_VISTA_DISCHARGE, rawData, rawData));
-        }
-    }
-
-    private static void setHospitalization(Encounter encounter, final String rawData) {
-        if(!rawData.isEmpty()) {
-            Encounter.EncounterHospitalizationComponent hospital = new Encounter.EncounterHospitalizationComponent();
-
-            hospital.setAdmitSource(ResourceHelper.createCodeableConcept(HcConstants.URN_VISTA_ADMIN, rawData, rawData));
-
-            encounter.setHospitalization(hospital);
-        }
+        return result;
     }
 }

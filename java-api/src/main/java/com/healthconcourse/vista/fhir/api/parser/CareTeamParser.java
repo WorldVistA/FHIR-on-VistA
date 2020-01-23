@@ -1,32 +1,36 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.parser;
 
 import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.PathNotFoundException;
-import com.jayway.jsonpath.ReadContext;
-import org.apache.commons.lang3.StringUtils;
+import com.nfeld.jsonpathlite.JsonPath;
+import com.nfeld.jsonpathlite.JsonResult;
 import org.hl7.fhir.dstu3.model.CareTeam;
 import org.hl7.fhir.dstu3.model.Period;
+import org.hl7.fhir.dstu3.model.Reference;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,74 +46,89 @@ public class CareTeamParser implements VistaParser<CareTeam> {
         if (StringUtils.isEmpty(httpData)) {
             return result;
         }
-        try {
-            ReadContext ctx = JsonPath.parse(httpData);
 
-            Integer totalCareTeams = ctx.read("$.Teams.length()");
+        JsonResult json = JsonPath.parseOrNull(httpData);
+        if (json  == null) {
+            LOG.warn("Unable to parse Care Team JSON");
+            return result;
+        }
 
-            for (int careTeamCounter = 0; careTeamCounter < totalCareTeams; careTeamCounter++) {
+        JSONArray allTeams = json.read("$.Teams..Team");
+
+        if (allTeams != null) {
+            for (int i = 0; i < allTeams.length(); i++) {
+                JSONObject raw = allTeams.getJSONObject(i);
                 CareTeam careTeam = new CareTeam();
                 careTeam.setMeta(ResourceHelper.getVistaMeta());
-
-                String basePath = "$.Teams[" + careTeamCounter + "].Team.";
-                String resourceId = ctx.read(basePath + "resourceId");
+                String resourceId = raw.getString( "resourceId");
                 careTeam.setId(resourceId);
-                String name = ctx.read(basePath + "teamName");
+                String name = raw.getString("teamName");
                 careTeam.setName(name);
-                String status = ctx.read(basePath + "currentStatusC");
+                String status = raw.getString("currentStatusC");
                 careTeam.setStatus(getStatus(status));
-                String teamType = ctx.read(basePath + "fhirTeamType");
-                careTeam.setCategory(ResourceHelper.createSingleCodeableConceptAsList("http://hl7.org/fhir/care-team-category", teamType, this.getCategoryDesc(teamType)));
-                String institution = ctx.read(basePath + "institution");
+                String teamType = raw.getString("fhirTeamType");
+                careTeam.setCategory(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.CARE_TEAM_CODING_SYSTEM, teamType, getCategoryDesc(teamType)));
+                String institution = raw.getString("institution");
                 if (!StringUtils.isEmpty(institution)) {
-                    Integer institutionId = ctx.read(basePath + "institutionId");
+                    Long institutionId = raw.getLong("institutionId");
                     careTeam.setManagingOrganization(ResourceHelper.createSingleReferenceAsList(HcConstants.URN_VISTA_ORGANIZATION, institutionId.toString(), institution));
                 }
-                String startDate = ctx.read(basePath + "currentActivationDateCFHIR");
-                String endDate = ctx.read(basePath + "currentInactivationDateCFHIR");
+                String startDate = raw.getString("currentActivationDateCFHIR");
+                String endDate = raw.getString("currentInactivationDateCFHIR");
                 Optional<Period> period = getPlanPeriod(startDate, endDate);
                 if (period.isPresent()) {
                     careTeam.setPeriod(period.get());
                 }
-                String positionsPath = basePath  + "positions.position.length()";
-                if (InputValidator.pathExists(ctx, positionsPath)) {
-                    List<CareTeam.CareTeamParticipantComponent> positions = getParticipants(ctx, basePath);
-                    careTeam.setParticipant(positions);
-                }
+                careTeam.setParticipant(getParticipants(raw));
 
                 result.add(careTeam);
             }
-        } catch (PathNotFoundException pex) {
-            LOG.warn("Invalid JSON found", pex);
-            LOG.warn(httpData);
-        } catch (Exception ex) {
-            LOG.warn("Parsing failure", ex);
-            LOG.warn(httpData);
         }
         return result;
     }
 
-    private List<CareTeam.CareTeamParticipantComponent> getParticipants(ReadContext context, String basePath) {
-        List<CareTeam.CareTeamParticipantComponent> result = new ArrayList<>();
-        Integer positionCount = context.read(basePath  + "positions.position.length()");
+    private static List<CareTeam.CareTeamParticipantComponent> getParticipants(JSONObject record) {
+        List<CareTeam.CareTeamParticipantComponent> memberList = new ArrayList<>();
+        try {
+            JSONObject members = record.getJSONObject("positions");
+            JSONArray positions = members.getJSONArray("position");
+            if (positions != null) {
+                for (int j = 0; j < positions.length(); j++) {
+                    CareTeam.CareTeamParticipantComponent participant = new CareTeam.CareTeamParticipantComponent();
+                    String positionResourceId = positions.getJSONObject(j).getString("resourceId");
+                    participant.setId(positionResourceId);
+                    Optional<Reference> practitioner = getPractitioner(positions.getJSONObject(j));
+                    if (practitioner.isPresent()) {
+                        participant.setMember(practitioner.get());
+                    }
 
-        for(int positionIndex = 0; positionIndex < positionCount; positionIndex++) {
-            CareTeam.CareTeamParticipantComponent participant = new CareTeam.CareTeamParticipantComponent();
-            String resourceId = context.read(basePath + "positions.position[" + positionIndex + "].resourceId");
-            participant.setId(resourceId);
-            String currentPractitioner = context.read(basePath + "positions.position[" + positionIndex + "].currPractitionerC");
-            if (!StringUtils.isEmpty(currentPractitioner)) {
-                participant.setMember(ResourceHelper.createReference(HcConstants.URN_VISTA_PRACTITIONER, resourceId, currentPractitioner));
+                    String role = positions.getJSONObject(j).getString("standRoleName");
+                    if (!StringUtils.isEmpty(role)) {
+                        Long roleId = positions.getJSONObject(j).getLong("standRoleNameId");
+                        participant.setRole(ResourceHelper.createCodeableConcept(HcConstants.URN_VISTA_CARETEAM_ROLE, roleId.toString(), role));
+                    }
+                    memberList.add(participant);
+                }
             }
-            String role = context.read(basePath + "positions.position[" + positionIndex + "].standRoleName");
-            if (!StringUtils.isEmpty(role)) {
-                Integer roleId = context.read(basePath + "positions.position[" + positionIndex + "].standRoleNameId");
-                participant.setRole(ResourceHelper.createCodeableConcept(HcConstants.URN_VISTA_CARETEAM_ROLE, roleId.toString(), role));
-            }
-            result.add(participant);
+        } catch (JSONException ex) {
+            LOG.warn("Team Member Positions not found", ex);
         }
+        return memberList;
+    }
 
-        return result;
+    private static Optional<Reference> getPractitioner (JSONObject json) {
+        String currentPractitioner = json.getString("currPractitionerC");
+        JSONObject history = json.optJSONObject("positionAssignmentHistory");
+        if (history != null) {
+            JSONArray assignment = history.getJSONArray("posAssignHist");
+            JSONObject firstAssignment = assignment.getJSONObject(0);
+            String id = firstAssignment.getString("practitionerResId");
+            currentPractitioner = firstAssignment.getString("practitioner");
+            Optional<Reference> result = Optional.of(ResourceHelper.createReference(HcConstants.URN_VISTA_PRACTITIONER, id, currentPractitioner, ResourceHelper.ReferenceType.Practitioner));
+            return result;
+        } else {
+            return Optional.empty();
+        }
     }
 
     private static Optional<Period> getPlanPeriod(String planStart, String planEnd) {

@@ -1,28 +1,33 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.parser;
 
 import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
-import org.apache.commons.lang3.StringUtils;
+import com.nfeld.jsonpathlite.JsonPath;
+import com.nfeld.jsonpathlite.JsonResult;
 import org.hl7.fhir.dstu3.model.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,117 +37,93 @@ import java.util.Optional;
 public class DiagnosticReportParser implements VistaParser<DiagnosticReport> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiagnosticReportParser.class);
-    private String mPatientId;
 
     @Override
     public List<DiagnosticReport> parseList(String httpData) {
-
-        List<DiagnosticReport> results = new ArrayList<>();
+        List<DiagnosticReport> result = new ArrayList<>();
 
         if (StringUtils.isEmpty(httpData)) {
-            return results;
+            return result;
         }
 
-        String[] records = httpData.trim().split("\\^");
-        boolean isFirst = true;
-
-        for (String record : records) {
-            Optional<DiagnosticReport> med = parseDiagnosticReportRecord(record, isFirst);
-            med.ifPresent(results::add);
-            isFirst = false;
+        JsonResult allJson = JsonPath.parseOrNull(httpData);
+        if (allJson == null) {
+            LOG.error("Unable to parse Diagnostic Report JSON");
+            return result;
         }
 
-        return results;
-    }
+        JSONArray allReports = allJson.read("$.DxReportRad");
+        if (allReports != null) {
+            for (int i = 0; i < allReports.length(); i++) {
+                JSONObject reportJson = allReports.getJSONObject(i).optJSONObject("RadReport");
+                if (reportJson != null) {
+                    DiagnosticReport report = new DiagnosticReport();
+                    report.setMeta(ResourceHelper.getVistaMeta());
 
-    private Optional<DiagnosticReport> parseDiagnosticReportRecord(String record, boolean isFirst) {
+                    String resourceId = reportJson.getString("resourceId");
+                    report.setId(resourceId);
 
-        DiagnosticReport result = new DiagnosticReport();
+                    Optional<Date> observationDate = InputValidator.parseAnyDate(reportJson.getString("dateTimeFHIR"));
+                    if (observationDate.isPresent()) {
+                        report.setIssued(observationDate.get());
+                        DateTimeType effective = new DateTimeType(observationDate.get());
+                        report.setEffective(effective);
+                    }
 
-        String[] fields = record.split("\\|");
+                    report.setPerformer(this.getPerformers(reportJson));
 
-        if (isFirst) {
-            mPatientId = fields[0];
-            return Optional.empty();
-        } else if (fields.length < 6) {
-            return Optional.empty();
-        }
+                    String conclusion = reportJson.getString("conclusion");
+                    report.setConclusion(conclusion);
 
-        // Patient ID
-        result.setSubject(ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, mPatientId, "", ResourceHelper.ReferenceType.Patient));
-        result.setId(mPatientId);
-
-        // category
-        try {
-            result.setCategory((new CodeableConcept()).setText(fields[0]));
-        } catch (Exception ex) {
-            LOG.error("Invalid DiagnosticReport Category, exception " + ex.getMessage());
-        }
-
-        result.setStatus(getDiagnosticReportStatus(fields[1]));
-
-        // dateTime
-        Optional<Date> observationDate = InputValidator.parseAnyDate(fields[2]);
-        if (observationDate.isPresent()) {
-            result.setIssued(observationDate.get());
-            Period period = new Period();
-            period.setStart(observationDate.get());
-            period.setEnd(observationDate.get());
-            result.setEffective(period);
-        }
-
-        // provider
-        result.setPerformer(getPerformers(fields[3]));
-
-        // identifier
-        result.setIdentifier(getIds(fields[4]));
-
-        result.setMeta(ResourceHelper.getVistaMeta());
-
-        if(fields.length > 6) {
-            String display = "";
-            if(fields.length > 7) {
-                display = fields[7];
+                    JSONObject examJson = allReports.getJSONObject(i).optJSONObject("RadExam");
+                    if (examJson != null) {
+                        String status = examJson.getString("status");
+                        report.setStatus(getDiagnosticReportStatus(status));
+                    }
+                    result.add(report);
+                }
             }
-            result.setCode(ResourceHelper.createCodeableConcept(HcConstants.CPT, fields[6], display));
+        }
+        JSONArray allVisits = allJson.read("$.DxReportVisit");
+        String patientName = "";
+        String patientICN = "";
+
+        if (allVisits != null) {
+            for (int i = 0; i < allVisits.length(); i++) {
+                JSONObject visitJson = allVisits.getJSONObject(i).getJSONObject("V POV");
+                if (visitJson != null) {
+                    if (StringUtils.isEmpty(patientName) && StringUtils.isEmpty(patientICN)) {
+                        patientName = visitJson.getString("patientName");
+                        patientICN = visitJson.getString("patientICN");
+                        break;
+                    }
+                }
+            }
         }
 
-        if(fields.length > 7) {
-            result.setCodedDiagnosis(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.SNOMED_URN, fields[8], fields[7]));
-
+        for(DiagnosticReport report:result) {
+            if (!StringUtils.isEmpty(patientName) && !StringUtils.isEmpty(patientICN)) {
+                report.setSubject(ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, patientICN, patientName, ResourceHelper.ReferenceType.Patient));
+            }
         }
-
-        // conclusion
-        if(fields.length > 9) {
-            result.setConclusion(fields[10]);
-        }
-
-        return Optional.of(result);
-    }
-
-    private List<Identifier> getIds(String ids) {
-
-        List<Identifier> result = new ArrayList<>();
-
-        Identifier id = new Identifier();
-        id.setValue(ids);
-        result.add(id);
 
         return result;
     }
 
-    private List<DiagnosticReport.DiagnosticReportPerformerComponent> getPerformers(String actor) {
+    private List<DiagnosticReport.DiagnosticReportPerformerComponent> getPerformers(JSONObject reportJson) {
 
         List<DiagnosticReport.DiagnosticReportPerformerComponent> result = new ArrayList<>(1);
 
         DiagnosticReport.DiagnosticReportPerformerComponent component = new DiagnosticReport.DiagnosticReportPerformerComponent();
-        component.setActor(new Reference().setDisplay(actor));
+        String name = reportJson.getString("verifyingPhysicianName");
+        Long id = reportJson.optLong("verifyingPhysicianId", HcConstants.MISSING_ID);
+        String actorId = id.longValue() != HcConstants.MISSING_ID ? id.toString() : "";
+        component.setActor(ResourceHelper.createReference(HcConstants.URN_VISTA_PRACTITIONER, actorId, name, ResourceHelper.ReferenceType.Practitioner));
 
         result.add(component);
 
         return result;
     }
-
 
     private static DiagnosticReport.DiagnosticReportStatus getDiagnosticReportStatus(String data) {
         switch (data.toUpperCase()) {
@@ -165,7 +146,6 @@ public class DiagnosticReportParser implements VistaParser<DiagnosticReport> {
             case "REGISTERED":
                 return DiagnosticReport.DiagnosticReportStatus.REGISTERED;
             case "UNKNOWN":
-                return DiagnosticReport.DiagnosticReportStatus.UNKNOWN;
             default:
                 return DiagnosticReport.DiagnosticReportStatus.UNKNOWN;
         }

@@ -20,11 +20,6 @@ package com.healthconcourse.vista.fhir.api;
 * Constant values used across the application.
 */
 public class HcConstants {
-
-    public static final String HELLO_MESSAGE = "Bazinga!";
-
-    public static final String PROVIDER_PACKAGE = "com.healthconcourse.vista.fhir.api.provider";
-
     public static final String URN_VISTA_ICN = "urn:dxc:vista:icn";
     public static final String URN_VISTA_SOURCE = "urn:dxc:vista:source";
     public static final String ICD_9 = "http://hl7.org/fhir/sid/icd-9-cm";
@@ -33,16 +28,16 @@ public class HcConstants {
     public static final String RX_NORM = "http://www.nlm.nih.gov/research/umls/rxnorm";
     public static final String NDFRT = "http://hl7.org/fhir/ndfrt";
     public static final String VACCINE = "http://hl7.org/fhir/sid/cvx";
-    public static final String URN_VISTA_ENCOUNTER_REASON = "urn:dxc:vista:encounter-reason";
-    public static final String URN_VISTA_ADMIN = "urn:dxc:vista:admit-source";
-    public static final String URN_VISTA_DISCHARGE = "urn:dxc:vista:discharge-disposition";
-    public static final String URN_VISTA_SERVICE_PROVIDER = "urn:dxc:vista:service-provider";
-    public static final String URN_VISTA_PROVIDER = "urn:dxc:vista:provider";
-    public static final String URN_VISTA_PRACTITIONER = "urn:dxc:vista:practitioner";
-    public static final String URN_VISTA_ORGANIZATION = "urn:dxc:vista:organization";
-    public static final String URN_VISTA_VANDF = "urn:dxc:vista:vandf";
-    public static final String URN_VISTA_LOCATION = "urn:dxc:vista:location";
-    public static final String URN_VISTA_CARETEAM_ROLE = "urn:dxc:vista:careteam:role";
+    public static final String URN_VISTA_PROVIDER = "urn:healthconcourse:vista:provider";
+    public static final String URN_VISTA_CONDITION = "urn:healthconcourse:vista:condition";
+    public static final String URN_VISTA_MEDICATION = "urn:healthconcourse:vista:medication";
+    public static final String URN_VISTA_PRACTITIONER = "urn:healthconcourse:vista:practitioner";
+    public static final String URN_VISTA_ORGANIZATION = "urn:healthconcourse:vista:organization";
+    public static final String URN_VISTA_ENCOUNTER = "urn:healthconcourse:vista:encounter";
+    public static final String URN_VISTA_LOCATION = "urn:healthconcourse:vista:location";
+    public static final String URN_VISTA_CARETEAM_ROLE = "urn:healthconcourse:vista:careteam:role";
+    public static final String URN_VISTA_HEALTH_FACTOR = "urn:healthconcourse:vista:healthfactor";
+    public static final String UNIT_OF_MEASURE_SYSTEM = "http://unitsofmeasure.org";
 
     public static final String SNOMED_URN = "http://snomed.info/sct";
 
@@ -53,16 +48,16 @@ public class HcConstants {
     public static final String PARTICIPANT_CODING_SYSTEM = "http://hl7.org/fhir/v3/ParticipationType";
     public static final String OBSERVATION_CODING_SYSTEM = "http://hl7.org/fhir/ValueSet/observation-category";
     public static final String APPOINTMENT_TYPE_CODING_SYSTEM = "http://hl7.org/fhir/v2/0276";
-
-    public static final String SP_START = "startDate";
-
-    public static final String UNICODE = "UTF-8";
+    public static final String CARE_TEAM_CODING_SYSTEM = "http://hl7.org/fhir/care-team-category";
+    public static final String MARITAL_STATUS_CODING_SYSTEM = "http://hl7.org/fhir/v3/MaritalStatus";
+    public static final String HL7_NULL_CODE = "http://hl7.org/fhir/v3/NullFlavor";
+    public static final String HL7_ACT_ENCOUNTER_CODE = "http://hl7.org/fhir/v3/ActCode";
 
     static final String SERVER_DESC = "HealthConcourse FHIR API using VistA as a data source";
     static final String SERVER_NAME = "HealthConcourse VistA FHIR API";
-    static final String SERVER_VERSION = "1.2";
+    static final String SERVER_VERSION = "1.3";
 
-    static final String CONFIG_VISTA_URL = "VistaBaseUrl";
+    public static final Long MISSING_ID = -999L;
 
     private HcConstants(){}
 }

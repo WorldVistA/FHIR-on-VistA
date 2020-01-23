@@ -1,29 +1,32 @@
 /* Created by Perspecta http://www.perspecta.com */
 /*
-(c) 2017-2019 Perspecta
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+        Licensed to the Apache Software Foundation (ASF) under one
+        or more contributor license agreements.  See the NOTICE file
+        distributed with this work for additional information
+        regarding copyright ownership.  The ASF licenses this file
+        to you under the Apache License, Version 2.0 (the
+        "License"); you may not use this file except in compliance
+        with the License.  You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing,
+        software distributed under the License is distributed on an
+        "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+        KIND, either express or implied.  See the License for the
+        specific language governing permissions and limitations
+        under the License.
 */
 package com.healthconcourse.vista.fhir.api.parser;
 
 import com.healthconcourse.vista.fhir.api.HcConstants;
 import com.healthconcourse.vista.fhir.api.utils.InputValidator;
 import com.healthconcourse.vista.fhir.api.utils.ResourceHelper;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.PathNotFoundException;
-import com.jayway.jsonpath.ReadContext;
+
+import com.nfeld.jsonpathlite.JsonPath;
+import com.nfeld.jsonpathlite.JsonResult;
 import org.apache.commons.lang.StringUtils;
 import org.hl7.fhir.dstu3.model.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,53 +44,67 @@ public class CarePlanParser {
     public List<CarePlan> parseCarePlan(String httpData, String icn) {
         List<CarePlan> results = new ArrayList<>();
 
-        if (org.apache.commons.lang3.StringUtils.isEmpty(httpData)) {
+        if (StringUtils.isEmpty(httpData)) {
             return results;
         }
 
-        ReadContext ctx = JsonPath.parse(httpData);
+        JsonResult parsedJson = JsonPath.parseOrNull(httpData);
+        if (parsedJson == null) {
+            LOG.warn("Unable to parse Care Plan JSON");
+            return results;
+        }
+        JSONArray allPlans = parsedJson.read("$.CarePlan");
 
-        try {
-            Integer totalCarePlans = ctx.read("$.CarePlan.length()");
-            Integer totalVisits = ctx.read("$.CarePlan[0].Visit.length()");
-
-            for (int carePlanCounter = 0; carePlanCounter < totalCarePlans; carePlanCounter++) {
+        if (allPlans != null) {
+            for (int i = 0; i < allPlans.length(); i++) {
+                JSONObject visitJson = allPlans.getJSONObject(i);
+                JSONArray visits = visitJson.getJSONArray("Visit");
                 CarePlan carePlan = new CarePlan();
-                carePlan.setMeta(ResourceHelper.getVistaMeta());
                 List<CarePlan.CarePlanActivityComponent> activities = new ArrayList<>();
-                for (int visitCounter = 0; visitCounter < totalVisits; visitCounter++) {
-                    String basePath = "$.CarePlan[" + carePlanCounter + "].Visit[" + visitCounter + "].HealthFactor.";
-                    String cpType = ctx.read(basePath + "cpType");
+                // A visit can be either a new care plan or an activity under the last care plan
+                //  so activities need to accumulate before making a new plan
+                for (int visitCounter = 0; visitCounter < visits.length(); visitCounter++) {
+                    JSONObject json = visits.getJSONObject(visitCounter).getJSONObject("HealthFactor");
+                    String cpType = json.getString("cpType");
                     if (cpType.toLowerCase().equals("careplan")) {
-                        String resourceId = ctx.read(basePath + "resourceId");
+                        carePlan = new CarePlan();
+                        activities = new ArrayList<>();
+                        carePlan.setMeta(ResourceHelper.getVistaMeta());
+                        String resourceId = json.getString("resourceId");
                         carePlan.setId(resourceId);
-                        String cpIntent = ctx.read(basePath + "cpIntent");
+                        String cpIntent = json.getString("cpIntent");
                         if (!StringUtils.isEmpty(cpIntent)) {
                             carePlan.setIntent(getIntent(cpIntent));
                         }
-                        String cpState = ctx.read(basePath + "cpState");
+                        String cpState = json.getString("cpState");
                         if (!StringUtils.isEmpty(cpState)) {
                             carePlan.setStatus(getCarePlanStatus(cpState));
                         }
-                        String cpStartFHIR = ctx.read(basePath + "cpStartFHIR");
+                        String cpStartFHIR = json.getString("cpStartFHIR");
                         if (!StringUtils.isEmpty(cpStartFHIR)) {
-                            String cpEndFHIR = ctx.read(basePath + "cpEndFHIR");
+                            String cpEndFHIR = json.getString("cpEndFHIR");
                             Optional<Period> carePlanPeriod = getPlanPeriod(cpStartFHIR, cpEndFHIR);
                             if (carePlanPeriod.isPresent()) {
                                 carePlan.setPeriod(carePlanPeriod.get());
                             }
                         }
-                        String patientName = ctx.read(basePath + "patientName");
+                        String patientName = json.getString("patientName");
                         Reference ref = ResourceHelper.createReference(HcConstants.URN_VISTA_ICN, icn, patientName, ResourceHelper.ReferenceType.Patient);
                         carePlan.setSubject(ref);
 
-                        Integer snomedCode = ctx.read(basePath + "hlfNameSCT");
-                        String snomedName = ctx.read(basePath + "hlfName");
-                        carePlan.setCategory(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.SNOMED_URN, snomedCode.toString(), snomedName));
+                        Long code = json.optLong("hlfNameSCT", HcConstants.MISSING_ID);
+                        String snomedCode = code.longValue() != HcConstants.MISSING_ID ? code.toString() : "";
+                        String snomedName = json.getString("hlfName");
+                        carePlan.setCategory(ResourceHelper.createSingleCodeableConceptAsList(HcConstants.SNOMED_URN, snomedCode, snomedName));
                         carePlan.setTitle(snomedName);
                         carePlan.setDescription(snomedName);
+
+                        String encounterId = json.getString("visitResId");
+                        if (!StringUtils.isEmpty(encounterId)) {
+                            carePlan.setContext(ResourceHelper.createReference(HcConstants.URN_VISTA_ENCOUNTER, encounterId, null, ResourceHelper.ReferenceType.Encounter));
+                        }
                     } else if (cpType.toLowerCase().equals("activity")) {
-                        activities.add(getActivity(ctx, basePath));
+                        activities.add(getActivity(json));
                     }
 
                     if (!activities.isEmpty()) {
@@ -97,40 +114,36 @@ public class CarePlanParser {
                     results.add(carePlan);
                 }
             }
-        } catch (PathNotFoundException pex) {
-            LOG.warn("Invalid JSON found", pex);
-            LOG.warn(httpData);
         }
         return results;
     }
 
-    private CarePlan.CarePlanActivityComponent getActivity(ReadContext ctx, String basePath) {
-
+    private CarePlan.CarePlanActivityComponent getActivity(JSONObject json) {
         CarePlan.CarePlanActivityComponent activity = new CarePlan.CarePlanActivityComponent();
         CarePlan.CarePlanActivityDetailComponent detail = new CarePlan.CarePlanActivityDetailComponent();
         activity.setDetail(detail);
 
-        String snomedName = ctx.read(basePath + "hlfName");
-        Integer snomedCode = ctx.read(basePath + "hlfNameSCT");
-
+        String snomedName = json.getString("hlfName");
+        Long code = json.optLong("hlfNameSCT", HcConstants.MISSING_ID);
+        String snomedCode = code.longValue() != HcConstants.MISSING_ID ? code.toString() : "";
         detail.setDescription(snomedName);
-        String cpState = ctx.read(basePath + "cpState");
+        String cpState = json.getString("cpState");
         if (!cpState.equals("")) {
             detail.setStatus(getActivityStatus(cpState));
         }
 
         if (!snomedName.equals("")) {
-            detail.setCode(ResourceHelper.createCodeableConcept(HcConstants.SNOMED_URN, snomedCode.toString(), snomedName));
+            detail.setCode(ResourceHelper.createCodeableConcept(HcConstants.SNOMED_URN, snomedCode, snomedName));
             detail.setDescription(snomedName);
         }
 
-        String encounterProvider = ctx.read(basePath + "encounterProvider");
-        String encounterProviderId = ctx.read(basePath + "encounterProviderId");
+        String encounterProvider = json.getString("encounterProvider");
+        String encounterProviderId = json.getString("encounterProviderId");
         if (!encounterProvider.equals("")) {
             detail.setPerformer(ResourceHelper.createSingleReferenceAsList(HcConstants.URN_VISTA_PRACTITIONER, encounterProviderId, encounterProvider, ResourceHelper.ReferenceType.Practitioner));
         }
 
-        String eventDateTimeFHIR = ctx.read(basePath + "eventDateTimeFHIR");
+        String eventDateTimeFHIR =json.getString("eventDateTimeFHIR");
         Optional<Period> detailPeriod = getPlanPeriod(eventDateTimeFHIR, "");
         if (detailPeriod.isPresent()) {
             detail.setScheduled(detailPeriod.get());
